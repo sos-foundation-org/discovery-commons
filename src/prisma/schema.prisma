@@ -1,0 +1,247 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// NextAuth required tables
+model Account {
+  id                String  @id @default(uuid())
+  userId            String  @map("user_id")
+  type              String
+  provider          String
+  providerAccountId String  @map("provider_account_id")
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(uuid())
+  sessionToken String   @unique @map("session_token")
+  userId       String   @map("user_id")
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// Domain models
+
+model User {
+  id                 String    @id @default(uuid())
+  email              String    @unique
+  emailVerified      DateTime? @map("email_verified")
+  name               String?
+  displayName        String?   @map("display_name")
+  image              String?
+  trustLevel         String    @default("new_member") @map("trust_level")
+  covenantAcceptedAt DateTime? @map("covenant_accepted_at")
+  bio                String?
+  interests          Json      @default("[]")
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+
+  accounts            Account[]
+  sessions            Session[]
+  threads             Thread[]
+  contributions       Contribution[]
+  comments            Comment[]
+  sealedRegistrations SealedRegistration[]
+  credits             Credit[]
+  trustedByMe         TrustedCircle[]      @relation("owner")
+  trustedByOthers     TrustedCircle[]      @relation("trusted")
+  notifications       Notification[]
+  visibilityChanges   VisibilityLog[]
+
+  @@map("users")
+}
+
+model Thread {
+  id           String   @id @default(uuid())
+  creatorId    String   @map("creator_id")
+  title        String
+  description  String
+  visibility   String   @default("L0")
+  currentStage String   @default("question") @map("current_stage")
+  domainTags   Json     @default("[]") @map("domain_tags")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  isArchived   Boolean  @default(false) @map("is_archived")
+
+  creator       User           @relation(fields: [creatorId], references: [id])
+  contributions Contribution[]
+  credits       Credit[]
+
+  @@index([visibility])
+  @@index([createdAt])
+  @@map("threads")
+}
+
+model Contribution {
+  id          String   @id @default(uuid())
+  threadId    String   @map("thread_id")
+  authorId    String   @map("author_id")
+  type        String
+  content     String
+  contentHash String   @map("content_hash")
+  visibility  String   @default("L0")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  parentId    String?  @map("parent_id")
+  attachments Json     @default("[]")
+
+  thread   Thread        @relation(fields: [threadId], references: [id])
+  author   User          @relation(fields: [authorId], references: [id])
+  parent   Contribution? @relation("ContributionTree", fields: [parentId], references: [id])
+  children Contribution[] @relation("ContributionTree")
+
+  versions  ContributionVersion[]
+  comments  Comment[]
+  credits   Credit[]
+  sealedReg SealedRegistration?
+
+  @@index([threadId])
+  @@index([authorId])
+  @@index([contentHash])
+  @@map("contributions")
+}
+
+model ContributionVersion {
+  id             String   @id @default(uuid())
+  contributionId String   @map("contribution_id")
+  versionNumber  Int      @map("version_number")
+  content        String
+  contentHash    String   @map("content_hash")
+  editSummary    String?  @map("edit_summary")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  contribution Contribution @relation(fields: [contributionId], references: [id])
+
+  @@unique([contributionId, versionNumber])
+  @@index([contentHash])
+  @@map("contribution_versions")
+}
+
+model SealedRegistration {
+  id             String    @id @default(uuid())
+  userId         String    @map("user_id")
+  contentHash    String    @map("content_hash")
+  title          String?
+  registeredAt   DateTime  @default(now()) @map("registered_at")
+  revealedAt     DateTime? @map("revealed_at")
+  contributionId String?   @unique @map("contribution_id")
+  status         String    @default("sealed")
+
+  user         User          @relation(fields: [userId], references: [id])
+  contribution Contribution? @relation(fields: [contributionId], references: [id])
+
+  @@index([userId])
+  @@index([contentHash])
+  @@map("sealed_registrations")
+}
+
+model Comment {
+  id             String   @id @default(uuid())
+  contributionId String   @map("contribution_id")
+  authorId       String   @map("author_id")
+  content        String
+  commentType    String   @default("supportive") @map("comment_type")
+  isAnonymous    Boolean  @default(false) @map("is_anonymous")
+  parentId       String?  @map("parent_id")
+  upvotes        Int      @default(0)
+  downvotes      Int      @default(0)
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  contribution Contribution @relation(fields: [contributionId], references: [id])
+  author       User         @relation(fields: [authorId], references: [id])
+  parent       Comment?     @relation("CommentTree", fields: [parentId], references: [id])
+  children     Comment[]    @relation("CommentTree")
+
+  @@index([contributionId])
+  @@map("comments")
+}
+
+model Credit {
+  id             String   @id @default(uuid())
+  userId         String   @map("user_id")
+  threadId       String   @map("thread_id")
+  contributionId String?  @map("contribution_id")
+  creditType     String   @map("credit_type")
+  hash           String
+  timestamp      DateTime @default(now())
+
+  user         User          @relation(fields: [userId], references: [id])
+  thread       Thread        @relation(fields: [threadId], references: [id])
+  contribution Contribution? @relation(fields: [contributionId], references: [id])
+
+  @@index([userId])
+  @@map("credits")
+}
+
+model TrustedCircle {
+  id            String   @id @default(uuid())
+  ownerId       String   @map("owner_id")
+  trustedUserId String   @map("trusted_user_id")
+  addedAt       DateTime @default(now()) @map("added_at")
+  note          String?
+
+  owner       User @relation("owner", fields: [ownerId], references: [id])
+  trustedUser User @relation("trusted", fields: [trustedUserId], references: [id])
+
+  @@unique([ownerId, trustedUserId])
+  @@map("trusted_circles")
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  type      String
+  title     String
+  message   String
+  linkUrl   String?  @map("link_url")
+  isRead    Boolean  @default(false) @map("is_read")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId, isRead])
+  @@map("notifications")
+}
+
+model VisibilityLog {
+  id         String   @id @default(uuid())
+  entityType String   @map("entity_type")
+  entityId   String   @map("entity_id")
+  oldLevel   String   @map("old_level")
+  newLevel   String   @map("new_level")
+  changedBy  String   @map("changed_by")
+  changedAt  DateTime @default(now()) @map("changed_at")
+
+  user User @relation(fields: [changedBy], references: [id])
+
+  @@index([entityType, entityId])
+  @@map("visibility_logs")
+}
