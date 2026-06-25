@@ -3,6 +3,8 @@ import {
   CONTRIBUTION_TYPES,
   VISIBILITY_LEVELS,
   COMMENT_TYPES,
+  CREDIT_DIMENSIONS,
+  REPLICATION_OUTCOMES,
 } from "./types";
 
 export const createThreadSchema = z.object({
@@ -54,6 +56,43 @@ export const updateVisibilitySchema = z.object({
   visibility: z.enum(VISIBILITY_LEVELS),
 });
 
+// v2 — Credit weight adjustment (append-only: creates a new versioned record).
+export const adjustCreditSchema = z.object({
+  creditId: z.string().min(1),
+  weight: z.number().min(0).max(1),
+  creditType: z.enum(CREDIT_DIMENSIONS).optional(),
+});
+
+// v2 — Register a replication attempt.
+export const createReplicationSchema = z.object({
+  replicationThreadId: z.string().min(1),
+  outcome: z.enum(REPLICATION_OUTCOMES),
+  notes: z.string().max(5000).optional(),
+  contributionId: z.string().min(1).optional(),
+});
+
+export const updateReplicationSchema = z.object({
+  outcome: z.enum(REPLICATION_OUTCOMES).optional(),
+  notes: z.string().max(5000).optional(),
+});
+
+// v2 — Create/update a Research Object (Semantic Document Graph).
+export const researchObjectSchema = z.object({
+  structuredContent: z.record(z.unknown()),
+});
+
+// v2 — Manually link an ORCID iD (format: 0000-0000-0000-000X).
+export const linkOrcidSchema = z.object({
+  orcidId: z
+    .string()
+    .regex(
+      /^\d{4}-\d{4}-\d{4}-\d{3}[\dX]$/,
+      "ORCID iD must look like 0000-0000-0000-0000"
+    ),
+});
+
 export type CreateThreadInput = z.infer<typeof createThreadSchema>;
 export type CreateContributionInput = z.infer<typeof createContributionSchema>;
 export type CreateCommentInput = z.infer<typeof createCommentSchema>;
+export type AdjustCreditInput = z.infer<typeof adjustCreditSchema>;
+export type CreateReplicationInput = z.infer<typeof createReplicationSchema>;

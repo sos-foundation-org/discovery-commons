@@ -29,6 +29,32 @@ export const authOptions: NextAuthOptions = {
           }),
         ]
       : []),
+    // ORCID OAuth (Task 4). Sandbox vs production host is env-controlled.
+    ...(process.env.ORCID_CLIENT_ID
+      ? [
+          {
+            id: "orcid",
+            name: "ORCID",
+            type: "oauth" as const,
+            wellKnown: `https://${process.env.ORCID_SANDBOX === "true" ? "sandbox.orcid.org" : "orcid.org"}/.well-known/openid-configuration`,
+            clientId: process.env.ORCID_CLIENT_ID,
+            clientSecret: process.env.ORCID_CLIENT_SECRET,
+            authorization: { params: { scope: "openid" } },
+            idToken: true,
+            checks: ["state" as const],
+            profile(profile: { sub: string; given_name?: string; family_name?: string; email?: string }) {
+              return {
+                id: profile.sub,
+                name: [profile.given_name, profile.family_name].filter(Boolean).join(" ") || profile.sub,
+                email: profile.email,
+                // ORCID iD is the OpenID `sub`.
+                orcidId: profile.sub,
+                orcidVerified: true,
+              };
+            },
+          },
+        ]
+      : []),
     ...(useCredentialsDev
       ? [
           CredentialsProvider({
@@ -74,6 +100,20 @@ export const authOptions: NextAuthOptions = {
         }
       }
       return session;
+    },
+  },
+  events: {
+    // Persist the ORCID iD onto the user record when they link/sign-in via ORCID
+    // (the PrismaAdapter's createUser doesn't carry custom profile fields).
+    async signIn({ user, account }) {
+      if (account?.provider === "orcid" && account.providerAccountId && user?.id) {
+        await prisma.user
+          .update({
+            where: { id: user.id },
+            data: { orcidId: account.providerAccountId, orcidVerified: true },
+          })
+          .catch(() => {});
+      }
     },
   },
   pages: {

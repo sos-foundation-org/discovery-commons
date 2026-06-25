@@ -255,6 +255,18 @@ export default function AboutPage() {
               title: "Report Violations",
               desc: "If you see covenant violations, report them. The community depends on collective enforcement.",
             },
+            {
+              title: "No Credit Gaming",
+              desc: "Don't create contributions solely to accumulate credits, or coordinate with others to inflate scores. Each contribution should represent genuine intellectual effort.",
+            },
+            {
+              title: "Honest Replication",
+              desc: "If you attempt to replicate someone's work and fail, report the failure honestly. Concealing failed replications undermines integrity — failed replications earn equal credit.",
+            },
+            {
+              title: "AI Transparency",
+              desc: "AI-generated suggestions and reviews are tools, not contributions. Don't present AI output as your own original work; AI-assisted content should be clearly marked.",
+            },
           ].map((principle) => (
             <Card key={principle.title}>
               <CardContent className="pt-4">

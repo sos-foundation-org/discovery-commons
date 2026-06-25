@@ -18,6 +18,11 @@ import { VisibilityUpgrade } from "@/components/thread/visibility-upgrade";
 import { CommentSection } from "@/components/contribution/comment-section";
 import { UnsealButton } from "@/components/contribution/unseal-button";
 import { StageAdvance } from "@/components/thread/stage-advance";
+import { VerificationBadge } from "@/components/thread/VerificationBadge";
+import { CreditDistribution } from "@/components/credit/CreditDistribution";
+import { AIReviewSection } from "@/components/ai/AIReviewSection";
+import { ReplicationSection } from "@/components/replication/ReplicationSection";
+import { summarizeCredits } from "@/lib/credits";
 
 const STAGE_COLORS: Record<string, string> = {
   question: "border-l-blue-500",
@@ -83,6 +88,13 @@ export default async function ThreadDetailPage({
 
   const isOwner = thread.creatorId === session?.user?.id;
 
+  // Thread-level nine-dimension credit distribution.
+  const threadCredits = await prisma.creditV2.findMany({
+    where: { threadId: thread.id },
+    select: { creditType: true, weight: true },
+  });
+  const creditSummary = summarizeCredits(threadCredits);
+
   // Filter contributions by visibility
   const contributions = thread.contributions.filter((c) => {
     if (c.authorId === session?.user?.id) return true;
@@ -107,7 +119,8 @@ export default async function ThreadDetailPage({
       <div className="mb-8">
         <div className="flex items-start justify-between gap-4 mb-4">
           <h1 className="text-3xl font-bold">{thread.title}</h1>
-          <div className="flex gap-2 flex-shrink-0">
+          <div className="flex gap-2 flex-shrink-0 flex-wrap justify-end">
+            <VerificationBadge badge={thread.verificationBadge} />
             <Badge variant="secondary">{thread.currentStage}</Badge>
             <Badge variant="outline">
               {VISIBILITY_LABELS[thread.visibility as VisibilityLevel]}
@@ -245,6 +258,32 @@ export default async function ThreadDetailPage({
             stageCounts={stageCounts}
           />
         )}
+      </div>
+
+      {/* Credit distribution + AI review */}
+      <div className="mb-8 grid gap-4 md:grid-cols-2">
+        <Card>
+          <CardHeader className="pb-2">
+            <h2 className="text-base font-semibold">
+              Credit Distribution{" "}
+              <span className="text-sm font-normal text-muted-foreground">
+                ({creditSummary.total.toFixed(2)} total)
+              </span>
+            </h2>
+          </CardHeader>
+          <CardContent>
+            <CreditDistribution
+              byDimension={creditSummary.byDimension}
+              showEmpty={false}
+            />
+          </CardContent>
+        </Card>
+        {session && <AIReviewSection threadId={thread.id} />}
+      </div>
+
+      {/* Replications */}
+      <div className="mb-8">
+        <ReplicationSection threadId={thread.id} canRegister={Boolean(session)} />
       </div>
 
       {/* Contributions */}

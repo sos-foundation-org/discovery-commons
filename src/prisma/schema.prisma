@@ -61,6 +61,9 @@ model User {
   covenantAcceptedAt DateTime? @map("covenant_accepted_at")
   bio                String?
   interests          Json      @default("[]")
+  // v2: ORCID identity linking (Phase 2 — Task 4)
+  orcidId            String?   @unique @map("orcid_id")
+  orcidVerified      Boolean   @default(false) @map("orcid_verified")
   createdAt          DateTime  @default(now()) @map("created_at")
   updatedAt          DateTime  @updatedAt @map("updated_at")
 
@@ -71,6 +74,8 @@ model User {
   comments            Comment[]
   sealedRegistrations SealedRegistration[]
   credits             Credit[]
+  creditsV2           CreditV2[]           @relation("UserCreditsV2")
+  aiInteractions      AIInteraction[]
   trustedByMe         TrustedCircle[]      @relation("owner")
   trustedByOthers     TrustedCircle[]      @relation("trusted")
   notifications       Notification[]
@@ -90,10 +95,17 @@ model Thread {
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
   isArchived   Boolean  @default(false) @map("is_archived")
+  // v2: Verify-based science (Task 3) — unverified | ai_checked | community_reviewed | replicated | doi_published
+  verificationBadge String @default("unverified") @map("verification_badge")
+  doi          String?  @unique
 
   creator       User           @relation(fields: [creatorId], references: [id])
   contributions Contribution[]
   credits       Credit[]
+  creditsV2     CreditV2[]
+  researchObject ResearchObject?
+  replicationsOf Replication[]  @relation("OriginalThread")
+  replicatedIn   Replication[]  @relation("ReplicationThread")
 
   @@index([visibility])
   @@index([createdAt])
@@ -112,6 +124,8 @@ model Contribution {
   updatedAt   DateTime @updatedAt @map("updated_at")
   parentId    String?  @map("parent_id")
   attachments Json     @default("[]")
+  // v2: replication metadata (Task 2) — { originalThreadId, outcome }
+  replicationMeta Json? @map("replication_meta")
 
   thread   Thread        @relation(fields: [threadId], references: [id])
   author   User          @relation(fields: [authorId], references: [id])
@@ -121,6 +135,7 @@ model Contribution {
   versions  ContributionVersion[]
   comments  Comment[]
   credits   Credit[]
+  creditsV2 CreditV2[]
   sealedReg SealedRegistration?
 
   @@index([threadId])
@@ -244,4 +259,93 @@ model VisibilityLog {
 
   @@index([entityType, entityId])
   @@map("visibility_logs")
+}
+
+// ============================================================
+// v2 — Phase 2 models (DC_Claude_Code_Brief Tasks 1, 3, 5, 6)
+// ============================================================
+
+// Task 1: Nine-dimensional credit system.
+// Append-only: hash and timestamp are never updated. Weight adjustments
+// create a NEW record with an incremented version (enforced in app code —
+// SQLite has no UPDATE triggers, unlike the PostgreSQL plan in the brief).
+model CreditV2 {
+  id              String   @id @default(uuid())
+  contributorId   String   @map("contributor_id")
+  threadId        String   @map("thread_id")
+  contributionId  String?  @map("contribution_id")
+  creditType      String   @map("credit_type")
+  // idea | data | method | analysis | validation | communication | curation | resource | mentorship
+  weight          Float    @default(0.0)
+  hash            String // SHA-256 of (contributorId + creditType + contributionId + timestamp)
+  timestamp       DateTime @default(now())
+  // JSON array of parent CreditV2 ids (SQLite has no scalar lists)
+  parentCreditIds Json     @default("[]") @map("parent_credit_ids")
+  version         Int      @default(1)
+
+  contributor  User          @relation("UserCreditsV2", fields: [contributorId], references: [id])
+  thread       Thread        @relation(fields: [threadId], references: [id])
+  contribution Contribution? @relation(fields: [contributionId], references: [id])
+
+  @@index([contributorId])
+  @@index([threadId])
+  @@index([creditType])
+  @@map("credits_v2")
+}
+
+// Task 3: Replication records for Verify-based Science.
+model Replication {
+  id                  String   @id @default(uuid())
+  originalThreadId    String   @map("original_thread_id")
+  replicationThreadId String   @map("replication_thread_id")
+  outcome             String // replicated | partially_replicated | failed_to_replicate | inconclusive
+  notes               String?
+  contributionId      String?  @map("contribution_id") // the replication contribution
+  createdAt           DateTime @default(now()) @map("created_at")
+
+  originalThread    Thread @relation("OriginalThread", fields: [originalThreadId], references: [id])
+  replicationThread Thread @relation("ReplicationThread", fields: [replicationThreadId], references: [id])
+
+  @@index([originalThreadId])
+  @@index([replicationThreadId])
+  @@map("replications")
+}
+
+// Task 5: AI interaction log (cost tracking + structured outputs).
+model AIInteraction {
+  id           String   @id @default(uuid())
+  userId       String   @map("user_id")
+  threadId     String?  @map("thread_id")
+  aiRole       String   @map("ai_role") // research_assistant | reviewer | translator
+  aiFeature    String   @map("ai_feature") // gap_analysis | literature | error_check | bias_detect | summarize | ...
+  inputTokens  Int      @map("input_tokens")
+  outputTokens Int      @map("output_tokens")
+  cost         Float // calculated from token counts
+  cached       Boolean  @default(false)
+  responseData Json?    @map("response_data") // structured AI output
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([threadId])
+  @@map("ai_interactions")
+}
+
+// Task 6: Research Object — Semantic Document Graph (SDG) storage.
+model ResearchObject {
+  id                String   @id @default(uuid())
+  threadId          String   @unique @map("thread_id")
+  structuredContent Json     @map("structured_content") // SemanticDocumentGraph JSON
+  version           Int      @default(1)
+  doiId             String?  @unique @map("doi_id")
+  // Cache of rendered outputs keyed by format ({} default set in app code —
+  // SQLite rejects a literal `{}` column default).
+  renderedFormats   Json?    @map("rendered_formats")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  thread Thread @relation(fields: [threadId], references: [id])
+
+  @@map("research_objects")
 }

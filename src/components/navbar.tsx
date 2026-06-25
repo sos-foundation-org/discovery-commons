@@ -34,6 +34,7 @@ export function Navbar() {
     ...(session
       ? [
           { href: "/sealed", label: "Sealed Ideas" },
+          { href: "/credits", label: "Credits" },
           { href: "/settings", label: "Settings" },
         ]
       : []),

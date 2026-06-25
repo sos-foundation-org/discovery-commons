@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { createContributionSchema } from "@/lib/validations";
 import { generatePriorityHash } from "@/lib/hash";
 import { STAGE_LEVEL } from "@/lib/types";
+import { generateCredits } from "@/lib/credits";
 
 export async function POST(request: NextRequest) {
   const session = await getSession();
@@ -80,7 +81,7 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      // Create credit
+      // Create credit (legacy v1 — preserved for backwards compatibility)
       await tx.credit.create({
         data: {
           userId: session.user.id,
@@ -90,6 +91,12 @@ export async function POST(request: NextRequest) {
           hash: contentHash,
         },
       });
+
+      // Create CreditV2 records (9-dimension system) for this contribution.
+      await generateCredits(
+        { id: contrib.id, authorId: contrib.authorId, threadId, type },
+        tx
+      );
 
       // Create sealed registration if requested
       if (sealed) {
