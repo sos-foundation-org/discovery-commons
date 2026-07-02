@@ -143,7 +143,7 @@ export default function AboutPage() {
             <p className="text-muted-foreground mb-4">
               For ideas you&apos;re not ready to share, use{" "}
               <strong>Seal &amp; Reveal</strong>: submit a sealed contribution
-              where only the hash is visible. When you&apos;re ready, unseal it
+              where only the hash is visible. When you&apos;re ready, reveal it
               — the timestamp proves you had the idea before anyone else saw it.
             </p>
             <div className="flex gap-2">

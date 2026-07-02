@@ -16,7 +16,8 @@ import { truncateHash } from "@/lib/hash";
 import { ContributionForm } from "@/components/contribution/contribution-form";
 import { VisibilityUpgrade } from "@/components/thread/visibility-upgrade";
 import { CommentSection } from "@/components/contribution/comment-section";
-import { UnsealButton } from "@/components/contribution/unseal-button";
+import { RevealButton } from "@/components/contribution/reveal-button";
+import { SealButton } from "@/components/contribution/seal-button";
 import { StageAdvance } from "@/components/thread/stage-advance";
 import { VerificationBadge } from "@/components/thread/VerificationBadge";
 import { CreditDistribution } from "@/components/credit/CreditDistribution";
@@ -410,14 +411,25 @@ export default async function ThreadDetailPage({
                         {contribution.content}
                       </div>
                       {isSealed && isContribAuthor && (
-                        <div className="mb-3 p-2 rounded bg-amber-50 dark:bg-amber-950 flex items-center justify-between">
+                        <div className="mb-3 p-2 rounded bg-amber-50 dark:bg-amber-950 flex items-center justify-between gap-2">
                           <span className="text-xs text-amber-700 dark:text-amber-300">
                             This contribution is sealed. Others can only see the
-                            hash.
+                            hash{contribution.revealedAt ? "" : " until you reveal it"}.
                           </span>
-                          <UnsealButton contributionId={contribution.id} />
+                          <RevealButton contributionId={contribution.id} />
                         </div>
                       )}
+                      {!isSealed &&
+                        isContribAuthor &&
+                        contribution.visibility !== "public" && (
+                          <div className="mb-3 p-2 rounded bg-muted/50 flex items-center justify-between gap-2">
+                            <span className="text-xs text-muted-foreground">
+                              Not ready to share? Seal this to lock the content
+                              while proving priority with its hash.
+                            </span>
+                            <SealButton contributionId={contribution.id} />
+                          </div>
+                        )}
                     </>
                   )}
                   <div className="flex items-center gap-2 text-xs text-muted-foreground font-mono">

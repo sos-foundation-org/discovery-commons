@@ -4,22 +4,28 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 
-export function UnsealButton({ contributionId }: { contributionId: string }) {
+// Seals a not-yet-public contribution (private|shared → sealed): content becomes
+// hidden while the SHA-256 hash + timestamp stay public. Irreversible content lock.
+export function SealButton({ contributionId }: { contributionId: string }) {
   const router = useRouter();
   const [confirming, setConfirming] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleUnseal = async () => {
+  const handleSeal = async () => {
     setIsLoading(true);
-    const res = await fetch(`/api/contributions/${contributionId}/unseal`, {
+    setError("");
+    const res = await fetch(`/api/contributions/${contributionId}/seal`, {
       method: "POST",
     }).catch(() => null);
 
     if (res?.ok) {
       router.refresh();
+      return;
     }
+    const data = await res?.json().catch(() => null);
+    setError(data?.error || "Failed to seal");
     setIsLoading(false);
-    setConfirming(false);
   };
 
   if (!confirming) {
@@ -30,7 +36,7 @@ export function UnsealButton({ contributionId }: { contributionId: string }) {
         onClick={() => setConfirming(true)}
         className="text-xs"
       >
-        Unseal
+        Seal
       </Button>
     );
   }
@@ -38,25 +44,29 @@ export function UnsealButton({ contributionId }: { contributionId: string }) {
   return (
     <div className="flex items-center gap-2">
       <span className="text-xs text-amber-700 dark:text-amber-300">
-        This cannot be undone.
+        Hide content, keep hash public. Content can no longer be edited.
       </span>
       <Button
         size="sm"
-        variant="destructive"
-        onClick={handleUnseal}
+        variant="default"
+        onClick={handleSeal}
         disabled={isLoading}
         className="text-xs"
       >
-        {isLoading ? "Unsealing..." : "Confirm Unseal"}
+        {isLoading ? "Sealing…" : "Confirm Seal"}
       </Button>
       <Button
         size="sm"
         variant="ghost"
-        onClick={() => setConfirming(false)}
+        onClick={() => {
+          setConfirming(false);
+          setError("");
+        }}
         className="text-xs"
       >
         Cancel
       </Button>
+      {error && <span className="text-[11px] text-red-600">{error}</span>}
     </div>
   );
 }

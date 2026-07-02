@@ -3,15 +3,51 @@ import crypto from "crypto";
 
 const prisma = new PrismaClient();
 
-function generateHash(userId: string, content: string, timestamp: Date) {
+// Mirror src/lib/hash.ts generatePriorityHash: SHA-256 over authorId|content|ISO.
+// Hashing the ACTUAL content (not a label) keeps seed data verifiable, so the
+// reveal flow's integrity check passes.
+function priorityHash(userId: string, content: string, timestamp: Date) {
   const payload = `${userId}|${content}|${timestamp.toISOString()}`;
   return crypto.createHash("sha256").update(payload, "utf-8").digest("hex");
+}
+
+async function seedContribution(opts: {
+  id: string;
+  threadId: string;
+  authorId: string;
+  type: string;
+  content: string;
+  visibility: string;
+  createdAt: Date;
+  sealedAt?: Date;
+}) {
+  const contentHash = priorityHash(opts.authorId, opts.content, opts.createdAt);
+  await prisma.contribution.upsert({
+    where: { id: opts.id },
+    update: {
+      visibility: opts.visibility,
+      content: opts.content,
+      contentHash,
+      sealedAt: opts.sealedAt ?? null,
+      revealedAt: null,
+    },
+    create: {
+      id: opts.id,
+      threadId: opts.threadId,
+      authorId: opts.authorId,
+      type: opts.type,
+      content: opts.content,
+      contentHash,
+      visibility: opts.visibility,
+      sealedAt: opts.sealedAt ?? null,
+      createdAt: opts.createdAt,
+    },
+  });
 }
 
 async function main() {
   console.log("Seeding Discovery Commons...");
 
-  // Create seed user (admin/Ping)
   const admin = await prisma.user.upsert({
     where: { email: "admin@discoverycommons.org" },
     update: {},
@@ -25,7 +61,7 @@ async function main() {
     },
   });
 
-  // Create a collaborator (Wei) to demonstrate shared visibility + collaborators.
+  // Collaborator (Wei) — demonstrates shared visibility + thread collaborators.
   const collaborator = await prisma.user.upsert({
     where: { email: "wei@discoverycommons.org" },
     update: {},
@@ -41,7 +77,7 @@ async function main() {
 
   console.log(`Created users: ${admin.id}, ${collaborator.id}`);
 
-  // Seed Thread 1: Soundscape Research — fully public
+  // ---- Thread 1: Soundscape — fully public ----
   const thread1 = await prisma.thread.upsert({
     where: { id: "seed-thread-soundscape" },
     update: { visibility: "public" },
@@ -58,27 +94,18 @@ async function main() {
     },
   });
 
-  const t1q = new Date("2026-06-15T10:00:00Z");
-  const t1qHash = generateHash(admin.id, "Initial question about soundscape reproducibility", t1q);
-  await prisma.contribution.upsert({
-    where: { id: "seed-c1-q1" },
-    update: { visibility: "public" },
-    create: {
-      id: "seed-c1-q1",
-      threadId: thread1.id,
-      authorId: admin.id,
-      type: "question",
-      content:
-        "When we extract species-level information from complex multi-species soundscapes, how does the acoustic complexity index (ACI) of the recording environment affect the reproducibility of our extraction results? Are simpler soundscapes more reproducible, or does complexity provide redundant information that actually improves reliability?",
-      contentHash: t1qHash,
-      visibility: "public",
-      createdAt: t1q,
-    },
+  await seedContribution({
+    id: "seed-c1-q1",
+    threadId: thread1.id,
+    authorId: admin.id,
+    type: "question",
+    visibility: "public",
+    createdAt: new Date("2026-06-15T10:00:00Z"),
+    content:
+      "When we extract species-level information from complex multi-species soundscapes, how does the acoustic complexity index (ACI) of the recording environment affect the reproducibility of our extraction results? Are simpler soundscapes more reproducible, or does complexity provide redundant information that actually improves reliability?",
   });
 
-  // Seed Thread 2: Brain Resolution — public thread, but demonstrates the full
-  // per-contribution visibility range: public question, SEALED hypothesis,
-  // SHARED interpretation (collaborators only), and a PRIVATE draft.
+  // ---- Thread 2: Brain resolution — public thread, full visibility range ----
   const thread2 = await prisma.thread.upsert({
     where: { id: "seed-thread-brain-dimensions" },
     update: { visibility: "public" },
@@ -95,7 +122,6 @@ async function main() {
     },
   });
 
-  // Wei collaborates on thread 2 (grants access to shared contributions).
   await prisma.threadCollaborator.upsert({
     where: {
       threadId_userId: { threadId: thread2.id, userId: collaborator.id },
@@ -109,83 +135,56 @@ async function main() {
     },
   });
 
-  const t2q = new Date("2026-06-15T10:30:00Z");
-  const t2qHash = generateHash(admin.id, "Brain temporal resolution question", t2q);
-  await prisma.contribution.upsert({
-    where: { id: "seed-c2-q1" },
-    update: { visibility: "public" },
-    create: {
-      id: "seed-c2-q1",
-      threadId: thread2.id,
-      authorId: admin.id,
-      type: "question",
-      content:
-        "If the universe has more dimensions than we perceive, does the human brain's temporal resolution (~40ms for conscious binding) represent a form of lossy compression? What would be the information-theoretic signature of such compression?",
-      contentHash: t2qHash,
-      visibility: "public",
-      createdAt: t2q,
-    },
+  await seedContribution({
+    id: "seed-c2-q1",
+    threadId: thread2.id,
+    authorId: admin.id,
+    type: "question",
+    visibility: "public",
+    createdAt: new Date("2026-06-15T10:30:00Z"),
+    content:
+      "If the universe has more dimensions than we perceive, does the human brain's temporal resolution (~40ms for conscious binding) represent a form of lossy compression? What would be the information-theoretic signature of such compression?",
   });
 
   // SEALED hypothesis — content hidden, hash + timestamp public (anti-scooping).
   const t2h = new Date("2026-06-15T11:00:00Z");
-  const t2hHash = generateHash(admin.id, "Brain compression hypothesis", t2h);
-  await prisma.contribution.upsert({
-    where: { id: "seed-c2-h1" },
-    update: { visibility: "sealed", sealedAt: t2h },
-    create: {
-      id: "seed-c2-h1",
-      threadId: thread2.id,
-      authorId: admin.id,
-      type: "hypothesis",
-      content:
-        "Hypothesis: The discrete nature of conscious temporal perception (the ~40ms window) is analogous to a sampling theorem constraint. If higher-dimensional information must be projected onto our 3+1 dimensional experience, the temporal axis acts as the primary compression dimension. Prediction: neural oscillation frequencies should show information-theoretic signatures consistent with rate-distortion optimal compression.",
-      contentHash: t2hHash,
-      visibility: "sealed",
-      sealedAt: t2h,
-      createdAt: t2h,
-    },
+  await seedContribution({
+    id: "seed-c2-h1",
+    threadId: thread2.id,
+    authorId: admin.id,
+    type: "hypothesis",
+    visibility: "sealed",
+    createdAt: t2h,
+    sealedAt: t2h,
+    content:
+      "Hypothesis: The discrete nature of conscious temporal perception (the ~40ms window) is analogous to a sampling theorem constraint. If higher-dimensional information must be projected onto our 3+1 dimensional experience, the temporal axis acts as the primary compression dimension. Prediction: neural oscillation frequencies should show information-theoretic signatures consistent with rate-distortion optimal compression.",
   });
 
   // SHARED interpretation — visible to thread collaborators (Wei) only.
-  const t2i = new Date("2026-06-15T11:15:00Z");
-  const t2iHash = generateHash(admin.id, "Shared interpretation draft", t2i);
-  await prisma.contribution.upsert({
-    where: { id: "seed-c2-i1" },
-    update: { visibility: "shared" },
-    create: {
-      id: "seed-c2-i1",
-      threadId: thread2.id,
-      authorId: admin.id,
-      type: "interpretation",
-      content:
-        "Working note for collaborators: if the sealed hypothesis holds, we should be able to test it against existing EEG datasets before going public. Wei — can you check whether the gamma-band data we discussed shows the predicted rate-distortion signature?",
-      contentHash: t2iHash,
-      visibility: "shared",
-      createdAt: t2i,
-    },
+  await seedContribution({
+    id: "seed-c2-i1",
+    threadId: thread2.id,
+    authorId: admin.id,
+    type: "interpretation",
+    visibility: "shared",
+    createdAt: new Date("2026-06-15T11:15:00Z"),
+    content:
+      "Working note for collaborators: if the sealed hypothesis holds, we should be able to test it against existing EEG datasets before going public. Wei — can you check whether the gamma-band data we discussed shows the predicted rate-distortion signature?",
   });
 
   // PRIVATE draft — only the author (Ping) can see this.
-  const t2p = new Date("2026-06-15T11:20:00Z");
-  const t2pHash = generateHash(admin.id, "Private draft note", t2p);
-  await prisma.contribution.upsert({
-    where: { id: "seed-c2-p1" },
-    update: { visibility: "private" },
-    create: {
-      id: "seed-c2-p1",
-      threadId: thread2.id,
-      authorId: admin.id,
-      type: "insight",
-      content:
-        "Private scratchpad: half-formed idea about connecting this to the holographic principle. Not ready to share — revisit after the EEG check.",
-      contentHash: t2pHash,
-      visibility: "private",
-      createdAt: t2p,
-    },
+  await seedContribution({
+    id: "seed-c2-p1",
+    threadId: thread2.id,
+    authorId: admin.id,
+    type: "insight",
+    visibility: "private",
+    createdAt: new Date("2026-06-15T11:20:00Z"),
+    content:
+      "Private scratchpad: half-formed idea about connecting this to the holographic principle. Not ready to share — revisit after the EEG check.",
   });
 
-  // Seed Thread 3: Complex System Emergence — fully public
+  // ---- Thread 3: Emergence — fully public ----
   const thread3 = await prisma.thread.upsert({
     where: { id: "seed-thread-emergence" },
     update: { visibility: "public" },
@@ -202,25 +201,18 @@ async function main() {
     },
   });
 
-  const t3q = new Date("2026-06-15T11:30:00Z");
-  const t3qHash = generateHash(admin.id, "Emergence information propagation question", t3q);
-  await prisma.contribution.upsert({
-    where: { id: "seed-c3-q1" },
-    update: { visibility: "public" },
-    create: {
-      id: "seed-c3-q1",
-      threadId: thread3.id,
-      authorId: admin.id,
-      type: "question",
-      content:
-        "When a complex system exhibits emergence — behavior not predictable from its parts — could this be because the system is propagating information through a higher-dimensional state space, and what we call 'emergence' is the low-dimensional shadow of that propagation? If so, can we use information geometry to characterize the dimensionality of the 'hidden' space?",
-      contentHash: t3qHash,
-      visibility: "public",
-      createdAt: t3q,
-    },
+  await seedContribution({
+    id: "seed-c3-q1",
+    threadId: thread3.id,
+    authorId: admin.id,
+    type: "question",
+    visibility: "public",
+    createdAt: new Date("2026-06-15T11:30:00Z"),
+    content:
+      "When a complex system exhibits emergence — behavior not predictable from its parts — could this be because the system is propagating information through a higher-dimensional state space, and what we call 'emergence' is the low-dimensional shadow of that propagation? If so, can we use information geometry to characterize the dimensionality of the 'hidden' space?",
   });
 
-  // Create version + legacy credit records for all seed contributions.
+  // Version + legacy credit records for all seed contributions.
   const contributions = await prisma.contribution.findMany({
     where: { id: { startsWith: "seed-" } },
   });
@@ -233,7 +225,7 @@ async function main() {
           versionNumber: 1,
         },
       },
-      update: {},
+      update: { content: c.content, contentHash: c.contentHash },
       create: {
         contributionId: c.id,
         versionNumber: 1,
@@ -258,7 +250,7 @@ async function main() {
 
   console.log("Seed complete!");
   console.log(`  2 users, 3 threads, ${contributions.length} contributions`);
-  console.log(`  Demonstrates: public / sealed / shared / private visibility`);
+  console.log(`  Demonstrates: public / sealed / shared / private + verifiable hashes`);
 }
 
 main()
