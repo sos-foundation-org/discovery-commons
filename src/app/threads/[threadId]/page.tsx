@@ -363,8 +363,13 @@ export default async function ThreadDetailPage({
                       </Badge>
                       <span className="text-sm text-muted-foreground">
                         by{" "}
-                        {contribution.author.displayName ||
-                          contribution.author.name}
+                        <Link
+                          href={`/profile/${contribution.authorId}`}
+                          className="hover:text-foreground hover:underline"
+                        >
+                          {contribution.author.displayName ||
+                            contribution.author.name}
+                        </Link>
                       </span>
                       <span className="text-xs text-muted-foreground">
                         {timeAgo(contribution.createdAt)}

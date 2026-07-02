@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import crypto from "crypto";
+import { generateCredits } from "../lib/credits";
 
 const prisma = new PrismaClient();
 
@@ -212,10 +213,16 @@ async function main() {
       "When a complex system exhibits emergence — behavior not predictable from its parts — could this be because the system is propagating information through a higher-dimensional state space, and what we call 'emergence' is the low-dimensional shadow of that propagation? If so, can we use information geometry to characterize the dimensionality of the 'hidden' space?",
   });
 
-  // Version + legacy credit records for all seed contributions.
+  // Version + credit records for all seed contributions.
   const contributions = await prisma.contribution.findMany({
     where: { id: { startsWith: "seed-" } },
   });
+  const seedIds = contributions.map((c) => c.id);
+
+  // Idempotent: clear prior seed credits so re-seeding doesn't duplicate them.
+  // (On fresh Postgres these match nothing; SQLite has no delete triggers.)
+  await prisma.creditV2.deleteMany({ where: { contributionId: { in: seedIds } } });
+  await prisma.credit.deleteMany({ where: { contributionId: { in: seedIds } } });
 
   for (const c of contributions) {
     await prisma.contributionVersion.upsert({
@@ -234,23 +241,28 @@ async function main() {
       },
     });
 
-    await prisma.credit
-      .create({
-        data: {
-          userId: c.authorId,
-          threadId: c.threadId,
-          contributionId: c.id,
-          creditType: c.type,
-          hash: c.contentHash,
-          timestamp: c.createdAt,
-        },
-      })
-      .catch(() => {});
+    // Legacy v1 credit (contribution-type keyed).
+    await prisma.credit.create({
+      data: {
+        userId: c.authorId,
+        threadId: c.threadId,
+        contributionId: c.id,
+        creditType: c.type,
+        hash: c.contentHash,
+        timestamp: c.createdAt,
+      },
+    });
+
+    // v2 credits — the 4-dimension prototype model (idea/data/analysis/validation).
+    await generateCredits(
+      { id: c.id, authorId: c.authorId, threadId: c.threadId, type: c.type },
+      prisma
+    );
   }
 
   console.log("Seed complete!");
   console.log(`  2 users, 3 threads, ${contributions.length} contributions`);
-  console.log(`  Demonstrates: public / sealed / shared / private + verifiable hashes`);
+  console.log(`  Demonstrates: public / sealed / shared / private + 4-dim credits`);
 }
 
 main()

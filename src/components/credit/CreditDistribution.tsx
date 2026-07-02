@@ -1,9 +1,10 @@
 import {
-  CREDIT_DIMENSIONS,
+  PROTOTYPE_CREDIT_DIMENSIONS,
   CREDIT_DIMENSION_CONFIG,
 } from "@/lib/types";
 
-// Horizontal bar visualization across all nine credit dimensions.
+// Horizontal bar visualization across the prototype's four credit dimensions
+// (idea / data / analysis / validation).
 export function CreditDistribution({
   byDimension,
   showEmpty = true,
@@ -13,13 +14,13 @@ export function CreditDistribution({
 }) {
   const max = Math.max(1, ...Object.values(byDimension));
   const dimensions = showEmpty
-    ? CREDIT_DIMENSIONS
-    : CREDIT_DIMENSIONS.filter((d) => (byDimension[d] || 0) > 0);
+    ? PROTOTYPE_CREDIT_DIMENSIONS
+    : PROTOTYPE_CREDIT_DIMENSIONS.filter((d) => (byDimension[d] || 0) > 0);
 
   if (dimensions.length === 0) {
     return (
       <p className="text-sm text-muted-foreground">
-        No credits recorded yet across the nine dimensions.
+        No credits recorded yet.
       </p>
     );
   }

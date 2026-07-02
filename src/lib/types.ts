@@ -240,6 +240,15 @@ export const CREDIT_DIMENSIONS = [
 ] as const;
 export type CreditDimension = (typeof CREDIT_DIMENSIONS)[number];
 
+// The prototype tracks a 4-dimension subset (brief §3.1 B3). The full 9-dim
+// config above is retained for forward-compatibility with the production system.
+export const PROTOTYPE_CREDIT_DIMENSIONS: CreditDimension[] = [
+  "idea",
+  "data",
+  "analysis",
+  "validation",
+];
+
 export const CREDIT_DIMENSION_CONFIG: Record<
   CreditDimension,
   { label: string; icon: string; color: string; description: string }
