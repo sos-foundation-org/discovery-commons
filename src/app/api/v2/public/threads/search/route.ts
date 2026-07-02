@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
 
   const threads = await prisma.thread.findMany({
     where: {
-      visibility: "L3",
+      visibility: "public",
       isArchived: false,
       ...(q
         ? {

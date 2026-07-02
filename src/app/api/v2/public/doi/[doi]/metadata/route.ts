@@ -32,7 +32,7 @@ export async function GET(
     },
   });
 
-  if (!thread || thread.visibility !== "L3") {
+  if (!thread || thread.visibility !== "public") {
     return NextResponse.json(
       { error: "No public research object for this DOI" },
       { status: 404, headers: PUBLIC_CORS_HEADERS }

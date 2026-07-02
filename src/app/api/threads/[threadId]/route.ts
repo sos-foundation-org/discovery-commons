@@ -47,10 +47,10 @@ export async function GET(
     }
 
     // Visibility check
-    if (thread.visibility === "L0" && thread.creatorId !== session?.user?.id) {
+    if (thread.visibility === "private" && thread.creatorId !== session?.user?.id) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
-    if (thread.visibility === "L1") {
+    if (thread.visibility === "shared") {
       if (!session?.user?.id) {
         return NextResponse.json({ error: "Not found" }, { status: 404 });
       }
@@ -66,18 +66,14 @@ export async function GET(
         }
       }
     }
-    if (thread.visibility === "L2" && !session?.user?.id) {
-      return NextResponse.json({ error: "Sign in required" }, { status: 401 });
-    }
 
     // Filter contributions by visibility for non-owner
     const filteredContributions = thread.contributions.filter((c) => {
       if (c.authorId === session?.user?.id) return true;
-      if (c.visibility === "L3") return true;
-      if (c.visibility === "L2" && session?.user?.id) return true;
-      if (c.visibility === "L1" && session?.user?.id) return true;
-      if (c.visibility === "L0") return false;
-      return false;
+      if (c.visibility === "public") return true;
+      if (c.visibility === "sealed") return true; // hash + timestamp visible; content masked client-side
+      if (c.visibility === "shared" && session?.user?.id) return true;
+      return false; // private
     });
 
     return NextResponse.json({

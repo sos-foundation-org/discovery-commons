@@ -11,7 +11,7 @@ export default async function HomePage() {
 
   const publicThreads = await prisma.thread
     .findMany({
-      where: { visibility: { in: ["L3", "L2"] }, isArchived: false },
+      where: { visibility: "public", isArchived: false },
       include: {
         creator: { select: { displayName: true, name: true } },
         _count: { select: { contributions: true } },
@@ -216,14 +216,15 @@ export default async function HomePage() {
             <Card>
               <CardHeader>
                 <div className="text-2xl font-mono text-primary mb-2">
-                  L0 &rarr; L3
+                  Private &rarr; Public
                 </div>
                 <CardTitle className="text-lg">Graduated Visibility</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground">
-                  Start private, share with your trusted circle, open to
-                  community, or go fully public. You control who sees what, when.
+                  Start private, share with your trusted circle, or go fully
+                  public — and seal ideas you&rsquo;re not ready to reveal. You
+                  control who sees what, when.
                 </p>
               </CardContent>
             </Card>

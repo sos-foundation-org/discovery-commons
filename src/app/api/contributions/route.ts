@@ -30,9 +30,9 @@ export async function POST(request: NextRequest) {
 
     const { threadId, type, content, visibility, parentId, sealed, circleUserIds } = parsed.data;
 
-    // TODO: When visibility is L1, persist circleUserIds to restrict which circle
-    // members can see this contribution (requires a join table or JSON metadata field).
-    // For now the L1 check in the thread route uses the creator's full trusted circle.
+    // When visibility is "shared", circleUserIds can restrict which collaborators
+    // see this contribution. Persisted via ContributionShare in the seal/collab pass;
+    // for now the shared check in the thread route uses the creator's full trusted circle.
     void circleUserIds;
 
     // Verify thread exists and user has access
@@ -46,6 +46,11 @@ export async function POST(request: NextRequest) {
     const now = new Date();
     const contentHash = generatePriorityHash(session.user.id, content, now);
 
+    // Sealing overrides the chosen visibility: content is hidden, hash is public.
+    const effectiveVisibility = sealed
+      ? "sealed"
+      : visibility || thread.visibility;
+
     const contribution = await prisma.$transaction(async (tx) => {
       // Create contribution
       const contrib = await tx.contribution.create({
@@ -55,7 +60,8 @@ export async function POST(request: NextRequest) {
           type,
           content,
           contentHash,
-          visibility: visibility || thread.visibility,
+          visibility: effectiveVisibility,
+          sealedAt: sealed ? now : null,
           parentId,
           createdAt: now,
         },

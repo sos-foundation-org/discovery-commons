@@ -24,15 +24,15 @@ export async function GET(request: NextRequest) {
 
     // Visibility filtering based on auth
     if (!session) {
-      where.visibility = "L3";
+      where.visibility = "public";
     } else {
-      // Show L3, L2 (community), user's own threads, and L1 threads where user is in trusted circle
+      // Show public threads, the user's own threads, and shared threads where
+      // the user is in the creator's trusted circle (collaborator).
       where.OR = [
-        { visibility: "L3" },
-        { visibility: "L2" },
+        { visibility: "public" },
         { creatorId: session.user.id },
         {
-          visibility: "L1",
+          visibility: "shared",
           creator: {
             trustedByMe: {
               some: { trustedUserId: session.user.id },

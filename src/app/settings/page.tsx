@@ -90,7 +90,7 @@ export default function SettingsPage() {
     <div className="container mx-auto max-w-3xl px-4 py-8">
       <h1 className="text-3xl font-bold mb-2">Settings</h1>
       <p className="text-muted-foreground mb-8">
-        Manage your trusted circle for L1 (Inner Circle) visibility.
+        Manage your trusted circle for Shared visibility.
       </p>
 
       {/* Add member */}
@@ -152,8 +152,8 @@ export default function SettingsPage() {
         <CardContent>
           {members.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              Your trusted circle is empty. Add collaborators above to share L1
-              visibility content with them.
+              Your trusted circle is empty. Add collaborators above to share
+              Shared-visibility content with them.
             </p>
           ) : (
             <div className="space-y-3">

@@ -28,18 +28,17 @@ export default async function ThreadsPage({
 
   if (session?.user?.id) {
     where.OR = [
-      { visibility: "L3" },
-      { visibility: "L2" },
+      { visibility: "public" },
       { creatorId: session.user.id },
       {
-        visibility: "L1",
+        visibility: "shared",
         creator: {
           trustedByMe: { some: { trustedUserId: session.user.id } },
         },
       },
     ];
   } else {
-    where.visibility = "L3";
+    where.visibility = "public";
   }
 
   const andConditions: any[] = [];
