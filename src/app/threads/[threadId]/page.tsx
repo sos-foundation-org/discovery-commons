@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
@@ -436,9 +437,13 @@ export default async function ThreadDetailPage({
                     </>
                   )}
                   <div className="flex items-center gap-2 text-xs text-muted-foreground font-mono">
-                    <span title={contribution.contentHash}>
+                    <Link
+                      href={`/verify/${contribution.contentHash}`}
+                      title={`Verify ${contribution.contentHash}`}
+                      className="hover:text-foreground hover:underline"
+                    >
                       SHA-256: {truncateHash(contribution.contentHash)}
-                    </span>
+                    </Link>
                     <span>|</span>
                     <span>{formatDateTime(contribution.createdAt)}</span>
                   </div>
