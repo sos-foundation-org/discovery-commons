@@ -27,10 +27,15 @@ export async function GET(request: NextRequest) {
       where.visibility = "public";
     } else {
       // Show public threads, the user's own threads, and shared threads where
-      // the user is in the creator's trusted circle (collaborator).
+      // the user is a thread collaborator (or, for back-compat, in the
+      // creator's trusted circle).
       where.OR = [
         { visibility: "public" },
         { creatorId: session.user.id },
+        {
+          visibility: "shared",
+          collaborators: { some: { userId: session.user.id } },
+        },
         {
           visibility: "shared",
           creator: {

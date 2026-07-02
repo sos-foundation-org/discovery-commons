@@ -32,6 +32,10 @@ export default async function ThreadsPage({
       { creatorId: session.user.id },
       {
         visibility: "shared",
+        collaborators: { some: { userId: session.user.id } },
+      },
+      {
+        visibility: "shared",
         creator: {
           trustedByMe: { some: { trustedUserId: session.user.id } },
         },

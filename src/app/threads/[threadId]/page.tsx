@@ -15,6 +15,7 @@ import { formatDateTime, timeAgo } from "@/lib/utils";
 import { truncateHash } from "@/lib/hash";
 import { ContributionForm } from "@/components/contribution/contribution-form";
 import { VisibilityUpgrade } from "@/components/thread/visibility-upgrade";
+import { CollaboratorManager } from "@/components/thread/collaborator-manager";
 import { CommentSection } from "@/components/contribution/comment-section";
 import { RevealButton } from "@/components/contribution/reveal-button";
 import { SealButton } from "@/components/contribution/seal-button";
@@ -271,6 +272,8 @@ export default async function ThreadDetailPage({
             currentLevel={thread.visibility as VisibilityLevel}
           />
         )}
+
+        {isOwner && <CollaboratorManager threadId={thread.id} />}
 
         {/* Stage advance for owner */}
         {isOwner && (

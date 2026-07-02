@@ -55,13 +55,23 @@ export async function GET(
         return NextResponse.json({ error: "Not found" }, { status: 404 });
       }
       if (thread.creatorId !== session.user.id) {
-        const inCircle = await prisma.trustedCircle.findFirst({
-          where: {
-            ownerId: thread.creatorId,
-            trustedUserId: session.user.id,
-          },
-        });
-        if (!inCircle) {
+        const [collaborator, inCircle] = await Promise.all([
+          prisma.threadCollaborator.findUnique({
+            where: {
+              threadId_userId: {
+                threadId: thread.id,
+                userId: session.user.id,
+              },
+            },
+          }),
+          prisma.trustedCircle.findFirst({
+            where: {
+              ownerId: thread.creatorId,
+              trustedUserId: session.user.id,
+            },
+          }),
+        ]);
+        if (!collaborator && !inCircle) {
           return NextResponse.json({ error: "Not found" }, { status: 404 });
         }
       }
