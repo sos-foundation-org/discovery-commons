@@ -21,6 +21,8 @@ import { VisibilityUpgrade } from "@/components/thread/visibility-upgrade";
 import { CollaboratorManager } from "@/components/thread/collaborator-manager";
 import { DisciplineBadge } from "@/components/thread/discipline-badge";
 import { AvatarBadge } from "@/components/ui/avatar-badge";
+import { ContributionContent } from "@/components/contribution/contribution-content";
+import { TypeIcon } from "@/components/contribution/type-icon";
 import { CommentSection } from "@/components/contribution/comment-section";
 import { RevealButton } from "@/components/contribution/reveal-button";
 import { SealButton } from "@/components/contribution/seal-button";
@@ -372,7 +374,11 @@ export default async function ThreadDetailPage({
                               &#x1F512;
                             </span>
                           )}
-                          <Badge variant="outline" className={typeConfig.color}>
+                          <Badge
+                            variant="outline"
+                            className={`gap-1 ${typeConfig.color}`}
+                          >
+                            <TypeIcon type={contribution.type} className="h-3.5 w-3.5" />
                             {typeConfig.label}
                           </Badge>
                           {contribution.type === "methodology" &&
@@ -451,9 +457,10 @@ export default async function ThreadDetailPage({
                     </div>
                   ) : (
                     <>
-                      <div className="prose prose-neutral dark:prose-invert max-w-none mb-3 whitespace-pre-wrap text-[15px] leading-relaxed">
-                        {contribution.content}
-                      </div>
+                      <ContributionContent
+                        content={contribution.content}
+                        className="mb-3"
+                      />
                       {isSealed && isContribAuthor && (
                         <div className="mb-3 p-2 rounded bg-amber-50 dark:bg-amber-950 flex items-center justify-between gap-2">
                           <span className="text-xs text-amber-700 dark:text-amber-300">

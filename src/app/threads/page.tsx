@@ -2,18 +2,11 @@ import Link from "next/link";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { timeAgo } from "@/lib/utils";
-import {
-  VISIBILITY_LABELS,
-  STAGE_ORDER,
-  type VisibilityLevel,
-} from "@/lib/types";
+import { VISIBILITY_LABELS, type VisibilityLevel } from "@/lib/types";
 import { ThreadFilters } from "@/components/thread/thread-filters";
-import { DisciplineBadge } from "@/components/thread/discipline-badge";
-import { AvatarBadge } from "@/components/ui/avatar-badge";
-import { DISCIPLINE_CONFIG, type Discipline } from "@/lib/types";
+import { ThreadRow } from "@/components/thread/thread-row";
 
 export default async function ThreadsPage({
   searchParams,
@@ -187,74 +180,7 @@ export default async function ThreadsPage({
             </CardContent>
           </Card>
         ) : (
-          threads.map((thread) => {
-            const disc = thread.discipline
-              ? DISCIPLINE_CONFIG[thread.discipline as Discipline]
-              : null;
-            const author =
-              thread.creator.displayName || thread.creator.name || "Anonymous";
-            return (
-              <Link
-                key={thread.id}
-                href={`/threads/${thread.id}`}
-                className="group block"
-              >
-                <article className="relative overflow-hidden rounded-xl border bg-card py-4 pl-5 pr-5 transition-all hover:border-primary/40 hover:shadow-sm">
-                  <span
-                    className={`absolute inset-y-0 left-0 w-1 ${disc?.dot ?? "bg-border"}`}
-                    aria-hidden
-                  />
-                  <div className="flex items-start gap-3">
-                    <AvatarBadge
-                      name={author}
-                      seed={thread.creator.id}
-                      image={thread.creator.image}
-                      size="md"
-                      className="mt-0.5 shrink-0"
-                    />
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-start justify-between gap-3">
-                        <h2 className="text-lg font-semibold leading-snug tracking-tight group-hover:text-primary transition-colors">
-                          {thread.title}
-                        </h2>
-                        <DisciplineBadge
-                          discipline={thread.discipline}
-                          className="hidden shrink-0 sm:inline-flex"
-                        />
-                      </div>
-                      <p className="mt-1 line-clamp-2 text-[15px] leading-relaxed text-muted-foreground">
-                        {thread.description}
-                      </p>
-                      <div className="mt-2.5 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-muted-foreground">
-                        <span className="font-medium text-foreground/80">
-                          {author}
-                        </span>
-                        <span aria-hidden>·</span>
-                        <span className="capitalize">{thread.currentStage}</span>
-                        <span aria-hidden>·</span>
-                        <span>
-                          {thread._count.contributions} contribution
-                          {thread._count.contributions !== 1 ? "s" : ""}
-                        </span>
-                        <span aria-hidden>·</span>
-                        <span>{timeAgo(thread.updatedAt)}</span>
-                        {(thread.domainTags as string[])
-                          .slice(0, 3)
-                          .map((tag) => (
-                            <span
-                              key={tag}
-                              className="rounded bg-muted px-1.5 py-0.5"
-                            >
-                              {tag}
-                            </span>
-                          ))}
-                      </div>
-                    </div>
-                  </div>
-                </article>
-              </Link>
-            );
-          })
+          threads.map((thread) => <ThreadRow key={thread.id} thread={thread} />)
         )}
       </div>
     </div>

@@ -4,8 +4,7 @@ import { prisma } from "@/lib/db";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { timeAgo } from "@/lib/utils";
-import { DisciplineBadge } from "@/components/thread/discipline-badge";
+import { ThreadRow } from "@/components/thread/thread-row";
 
 export default async function HomePage() {
   const session = await getSession();
@@ -14,7 +13,9 @@ export default async function HomePage() {
     .findMany({
       where: { visibility: "public", isArchived: false },
       include: {
-        creator: { select: { displayName: true, name: true } },
+        creator: {
+          select: { id: true, displayName: true, name: true, image: true },
+        },
         _count: { select: { contributions: true } },
       },
       orderBy: { updatedAt: "desc" },
@@ -299,52 +300,9 @@ export default async function HomePage() {
             <p className="text-center text-muted-foreground mb-8">
               See what the community is exploring
             </p>
-            <div className="space-y-4">
+            <div className="space-y-3">
               {publicThreads.map((thread) => (
-                <Link key={thread.id} href={`/threads/${thread.id}`}>
-                  <Card className="hover:shadow-md transition-shadow cursor-pointer">
-                    <CardHeader className="pb-2">
-                      <div className="flex items-start justify-between gap-3">
-                        <CardTitle className="text-lg">
-                          {thread.title}
-                        </CardTitle>
-                        <div className="flex gap-2 flex-shrink-0 flex-wrap justify-end">
-                          <DisciplineBadge discipline={thread.discipline} />
-                          <Badge variant="secondary">
-                            {thread.currentStage}
-                          </Badge>
-                        </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-sm text-muted-foreground line-clamp-2 mb-2">
-                        {thread.description}
-                      </p>
-                      <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                        <span>
-                          by{" "}
-                          {thread.creator.displayName || thread.creator.name}
-                        </span>
-                        <span>
-                          {thread._count.contributions} contribution
-                          {thread._count.contributions !== 1 ? "s" : ""}
-                        </span>
-                        <span>{timeAgo(thread.updatedAt)}</span>
-                        <div className="flex gap-1">
-                          {(thread.domainTags as string[]).map((tag) => (
-                            <Badge
-                              key={tag}
-                              variant="outline"
-                              className="text-xs"
-                            >
-                              {tag}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
+                <ThreadRow key={thread.id} thread={thread} />
               ))}
             </div>
             <div className="text-center mt-6">

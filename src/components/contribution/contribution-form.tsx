@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { TypeIcon } from "@/components/contribution/type-icon";
 import {
   CONTRIBUTION_TYPE_CONFIG,
   PRIMARY_CONTRIBUTION_TYPES,
@@ -156,8 +157,10 @@ export function ContributionForm({
                     type="button"
                     variant={type === t ? "default" : "outline"}
                     size="sm"
+                    className="gap-1.5"
                     onClick={() => setType(t)}
                   >
+                    <TypeIcon type={t} className="h-4 w-4" />
                     {config.label}
                   </Button>
                 );
