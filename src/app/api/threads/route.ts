@@ -49,8 +49,16 @@ export async function GET(request: NextRequest) {
 
     if (visibility) where.visibility = visibility;
     if (stage) where.currentStage = stage;
-    // domainTags is stored as Json; filter with string_contains for SQLite compat
-    if (domain) where.domainTags = { string_contains: domain };
+    // domainTags is a JSON array. Postgres supports proper array containment;
+    // SQLite has no JSON-array query, so fall back to a substring match on the
+    // serialized JSON. (The datasource provider is swapped at build time — see
+    // scripts/prisma-provider.mjs.)
+    if (domain) {
+      where.domainTags =
+        process.env.DATABASE_PROVIDER === "postgresql"
+          ? { array_contains: domain }
+          : { string_contains: domain };
+    }
     if (q) {
       where.OR = [
         { title: { contains: q } },
