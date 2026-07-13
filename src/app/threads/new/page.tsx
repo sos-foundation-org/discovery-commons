@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { VISIBILITY_LABELS, type VisibilityLevel } from "@/lib/types";
+import { THREAD_VISIBILITY, VISIBILITY_LABELS, type VisibilityLevel } from "@/lib/types";
 
 const DOMAIN_SUGGESTIONS = [
   "ecology",
@@ -28,7 +28,7 @@ export default function NewThreadPage() {
   const router = useRouter();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [visibility, setVisibility] = useState<VisibilityLevel>("L0");
+  const [visibility, setVisibility] = useState<VisibilityLevel>("private");
   const [domainTags, setDomainTags] = useState<string[]>([]);
   const [customTag, setCustomTag] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -161,7 +161,7 @@ export default function NewThreadPage() {
                 Who can see this?
               </label>
               <div className="flex gap-2">
-                {(["L0", "L1", "L2", "L3"] as VisibilityLevel[]).map((v) => (
+                {THREAD_VISIBILITY.map((v) => (
                   <Button
                     key={v}
                     type="button"

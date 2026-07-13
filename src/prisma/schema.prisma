@@ -80,6 +80,8 @@ model User {
   trustedByOthers     TrustedCircle[]      @relation("trusted")
   notifications       Notification[]
   visibilityChanges   VisibilityLog[]
+  threadCollaborations ThreadCollaborator[]
+  contributionShares  ContributionShare[]
 
   @@map("users")
 }
@@ -89,7 +91,7 @@ model Thread {
   creatorId    String   @map("creator_id")
   title        String
   description  String
-  visibility   String   @default("L0")
+  visibility   String   @default("private")
   currentStage String   @default("question") @map("current_stage")
   domainTags   Json     @default("[]") @map("domain_tags")
   createdAt    DateTime @default(now()) @map("created_at")
@@ -103,6 +105,7 @@ model Thread {
   contributions Contribution[]
   credits       Credit[]
   creditsV2     CreditV2[]
+  collaborators ThreadCollaborator[]
   researchObject ResearchObject?
   replicationsOf Replication[]  @relation("OriginalThread")
   replicatedIn   Replication[]  @relation("ReplicationThread")
@@ -119,7 +122,11 @@ model Contribution {
   type        String
   content     String
   contentHash String   @map("content_hash")
-  visibility  String   @default("L0")
+  visibility  String   @default("private")
+  // Seal lifecycle (Web Prototype §3A): visibility="sealed" hides content while
+  // exposing contentHash + serverTimestamp. sealedAt/revealedAt are the audit trail.
+  sealedAt    DateTime? @map("sealed_at")
+  revealedAt  DateTime? @map("revealed_at")
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
   parentId    String?  @map("parent_id")
@@ -132,11 +139,12 @@ model Contribution {
   parent   Contribution? @relation("ContributionTree", fields: [parentId], references: [id])
   children Contribution[] @relation("ContributionTree")
 
-  versions  ContributionVersion[]
-  comments  Comment[]
-  credits   Credit[]
-  creditsV2 CreditV2[]
-  sealedReg SealedRegistration?
+  versions   ContributionVersion[]
+  comments   Comment[]
+  credits    Credit[]
+  creditsV2  CreditV2[]
+  sealedReg  SealedRegistration?
+  sharedWith ContributionShare[]
 
   @@index([threadId])
   @@index([authorId])
@@ -228,6 +236,42 @@ model TrustedCircle {
 
   @@unique([ownerId, trustedUserId])
   @@map("trusted_circles")
+}
+
+// Thread-scoped collaborators (Web Prototype §3A.4). Distinct from the
+// user-level TrustedCircle: membership is per-thread and grants access to
+// "shared" threads and their shared contributions.
+model ThreadCollaborator {
+  id       String   @id @default(uuid())
+  threadId String   @map("thread_id")
+  userId   String   @map("user_id")
+  role     String   @default("viewer") // viewer | contributor | admin
+  addedAt  DateTime @default(now()) @map("added_at")
+  addedBy  String   @map("added_by") // userId of inviter (audit field, no FK)
+
+  thread Thread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@unique([threadId, userId])
+  @@index([userId])
+  @@map("thread_collaborators")
+}
+
+// Per-contribution extra viewers (Web Prototype §3A.4). Lets a "shared"
+// contribution be revealed to specific users beyond thread collaborators.
+model ContributionShare {
+  id             String   @id @default(uuid())
+  contributionId String   @map("contribution_id")
+  userId         String   @map("user_id")
+  sharedAt       DateTime @default(now()) @map("shared_at")
+  sharedBy       String   @map("shared_by") // userId of sharer (audit field, no FK)
+
+  contribution Contribution @relation(fields: [contributionId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id])
+
+  @@unique([contributionId, userId])
+  @@index([userId])
+  @@map("contribution_shares")
 }
 
 model Notification {

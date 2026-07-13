@@ -11,6 +11,7 @@ import {
   CONTRIBUTION_TYPE_CONFIG,
   PRIMARY_CONTRIBUTION_TYPES,
   CONTRIBUTION_TYPES,
+  THREAD_VISIBILITY,
   VISIBILITY_LABELS,
   type ContributionType,
   type VisibilityLevel,
@@ -95,7 +96,7 @@ export function ContributionForm({
           content,
           visibility,
           sealed,
-          ...(visibility === "L1" && selectedCircleUserIds.length > 0
+          ...(visibility === "shared" && selectedCircleUserIds.length > 0
             ? { circleUserIds: selectedCircleUserIds }
             : {}),
         }),
@@ -203,14 +204,14 @@ export function ContributionForm({
           {/* Visibility */}
           <div className="flex items-center gap-2">
             <span className="text-sm">Visibility:</span>
-            {(["L0", "L1", "L2", "L3"] as VisibilityLevel[]).map((v) => (
+            {THREAD_VISIBILITY.map((v) => (
               <Badge
                 key={v}
                 variant={visibility === v ? "default" : "outline"}
                 className="cursor-pointer"
                 onClick={() => {
                   setVisibility(v);
-                  if (v !== "L1") setSelectedCircleUserIds([]);
+                  if (v !== "shared") setSelectedCircleUserIds([]);
                 }}
               >
                 {VISIBILITY_LABELS[v]}
@@ -218,8 +219,8 @@ export function ContributionForm({
             ))}
           </div>
 
-          {/* Circle member selection for L1 */}
-          {visibility === "L1" && (
+          {/* Circle member selection for shared visibility */}
+          {visibility === "shared" && (
             <div className="rounded-lg border p-3 space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">

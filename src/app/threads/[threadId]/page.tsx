@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
@@ -15,14 +16,17 @@ import { formatDateTime, timeAgo } from "@/lib/utils";
 import { truncateHash } from "@/lib/hash";
 import { ContributionForm } from "@/components/contribution/contribution-form";
 import { VisibilityUpgrade } from "@/components/thread/visibility-upgrade";
+import { CollaboratorManager } from "@/components/thread/collaborator-manager";
 import { CommentSection } from "@/components/contribution/comment-section";
-import { UnsealButton } from "@/components/contribution/unseal-button";
+import { RevealButton } from "@/components/contribution/reveal-button";
+import { SealButton } from "@/components/contribution/seal-button";
 import { StageAdvance } from "@/components/thread/stage-advance";
 import { VerificationBadge } from "@/components/thread/VerificationBadge";
 import { CreditDistribution } from "@/components/credit/CreditDistribution";
 import { AIReviewSection } from "@/components/ai/AIReviewSection";
 import { ReplicationSection } from "@/components/replication/ReplicationSection";
 import { summarizeCredits } from "@/lib/credits";
+import { evaluateContributionAccess } from "@/lib/access-control";
 
 const STAGE_COLORS: Record<string, string> = {
   question: "border-l-blue-500",
@@ -68,9 +72,11 @@ export default async function ThreadDetailPage({
             sealedReg: {
               select: { id: true, registeredAt: true, status: true },
             },
+            sharedWith: { select: { userId: true } },
             _count: { select: { comments: true } },
           },
         },
+        collaborators: { select: { userId: true } },
         _count: { select: { contributions: true } },
       },
     })
@@ -78,15 +84,19 @@ export default async function ThreadDetailPage({
 
   if (!thread) notFound();
 
-  // Visibility checks
-  if (thread.visibility === "L0" && thread.creatorId !== session?.user?.id) {
+  const userId = session?.user?.id ?? null;
+  const collaboratorIds = thread.collaborators.map((c) => c.userId);
+  const isOwner = thread.creatorId === userId;
+  const isCollaborator = userId !== null && collaboratorIds.includes(userId);
+
+  // Thread-level visibility gate.
+  if (thread.visibility === "private" && !isOwner && !isCollaborator) {
     notFound();
   }
-  if (thread.visibility === "L2" && !session?.user?.id) {
-    redirect("/auth/signin");
+  if (thread.visibility === "shared" && !isOwner && !isCollaborator) {
+    if (!userId) redirect("/auth/signin");
+    notFound();
   }
-
-  const isOwner = thread.creatorId === session?.user?.id;
 
   // Thread-level nine-dimension credit distribution.
   const threadCredits = await prisma.creditV2.findMany({
@@ -96,13 +106,27 @@ export default async function ThreadDetailPage({
   const creditSummary = summarizeCredits(threadCredits);
 
   // Filter contributions by visibility
-  const contributions = thread.contributions.filter((c) => {
-    if (c.authorId === session?.user?.id) return true;
-    if (c.visibility === "L3") return true;
-    if (c.visibility === "L2" && session?.user?.id) return true;
-    if (c.visibility === "L1" && session?.user?.id) return true;
-    return false;
-  });
+  // Resolve per-contribution access via the canonical helper. canView decides
+  // whether the card is shown at all; canViewContent decides whether the body
+  // is revealed or masked (sealed → hash only for non-authors).
+  const visibleContributions = thread.contributions
+    .map((c) => ({
+      c,
+      access: evaluateContributionAccess(
+        {
+          authorId: c.authorId,
+          visibility: c.visibility,
+          sharedWith: c.sharedWith.map((s) => s.userId),
+          thread: {
+            creatorId: thread.creatorId,
+            visibility: thread.visibility,
+            collaboratorIds,
+          },
+        },
+        userId
+      ),
+    }))
+    .filter((x) => x.access.canView);
 
   // Stage progress (level-based — data and simulation are parallel at level 2)
   const currentLevel = STAGE_LEVEL[thread.currentStage] ?? 0;
@@ -243,12 +267,14 @@ export default async function ThreadDetailPage({
         </div>
 
         {/* Visibility upgrade for owner */}
-        {isOwner && thread.visibility !== "L3" && (
+        {isOwner && thread.visibility !== "public" && (
           <VisibilityUpgrade
             threadId={thread.id}
             currentLevel={thread.visibility as VisibilityLevel}
           />
         )}
+
+        {isOwner && <CollaboratorManager threadId={thread.id} />}
 
         {/* Stage advance for owner */}
         {isOwner && (
@@ -289,23 +315,24 @@ export default async function ThreadDetailPage({
       {/* Contributions */}
       <div className="space-y-4 mb-8">
         <h2 className="text-xl font-semibold">
-          Contributions ({contributions.length})
+          Contributions ({visibleContributions.length})
         </h2>
 
-        {contributions.length === 0 ? (
+        {visibleContributions.length === 0 ? (
           <Card>
             <CardContent className="py-8 text-center text-muted-foreground">
               No contributions yet. Be the first to contribute!
             </CardContent>
           </Card>
         ) : (
-          contributions.map((contribution) => {
+          visibleContributions.map(({ c: contribution, access }) => {
             const typeConfig =
               CONTRIBUTION_TYPE_CONFIG[
                 contribution.type as ContributionType
               ] || CONTRIBUTION_TYPE_CONFIG.data;
 
             const isSealed =
+              contribution.visibility === "sealed" ||
               contribution.sealedReg?.status === "sealed";
             const isContribAuthor =
               contribution.authorId === session?.user?.id;
@@ -336,23 +363,36 @@ export default async function ThreadDetailPage({
                       </Badge>
                       <span className="text-sm text-muted-foreground">
                         by{" "}
-                        {contribution.author.displayName ||
-                          contribution.author.name}
+                        <Link
+                          href={`/profile/${contribution.authorId}`}
+                          className="hover:text-foreground hover:underline"
+                        >
+                          {contribution.author.displayName ||
+                            contribution.author.name}
+                        </Link>
                       </span>
                       <span className="text-xs text-muted-foreground">
                         {timeAgo(contribution.createdAt)}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
-                      {contribution.sealedReg && (
-                        <Badge
-                          variant={isSealed ? "secondary" : "default"}
-                          className="text-xs"
-                        >
-                          {isSealed
-                            ? `Sealed ${timeAgo(contribution.sealedReg.registeredAt)}`
-                            : "Revealed"}
+                      {isSealed ? (
+                        <Badge variant="secondary" className="text-xs">
+                          Sealed
+                          {contribution.sealedAt
+                            ? ` ${timeAgo(contribution.sealedAt)}`
+                            : contribution.sealedReg
+                              ? ` ${timeAgo(contribution.sealedReg.registeredAt)}`
+                              : ""}
                         </Badge>
+                      ) : (
+                        contribution.visibility !== "public" && (
+                          <Badge variant="outline" className="text-xs">
+                            {VISIBILITY_LABELS[
+                              contribution.visibility as keyof typeof VISIBILITY_LABELS
+                            ] ?? contribution.visibility}
+                          </Badge>
+                        )
                       )}
                       {contribution._count.comments > 0 && (
                         <span className="text-xs text-muted-foreground">
@@ -364,7 +404,7 @@ export default async function ThreadDetailPage({
                   </div>
                 </CardHeader>
                 <CardContent>
-                  {isSealed && !isContribAuthor ? (
+                  {isSealed && !access.canViewContent ? (
                     <div className="p-4 rounded-md bg-muted/50 border border-dashed border-muted-foreground/30 text-center">
                       <p className="text-sm text-muted-foreground mb-1">
                         This contribution is sealed. Only the hash is visible
@@ -380,20 +420,35 @@ export default async function ThreadDetailPage({
                         {contribution.content}
                       </div>
                       {isSealed && isContribAuthor && (
-                        <div className="mb-3 p-2 rounded bg-amber-50 dark:bg-amber-950 flex items-center justify-between">
+                        <div className="mb-3 p-2 rounded bg-amber-50 dark:bg-amber-950 flex items-center justify-between gap-2">
                           <span className="text-xs text-amber-700 dark:text-amber-300">
                             This contribution is sealed. Others can only see the
-                            hash.
+                            hash{contribution.revealedAt ? "" : " until you reveal it"}.
                           </span>
-                          <UnsealButton contributionId={contribution.id} />
+                          <RevealButton contributionId={contribution.id} />
                         </div>
                       )}
+                      {!isSealed &&
+                        isContribAuthor &&
+                        contribution.visibility !== "public" && (
+                          <div className="mb-3 p-2 rounded bg-muted/50 flex items-center justify-between gap-2">
+                            <span className="text-xs text-muted-foreground">
+                              Not ready to share? Seal this to lock the content
+                              while proving priority with its hash.
+                            </span>
+                            <SealButton contributionId={contribution.id} />
+                          </div>
+                        )}
                     </>
                   )}
                   <div className="flex items-center gap-2 text-xs text-muted-foreground font-mono">
-                    <span title={contribution.contentHash}>
+                    <Link
+                      href={`/verify/${contribution.contentHash}`}
+                      title={`Verify ${contribution.contentHash}`}
+                      className="hover:text-foreground hover:underline"
+                    >
                       SHA-256: {truncateHash(contribution.contentHash)}
-                    </span>
+                    </Link>
                     <span>|</span>
                     <span>{formatDateTime(contribution.createdAt)}</span>
                   </div>

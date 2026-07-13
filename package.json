@@ -4,15 +4,16 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build",
+    "build": "node scripts/prisma-provider.mjs && prisma generate && next build",
     "start": "next start",
     "lint": "next lint",
-    "db:generate": "prisma generate",
+    "prisma:provider": "node scripts/prisma-provider.mjs",
+    "db:generate": "node scripts/prisma-provider.mjs && prisma generate",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
     "db:seed": "tsx src/prisma/seed.ts",
-    "postinstall": "prisma generate"
+    "postinstall": "node scripts/prisma-provider.mjs && prisma generate"
   },
   "dependencies": {
     "next": "^14.2.0",

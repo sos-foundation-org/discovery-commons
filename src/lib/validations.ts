@@ -16,7 +16,7 @@ export const createThreadSchema = z.object({
     .string()
     .min(20, "Description must be at least 20 characters")
     .max(10000),
-  visibility: z.enum(VISIBILITY_LEVELS).default("L0"),
+  visibility: z.enum(VISIBILITY_LEVELS).default("private"),
   domainTags: z.array(z.string()).min(1, "Select at least one domain tag").max(5),
 });
 
@@ -27,7 +27,7 @@ export const createContributionSchema = z.object({
     .string()
     .min(10, "Content must be at least 10 characters")
     .max(10000),
-  visibility: z.enum(VISIBILITY_LEVELS).default("L0"),
+  visibility: z.enum(VISIBILITY_LEVELS).default("private"),
   parentId: z.string().min(1).optional(),
   sealed: z.boolean().default(false),
   circleUserIds: z.array(z.string()).optional(),

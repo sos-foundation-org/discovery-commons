@@ -1,18 +1,41 @@
-export const VISIBILITY_LEVELS = ["L0", "L1", "L2", "L3"] as const;
-export type VisibilityLevel = (typeof VISIBILITY_LEVELS)[number];
+// Web Prototype visibility model (DC_Web_Prototype_架構設計 §3A).
+// Threads have three levels; contributions add a fourth, "sealed" (content
+// hidden, SHA-256 hash + timestamp public — the anti-scooping mechanism).
+// Replaces the earlier L0-L3 scheme: L0→private, L1→shared, L2/L3→public.
+export const THREAD_VISIBILITY = ["private", "shared", "public"] as const;
+export type ThreadVisibility = (typeof THREAD_VISIBILITY)[number];
 
-export const VISIBILITY_LABELS: Record<VisibilityLevel, string> = {
-  L0: "Private",
-  L1: "Inner Circle",
-  L2: "Community",
-  L3: "Public",
+export const CONTRIBUTION_VISIBILITY = [
+  "private",
+  "shared",
+  "public",
+  "sealed",
+] as const;
+export type ContributionVisibility = (typeof CONTRIBUTION_VISIBILITY)[number];
+
+// Back-compat aliases: most of the app operates on the thread-level set.
+export const VISIBILITY_LEVELS = THREAD_VISIBILITY;
+export type VisibilityLevel = ThreadVisibility;
+
+export const VISIBILITY_LABELS: Record<ContributionVisibility, string> = {
+  private: "Private",
+  shared: "Shared",
+  public: "Public",
+  sealed: "Sealed",
 };
 
-export const VISIBILITY_ICONS: Record<VisibilityLevel, string> = {
-  L0: "Lock",
-  L1: "Users",
-  L2: "Globe2",
-  L3: "Globe",
+export const VISIBILITY_ICONS: Record<ContributionVisibility, string> = {
+  private: "Lock",
+  shared: "Users",
+  public: "Globe",
+  sealed: "ShieldCheck",
+};
+
+export const VISIBILITY_DESCRIPTIONS: Record<ContributionVisibility, string> = {
+  private: "Only you can see this",
+  shared: "Visible to thread collaborators and people you share with",
+  public: "Anyone can see this, including logged-out visitors",
+  sealed: "Content hidden; the SHA-256 hash + timestamp are public to prove priority",
 };
 
 export const CONTRIBUTION_TYPES = [
@@ -111,7 +134,7 @@ export const TRUST_LEVEL_CONFIG: Record<
 > = {
   new_member: {
     label: "New Member",
-    description: "Create threads (L0-L1), contribute to own threads",
+    description: "Create private/shared threads, contribute to own threads",
   },
   contributor: {
     label: "Contributor",
@@ -119,11 +142,11 @@ export const TRUST_LEVEL_CONFIG: Record<
   },
   trusted: {
     label: "Trusted",
-    description: "Create L2 threads, join Trusted Circles",
+    description: "Create shared threads, join Trusted Circles",
   },
   established: {
     label: "Established",
-    description: "Create L3 threads, nominate others",
+    description: "Create public threads, nominate others",
   },
   moderator: {
     label: "Moderator",
@@ -216,6 +239,15 @@ export const CREDIT_DIMENSIONS = [
   "mentorship",
 ] as const;
 export type CreditDimension = (typeof CREDIT_DIMENSIONS)[number];
+
+// The prototype tracks a 4-dimension subset (brief §3.1 B3). The full 9-dim
+// config above is retained for forward-compatibility with the production system.
+export const PROTOTYPE_CREDIT_DIMENSIONS: CreditDimension[] = [
+  "idea",
+  "data",
+  "analysis",
+  "validation",
+];
 
 export const CREDIT_DIMENSION_CONFIG: Record<
   CreditDimension,

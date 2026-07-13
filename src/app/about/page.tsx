@@ -143,7 +143,7 @@ export default function AboutPage() {
             <p className="text-muted-foreground mb-4">
               For ideas you&apos;re not ready to share, use{" "}
               <strong>Seal &amp; Reveal</strong>: submit a sealed contribution
-              where only the hash is visible. When you&apos;re ready, unseal it
+              where only the hash is visible. When you&apos;re ready, reveal it
               — the timestamp proves you had the idea before anyone else saw it.
             </p>
             <div className="flex gap-2">
@@ -178,40 +178,31 @@ export default function AboutPage() {
         <div className="flex flex-col sm:flex-row gap-3">
           {[
             {
-              level: "L0",
+              level: "private",
               label: "Private",
               desc: "Only you can see it",
               color: "bg-gray-100 dark:bg-gray-900",
             },
             {
-              level: "L1",
-              label: "Inner Circle",
-              desc: "Your trusted collaborators",
+              level: "shared",
+              label: "Shared",
+              desc: "Collaborators & people you share with",
               color: "bg-blue-50 dark:bg-blue-950",
             },
             {
-              level: "L2",
-              label: "Community",
-              desc: "All signed-in members",
-              color: "bg-green-50 dark:bg-green-950",
-            },
-            {
-              level: "L3",
+              level: "public",
               label: "Public",
               desc: "Anyone on the internet",
               color: "bg-orange-50 dark:bg-orange-950",
             },
-          ].map((v, i) => (
+          ].map((v, i, arr) => (
             <div
               key={v.level}
               className={`flex-1 rounded-lg p-4 ${v.color} border text-center`}
             >
-              <Badge variant="outline" className="mb-2">
-                {v.level}
-              </Badge>
               <p className="font-medium text-sm">{v.label}</p>
               <p className="text-xs text-muted-foreground">{v.desc}</p>
-              {i < 3 && (
+              {i < arr.length - 1 && (
                 <p className="text-muted-foreground mt-2 hidden sm:block">
                   &rarr;
                 </p>
@@ -219,6 +210,12 @@ export default function AboutPage() {
             </div>
           ))}
         </div>
+        <p className="text-sm text-muted-foreground mt-4">
+          Contributions add a fourth option:{" "}
+          <span className="font-medium text-foreground">Sealed</span> — the
+          content stays hidden while its SHA-256 hash and timestamp are public,
+          proving you had the idea first without revealing it.
+        </p>
       </section>
 
       {/* Community Covenant */}

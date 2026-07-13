@@ -33,7 +33,7 @@ export async function GET(
     },
   });
 
-  if (!thread || thread.visibility !== "L3") {
+  if (!thread || thread.visibility !== "public") {
     return NextResponse.json(
       { error: "Public thread not found" },
       { status: 404, headers: PUBLIC_CORS_HEADERS }

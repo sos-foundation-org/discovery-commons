@@ -12,7 +12,7 @@ export async function GET(_request: NextRequest) {
     await Promise.all([
       prisma.user.count(),
       prisma.thread.count(),
-      prisma.thread.count({ where: { visibility: "L3" } }),
+      prisma.thread.count({ where: { visibility: "public" } }),
       prisma.contribution.count(),
       prisma.replication.count(),
     ]);

@@ -16,7 +16,7 @@ export async function GET(
   const domain = decodeURIComponent(params.domain).toLowerCase();
 
   const threads = await prisma.thread.findMany({
-    where: { visibility: "L3", isArchived: false },
+    where: { visibility: "public", isArchived: false },
     select: {
       id: true,
       title: true,
