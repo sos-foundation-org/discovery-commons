@@ -1,6 +1,7 @@
 "use client";
 
 import { signIn, getProviders } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,10 +14,14 @@ import {
 } from "@/components/ui/card";
 
 export default function SignInPage() {
+  const router = useRouter();
   const [providers, setProviders] = useState<Record<string, any> | null>(null);
-  const [email, setEmail] = useState("dev@example.com");
-  const [name, setName] = useState("Dev User");
-  const [isLoading, setIsLoading] = useState(false);
+  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     getProviders()
@@ -24,18 +29,46 @@ export default function SignInPage() {
       .catch(() => setProviders({}));
   }, []);
 
-  const oauthProviders = providers
-    ? Object.values(providers).filter((p: any) => p.type !== "credentials")
+  const oauth = providers
+    ? Object.values(providers).filter((p: any) => p.type === "oauth")
     : [];
-  const hasCredentials = providers
-    ? Object.values(providers).some((p: any) => p.type === "credentials")
-    : false;
+  const hasDev = providers ? "dev" in providers : false;
 
-  const handleCredentialsSignIn = async (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    await signIn("credentials", { email, name, callbackUrl: "/threads" });
-    setIsLoading(false);
+    setLoading(true);
+    setError("");
+
+    if (mode === "signup") {
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password, name }),
+      }).catch(() => null);
+      if (!res?.ok) {
+        const d = await res?.json().catch(() => null);
+        setError(d?.error || "Could not create account");
+        setLoading(false);
+        return;
+      }
+    }
+
+    const result = await signIn("credentials", {
+      email,
+      password,
+      redirect: false,
+    });
+    setLoading(false);
+    if (result?.ok) {
+      router.push("/threads");
+      router.refresh();
+    } else {
+      setError(
+        mode === "signup"
+          ? "Account created but sign-in failed — try signing in."
+          : "Incorrect email or password."
+      );
+    }
   };
 
   return (
@@ -44,77 +77,121 @@ export default function SignInPage() {
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">Welcome to Discovery Commons</CardTitle>
           <CardDescription>
-            Sign in to start sharing your discoveries
+            {mode === "signin"
+              ? "Sign in to start sharing your discoveries"
+              : "Create an account with your email"}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {!providers && (
-            <div className="space-y-4">
-              <div className="h-12 animate-pulse rounded bg-muted" />
-              <div className="h-12 animate-pulse rounded bg-muted" />
+            <div className="space-y-3">
+              <div className="h-11 animate-pulse rounded bg-muted" />
+              <div className="h-11 animate-pulse rounded bg-muted" />
             </div>
           )}
 
-          {oauthProviders.map((provider: any) => (
+          {oauth.map((p: any) => (
             <Button
-              key={provider.id}
+              key={p.id}
               className="w-full"
               variant="outline"
               size="lg"
-              onClick={() => signIn(provider.id, { callbackUrl: "/threads" })}
+              onClick={() => signIn(p.id, { callbackUrl: "/threads" })}
             >
-              Continue with {provider.name}
+              Continue with {p.name}
             </Button>
           ))}
 
-          {hasCredentials && (
-            <>
-              {oauthProviders.length > 0 && (
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t" />
-                  </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-background px-2 text-muted-foreground">
-                      or dev login
-                    </span>
-                  </div>
-                </div>
-              )}
-              <form onSubmit={handleCredentialsSignIn} className="space-y-3">
-                <Input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Email"
-                  required
-                />
-                <Input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Display name"
-                />
-                <Button
-                  type="submit"
-                  className="w-full"
-                  size="lg"
-                  disabled={isLoading}
-                >
-                  {isLoading ? "Signing in..." : "Sign In (Dev)"}
-                </Button>
-                <p className="text-xs text-muted-foreground text-center">
-                  Development mode — no password required
-                </p>
-              </form>
-            </>
+          {oauth.length > 0 && (
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">or</span>
+              </div>
+            </div>
           )}
 
-          {providers && Object.keys(providers).length === 0 && (
-            <p className="text-sm text-muted-foreground text-center">
-              No auth providers configured. Set GOOGLE_CLIENT_ID/SECRET or
-              GITHUB_CLIENT_ID/SECRET in your .env file.
-            </p>
+          <form onSubmit={submit} className="space-y-3">
+            {mode === "signup" && (
+              <Input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Display name"
+              />
+            )}
+            <Input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Email"
+              required
+            />
+            <Input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder={mode === "signup" ? "Password (min 8 chars)" : "Password"}
+              required
+            />
+            {error && <p className="text-sm text-red-600">{error}</p>}
+            <Button type="submit" className="w-full" size="lg" disabled={loading}>
+              {loading
+                ? "…"
+                : mode === "signin"
+                  ? "Sign in"
+                  : "Create account"}
+            </Button>
+          </form>
+
+          <p className="text-center text-sm text-muted-foreground">
+            {mode === "signin" ? (
+              <>
+                No account?{" "}
+                <button
+                  type="button"
+                  className="text-primary hover:underline"
+                  onClick={() => {
+                    setMode("signup");
+                    setError("");
+                  }}
+                >
+                  Create one
+                </button>
+              </>
+            ) : (
+              <>
+                Already have an account?{" "}
+                <button
+                  type="button"
+                  className="text-primary hover:underline"
+                  onClick={() => {
+                    setMode("signin");
+                    setError("");
+                  }}
+                >
+                  Sign in
+                </button>
+              </>
+            )}
+          </p>
+
+          {hasDev && (
+            <button
+              type="button"
+              onClick={() =>
+                signIn("dev", {
+                  email: email || "dev@example.com",
+                  name: name || "Dev User",
+                  callbackUrl: "/threads",
+                })
+              }
+              className="w-full text-center text-xs text-muted-foreground underline"
+            >
+              Dev quick login (local only)
+            </button>
           )}
         </CardContent>
       </Card>

@@ -59,6 +59,8 @@ model User {
   image              String?
   trustLevel         String    @default("new_member") @map("trust_level")
   covenantAcceptedAt DateTime? @map("covenant_accepted_at")
+  // bcrypt hash for email+password sign-in (null for OAuth-only accounts).
+  passwordHash       String?   @map("password_hash")
   bio                String?
   interests          Json      @default("[]")
   // v2: ORCID identity linking (Phase 2 — Task 4)

@@ -3,6 +3,7 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import GoogleProvider from "next-auth/providers/google";
 import GitHubProvider from "next-auth/providers/github";
 import CredentialsProvider from "next-auth/providers/credentials";
+import bcrypt from "bcryptjs";
 import { prisma } from "./db";
 
 const useCredentialsDev =
@@ -55,9 +56,30 @@ export const authOptions: NextAuthOptions = {
           },
         ]
       : []),
+    // Email + password (self-created accounts). Passwords are bcrypt-hashed
+    // (see /api/auth/register). Prototype: no 2FA / email verification yet.
+    CredentialsProvider({
+      id: "credentials",
+      name: "Email & password",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) return null;
+        const user = await prisma.user.findUnique({
+          where: { email: credentials.email.toLowerCase().trim() },
+        });
+        if (!user?.passwordHash) return null;
+        const ok = await bcrypt.compare(credentials.password, user.passwordHash);
+        if (!ok) return null;
+        return { id: user.id, email: user.email, name: user.name };
+      },
+    }),
     ...(useCredentialsDev
       ? [
           CredentialsProvider({
+            id: "dev",
             name: "Dev Login",
             credentials: {
               email: { label: "Email", type: "email", placeholder: "dev@example.com" },

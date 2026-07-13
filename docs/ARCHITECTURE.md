@@ -122,11 +122,16 @@ JWT. The `jwt` callback stamps `id`, `trustLevel`, `displayName`, `image` onto
 the token **once at sign-in**; the `session` callback reads them from the token
 (no DB query per request).
 
-- **Production:** Google OAuth, basic scopes (`openid email profile`), app in
-  *Production* (no 7-day limit). `middleware.ts` protects
-  `/threads/new /sealed /profile /notifications /settings /admin/*`.
-- **Local dev:** a `CredentialsProvider` (enabled only when `NODE_ENV=development`
-  and no `GOOGLE_CLIENT_ID`) upserts a user by email — sign in as anyone.
+- **Google OAuth** — basic scopes (`openid email profile`), app in *Production*
+  (no 7-day limit).
+- **Email + password** — self-service accounts. `POST /api/auth/register` creates
+  a user with a **bcrypt** hash (`User.passwordHash`); a `credentials` provider
+  verifies it on sign-in. Prototype: no email verification / 2FA (deferred).
+- **Local dev** — an extra `dev` credentials provider (only when
+  `NODE_ENV=development` and no `GOOGLE_CLIENT_ID`) signs you in by email, no
+  password.
+- `middleware.ts` protects `/threads/new /sealed /profile /notifications
+  /settings /admin/*`.
 
 ## Hashing & verification
 
