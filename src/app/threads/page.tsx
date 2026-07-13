@@ -12,6 +12,8 @@ import {
 } from "@/lib/types";
 import { ThreadFilters } from "@/components/thread/thread-filters";
 import { DisciplineBadge } from "@/components/thread/discipline-badge";
+import { AvatarBadge } from "@/components/ui/avatar-badge";
+import { DISCIPLINE_CONFIG, type Discipline } from "@/lib/types";
 
 export default async function ThreadsPage({
   searchParams,
@@ -164,7 +166,7 @@ export default async function ThreadsPage({
       </p>
 
       {/* Thread list */}
-      <div className="space-y-4">
+      <div className="space-y-3">
         {threads.length === 0 ? (
           <Card>
             <CardContent className="py-12 text-center">
@@ -185,48 +187,74 @@ export default async function ThreadsPage({
             </CardContent>
           </Card>
         ) : (
-          threads.map((thread) => (
-            <Link key={thread.id} href={`/threads/${thread.id}`}>
-              <Card className="hover:shadow-md transition-shadow cursor-pointer mb-4">
-                <CardHeader className="pb-2">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1">
-                      <CardTitle className="text-lg">{thread.title}</CardTitle>
-                    </div>
-                    <div className="flex gap-2 flex-shrink-0 flex-wrap justify-end">
-                      <DisciplineBadge discipline={thread.discipline} />
-                      <Badge variant="secondary">{thread.currentStage}</Badge>
-                      <Badge variant="outline">
-                        {VISIBILITY_LABELS[thread.visibility as VisibilityLevel]}
-                      </Badge>
+          threads.map((thread) => {
+            const disc = thread.discipline
+              ? DISCIPLINE_CONFIG[thread.discipline as Discipline]
+              : null;
+            const author =
+              thread.creator.displayName || thread.creator.name || "Anonymous";
+            return (
+              <Link
+                key={thread.id}
+                href={`/threads/${thread.id}`}
+                className="group block"
+              >
+                <article className="relative overflow-hidden rounded-xl border bg-card py-4 pl-5 pr-5 transition-all hover:border-primary/40 hover:shadow-sm">
+                  <span
+                    className={`absolute inset-y-0 left-0 w-1 ${disc?.dot ?? "bg-border"}`}
+                    aria-hidden
+                  />
+                  <div className="flex items-start gap-3">
+                    <AvatarBadge
+                      name={author}
+                      seed={thread.creator.id}
+                      image={thread.creator.image}
+                      size="md"
+                      className="mt-0.5 shrink-0"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-start justify-between gap-3">
+                        <h2 className="text-lg font-semibold leading-snug tracking-tight group-hover:text-primary transition-colors">
+                          {thread.title}
+                        </h2>
+                        <DisciplineBadge
+                          discipline={thread.discipline}
+                          className="hidden shrink-0 sm:inline-flex"
+                        />
+                      </div>
+                      <p className="mt-1 line-clamp-2 text-[15px] leading-relaxed text-muted-foreground">
+                        {thread.description}
+                      </p>
+                      <div className="mt-2.5 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-muted-foreground">
+                        <span className="font-medium text-foreground/80">
+                          {author}
+                        </span>
+                        <span aria-hidden>·</span>
+                        <span className="capitalize">{thread.currentStage}</span>
+                        <span aria-hidden>·</span>
+                        <span>
+                          {thread._count.contributions} contribution
+                          {thread._count.contributions !== 1 ? "s" : ""}
+                        </span>
+                        <span aria-hidden>·</span>
+                        <span>{timeAgo(thread.updatedAt)}</span>
+                        {(thread.domainTags as string[])
+                          .slice(0, 3)
+                          .map((tag) => (
+                            <span
+                              key={tag}
+                              className="rounded bg-muted px-1.5 py-0.5"
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                      </div>
                     </div>
                   </div>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
-                    {thread.description}
-                  </p>
-                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                    <span>
-                      by {thread.creator.displayName || thread.creator.name}
-                    </span>
-                    <span>
-                      {thread._count.contributions} contribution
-                      {thread._count.contributions !== 1 ? "s" : ""}
-                    </span>
-                    <span>{timeAgo(thread.updatedAt)}</span>
-                    <div className="flex gap-1">
-                      {(thread.domainTags as string[]).map((tag) => (
-                        <Badge key={tag} variant="outline" className="text-xs">
-                          {tag}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-          ))
+                </article>
+              </Link>
+            );
+          })
         )}
       </div>
     </div>

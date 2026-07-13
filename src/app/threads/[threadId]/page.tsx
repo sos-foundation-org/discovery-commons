@@ -20,6 +20,7 @@ import { ContributionForm } from "@/components/contribution/contribution-form";
 import { VisibilityUpgrade } from "@/components/thread/visibility-upgrade";
 import { CollaboratorManager } from "@/components/thread/collaborator-manager";
 import { DisciplineBadge } from "@/components/thread/discipline-badge";
+import { AvatarBadge } from "@/components/ui/avatar-badge";
 import { CommentSection } from "@/components/contribution/comment-section";
 import { RevealButton } from "@/components/contribution/reveal-button";
 import { SealButton } from "@/components/contribution/seal-button";
@@ -156,7 +157,7 @@ export default async function ThreadDetailPage({
           </div>
         </div>
 
-        <div className="prose prose-sm max-w-none text-muted-foreground mb-4">
+        <div className="max-w-none text-[15px] leading-relaxed text-muted-foreground mb-4 whitespace-pre-wrap">
           {thread.description}
         </div>
 
@@ -349,78 +350,91 @@ export default async function ThreadDetailPage({
                 className={`relative border-l-4 ${stageColor}`}
               >
                 <CardHeader className="pb-2">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-2">
-                      {isSealed && (
-                        <span
-                          className="text-amber-500"
-                          title="Sealed contribution"
-                        >
-                          &#x1F512;
-                        </span>
-                      )}
-                      <Badge
-                        variant="outline"
-                        className={typeConfig.color}
-                      >
-                        {typeConfig.label}
-                      </Badge>
-                      {contribution.type === "methodology" &&
-                        (
-                          (contribution.metadata as { methodAppliesTo?: string[] } | null)
-                            ?.methodAppliesTo ?? []
-                        ).map((a) => {
-                          const cfg =
-                            METHOD_APPLIES_TO_CONFIG[a as MethodAppliesTo];
-                          return cfg ? (
-                            <Badge
-                              key={a}
-                              variant="secondary"
-                              className={`text-[10px] ${cfg.color}`}
+                  <div className="flex items-start gap-3">
+                    <AvatarBadge
+                      name={
+                        contribution.author.displayName ||
+                        contribution.author.name
+                      }
+                      seed={contribution.authorId}
+                      image={contribution.author.image}
+                      size="md"
+                      className="mt-0.5 shrink-0"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                          {isSealed && (
+                            <span
+                              className="text-amber-500"
+                              title="Sealed contribution"
                             >
-                              → {cfg.label}
+                              &#x1F512;
+                            </span>
+                          )}
+                          <Badge variant="outline" className={typeConfig.color}>
+                            {typeConfig.label}
+                          </Badge>
+                          {contribution.type === "methodology" &&
+                            (
+                              (contribution.metadata as {
+                                methodAppliesTo?: string[];
+                              } | null)?.methodAppliesTo ?? []
+                            ).map((a) => {
+                              const cfg =
+                                METHOD_APPLIES_TO_CONFIG[a as MethodAppliesTo];
+                              return cfg ? (
+                                <Badge
+                                  key={a}
+                                  variant="secondary"
+                                  className={`text-[10px] ${cfg.color}`}
+                                >
+                                  → {cfg.label}
+                                </Badge>
+                              ) : null;
+                            })}
+                        </div>
+                        <div className="flex shrink-0 items-center gap-2">
+                          {isSealed ? (
+                            <Badge variant="secondary" className="text-xs">
+                              Sealed
+                              {contribution.sealedAt
+                                ? ` ${timeAgo(contribution.sealedAt)}`
+                                : contribution.sealedReg
+                                  ? ` ${timeAgo(contribution.sealedReg.registeredAt)}`
+                                  : ""}
                             </Badge>
-                          ) : null;
-                        })}
-                      <span className="text-sm text-muted-foreground">
-                        by{" "}
+                          ) : (
+                            contribution.visibility !== "public" && (
+                              <Badge variant="outline" className="text-xs">
+                                {VISIBILITY_LABELS[
+                                  contribution.visibility as keyof typeof VISIBILITY_LABELS
+                                ] ?? contribution.visibility}
+                              </Badge>
+                            )
+                          )}
+                        </div>
+                      </div>
+                      <div className="mt-1 text-sm text-muted-foreground">
                         <Link
                           href={`/profile/${contribution.authorId}`}
-                          className="hover:text-foreground hover:underline"
+                          className="font-medium text-foreground/80 hover:text-primary hover:underline"
                         >
                           {contribution.author.displayName ||
                             contribution.author.name}
                         </Link>
-                      </span>
-                      <span className="text-xs text-muted-foreground">
-                        {timeAgo(contribution.createdAt)}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {isSealed ? (
-                        <Badge variant="secondary" className="text-xs">
-                          Sealed
-                          {contribution.sealedAt
-                            ? ` ${timeAgo(contribution.sealedAt)}`
-                            : contribution.sealedReg
-                              ? ` ${timeAgo(contribution.sealedReg.registeredAt)}`
-                              : ""}
-                        </Badge>
-                      ) : (
-                        contribution.visibility !== "public" && (
-                          <Badge variant="outline" className="text-xs">
-                            {VISIBILITY_LABELS[
-                              contribution.visibility as keyof typeof VISIBILITY_LABELS
-                            ] ?? contribution.visibility}
-                          </Badge>
-                        )
-                      )}
-                      {contribution._count.comments > 0 && (
-                        <span className="text-xs text-muted-foreground">
-                          {contribution._count.comments} comment
-                          {contribution._count.comments !== 1 ? "s" : ""}
-                        </span>
-                      )}
+                        <span aria-hidden> · </span>
+                        <span>{timeAgo(contribution.createdAt)}</span>
+                        {contribution._count.comments > 0 && (
+                          <>
+                            <span aria-hidden> · </span>
+                            <span>
+                              {contribution._count.comments} comment
+                              {contribution._count.comments !== 1 ? "s" : ""}
+                            </span>
+                          </>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </CardHeader>
@@ -437,7 +451,7 @@ export default async function ThreadDetailPage({
                     </div>
                   ) : (
                     <>
-                      <div className="prose prose-sm max-w-none mb-3">
+                      <div className="prose prose-neutral dark:prose-invert max-w-none mb-3 whitespace-pre-wrap text-[15px] leading-relaxed">
                         {contribution.content}
                       </div>
                       {isSealed && isContribAuthor && (

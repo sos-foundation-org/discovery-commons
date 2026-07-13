@@ -51,6 +51,9 @@
   }
   body {
     @apply bg-background text-foreground;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
     /* Subtle dotted texture behind everything (theme-aware, very faint). */
     background-image: radial-gradient(
       hsl(var(--muted-foreground) / 0.06) 1px,
