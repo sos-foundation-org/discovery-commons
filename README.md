@@ -1,169 +1,85 @@
 # Discovery Commons
 
-**The Antilibrary of Science** — a collaborative research platform where great questions are as valuable as great answers.
+**The Antilibrary of Science** — an open, non-commercial research platform where a
+thoughtful *question* earns the same credit as a published result. Every
+contribution is SHA-256 hashed and timestamped for priority protection, and
+authors control visibility per-contribution (private / shared / public / sealed).
 
-Discovery Commons reimagines how early-stage scientific ideas are shared, attributed, and built upon. Every contribution is SHA-256 hashed and timestamped for priority protection, with graduated visibility controls that let researchers share at their own pace.
+🌐 **Live:** https://discovery-commons.vercel.app
+🏛️ Operated by the Sustainability of Sustainability Foundation (501(c)(3)).
+📄 Code: AGPL-3.0 · Public contributions: CC BY 4.0 (see [/legal/cla](https://discovery-commons.vercel.app/legal/cla)).
 
-## Features
+---
 
-### Core Discovery
-- **Structured threads** — Lines of inquiry progress through stages: Question → Hypothesis → Data/Simulation (parallel) → Statistics → Interpretation → Insight
-- **Layered contributions** — 7 contribution types (question, data, statistics, simulation, interpretation, hypothesis, insight) with weighted credit scoring
-- **Stage progression** — Visual stage stepper with automatic and manual advancement by thread creators
-- **Domain tagging** — Organize threads by research domain with search and filtering
+## What it is
 
-### Priority Protection
-- **SHA-256 hashing** — Every contribution receives a content hash + timestamp at creation
-- **Seal-then-reveal** — Register the hash of an idea without revealing content; unseal when ready to share
-- **Immutable audit trail** — Original hashes are preserved through edits via versioning
-- **Verifiable proofs** — Public hash verification endpoints for any contribution or sealed registration
+Research happens as **Threads** (lines of inquiry, tagged by discipline). People
+add typed **Contributions** that build a thread from a question toward insight:
 
-### Graduated Visibility
-- **L0 (Private)** — Only you can see it
-- **L1 (Inner Circle)** — Shared with your trusted circle members
-- **L2 (Community)** — Visible to all logged-in users
-- **L3 (Public)** — Open to everyone
-- One-way upgrade only — visibility can be increased but never decreased
+```
+Question → Hypothesis → Data / Simulation → Statistics → Interpretation → Insight
+                         (+ Method, Replication as cross-cutting types)
+```
 
-### Collaboration
-- **Trusted circles** — Invite collaborators by email for L1 visibility sharing
-- **Comment/review system** — 6 comment types (endorsement, question, critique, suggestion, method review, stat review) with anonymous option
-- **Threaded comments** — Up to 3 levels of nesting
-- **Notifications** — Real-time notification bell with 30s polling, notifications page with mark-as-read
+Distinctive mechanics:
+- **Per-contribution visibility** — `private` · `shared` (collaborators) · `public` · `sealed`.
+- **Seal → Reveal** — hide content while publishing its SHA-256 hash + timestamp
+  (anti-scooping); revealing re-verifies the hash proving the content is unchanged.
+- **Credit** across dimensions (prototype: idea / data / method / analysis / validation).
+- **Public verification** — anyone can check a hash at `/verify/[hash]`.
+- **Reproducible media** — ` ```chart ` (SVG), ` ```embed ` (YouTube/Vimeo),
+  Markdown images, and raw-data links — all stored as text (see
+  [docs/media-and-data.md](docs/media-and-data.md)).
 
-### Credit & Attribution
-- **Discovery Credit Score** — Weighted scoring (Question: 1, Hypothesis: 2, Data: 3, Simulation: 3, Statistics: 3, Interpretation: 4, Insight: 5)
-- **Credit dashboard** — Visual breakdown by contribution type with bar charts
-- **Export** — Download credit history as CSV or JSON
-- **Community covenant** — 6 principles members agree to
+## Tech stack
 
-### Search & Discovery
-- **Full-text search** — Search threads by title, description, and domain tags
-- **Multi-filter** — Filter by stage, visibility level, and domain tag simultaneously
-- **URL-based state** — Search results are shareable via URL query parameters
+| | |
+|---|---|
+| Framework | Next.js 14 (App Router) + TypeScript + Tailwind |
+| Auth | NextAuth (Google OAuth, **JWT sessions**) |
+| ORM / DB | Prisma · **SQLite locally**, **Supabase PostgreSQL in production** |
+| Hosting | Vercel (Hobby) — auto-deploys from `main` |
+| Cost | **$0** (Vercel + Supabase free tiers) |
 
-## Tech Stack
-
-- **Framework**: Next.js 14 (App Router, Server + Client Components)
-- **Language**: TypeScript
-- **Database**: SQLite (via Prisma ORM) — swap to PostgreSQL for production
-- **Auth**: NextAuth.js with Credentials Provider (dev), OAuth-ready for production
-- **Styling**: Tailwind CSS
-- **Validation**: Zod
-- **Hashing**: Web Crypto API (SHA-256)
-
-## Getting Started
-
-### Prerequisites
-
-- Node.js 18+
-- npm
-
-### Setup
+## Quick start (local)
 
 ```bash
-# Clone the repository
-git clone <repo-url>
-cd discovery-commons
-
-# Install dependencies
 npm install
-
-# Set up environment variables
-cp .env.example .env
-# Edit .env with your NEXTAUTH_SECRET (any random string for dev)
-
-# Set up the database
-npx prisma db push
-
-# Seed the database (optional — creates demo users and threads)
-npx prisma db seed
-
-# Start the dev server
-npm run dev
+npm run db:seed        # SQLite (file:./dev.db) + demo data
+npm run dev            # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) to see the app.
+Local dev uses **SQLite** and a **dev credentials login** (any email signs you in;
+`admin@discoverycommons.org` is the seeded admin "Ping"). No Google keys needed
+locally. See [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
 
-### Environment Variables
+## Documentation
 
-```
-DATABASE_URL="file:./dev.db"
-NEXTAUTH_URL="http://localhost:3000"
-NEXTAUTH_SECRET="your-secret-here"
-```
+| Doc | For |
+|---|---|
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Data model, visibility/seal, credits, access control, auth, dual-DB |
+| [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) | Local setup, commands, conventions, how to extend |
+| [docs/USAGE.md](docs/USAGE.md) | End-user / alpha-tester guide |
+| [docs/media-and-data.md](docs/media-and-data.md) | Images, video, charts, raw-data links |
+| [docs/ROADMAP.md](docs/ROADMAP.md) | Status + remaining phases and plans |
+| [DEPLOY.md](DEPLOY.md) | Supabase + Google OAuth + Vercel deployment |
+| [SECURITY_AUDIT.md](SECURITY_AUDIT.md) | Security review notes |
 
-### Dev Authentication
-
-In development mode, the app uses a credentials provider. Sign in with any email — a user account is automatically created. No OAuth configuration needed.
-
-## Project Structure
+## Repository layout
 
 ```
 src/
-├── app/
-│   ├── api/                    # 21 API routes
-│   │   ├── auth/               # NextAuth
-│   │   ├── threads/            # Thread CRUD, visibility, stage advancement
-│   │   ├── contributions/      # Contribution CRUD, comments, unseal, verify
-│   │   ├── sealed/             # Seal registration, reveal, verify
-│   │   ├── credits/            # Credit export (CSV/JSON)
-│   │   ├── notifications/      # Notification list and mark-as-read
-│   │   ├── trusted-circle/     # Circle member management
-│   │   └── users/              # User profile, credits, covenant, trusted circle
-│   ├── about/                  # About page with platform philosophy
-│   ├── auth/signin/            # Sign-in page
-│   ├── notifications/          # Notification center
-│   ├── profile/                # Credit dashboard and user stats
-│   ├── sealed/                 # Seal-then-reveal interface
-│   ├── settings/               # Trusted circle management
-│   ├── threads/                # Thread listing with search/filters
-│   │   ├── new/                # Create thread form
-│   │   └── [threadId]/         # Thread detail with contributions
-│   ├── layout.tsx              # Root layout with navbar and footer
-│   ├── not-found.tsx           # Custom 404 page
-│   └── page.tsx                # Landing page
-├── components/
-│   ├── contribution/           # ContributionForm, CommentSection, UnsealButton
-│   ├── layout/                 # Footer
-│   ├── thread/                 # ThreadFilters, StageAdvance, VisibilityUpgrade
-│   ├── ui/                     # Button, Card, Badge, Input, Textarea, Toaster
-│   ├── navbar.tsx              # Global navbar with notification bell
-│   └── providers.tsx           # SessionProvider wrapper
-├── lib/
-│   ├── auth.ts                 # NextAuth config
-│   ├── db.ts                   # Prisma client
-│   ├── hash.ts                 # SHA-256 hashing utilities
-│   ├── types.ts                # Type definitions and config constants
-│   ├── utils.ts                # Date formatting, timeAgo, cn()
-│   └── validations.ts          # Zod schemas
-└── prisma/
-    └── schema.prisma           # Database schema
+  app/            Next.js routes (pages under /, API under /api)
+  components/     UI (ui/ thread/ contribution/ credit/ profile/ …)
+  lib/            auth, db, hash, access-control, credits, types, validations
+  prisma/         schema.prisma, seed.ts, triggers.sql (prod), dev.db (local)
+scripts/          prisma-provider.mjs (SQLite⇄Postgres provider swap)
+docs/             architecture / development / usage / roadmap / media
+public/           images/ (hero) · avatars/ (36 selectable icons)
+.github/workflows keepalive.yml (Supabase anti-sleep)
 ```
 
-## Architecture
+## Status
 
-- **10 pages**: Landing, threads list, thread detail, new thread, sealed ideas, profile, settings, notifications, about, sign-in
-- **21 API routes**: Full CRUD for threads, contributions, comments, seals, notifications, trusted circles, user profile, credits
-- **15 components**: Reusable UI components for forms, thread management, and layout
-- **Middleware**: Protects authenticated routes (`/threads/new`, `/sealed`, `/profile`, `/notifications`, `/settings`, `/admin/*`)
-
-## Known TODOs
-
-- **Per-contribution circle restriction** — L1 circle selection UI exists on the contribution form, but per-contribution visibility filtering is not yet enforced server-side (all circle members can see all L1 content for now)
-- **OAuth providers** — Currently dev-only credentials auth; add Google/GitHub/ORCID for production
-- **Email notifications** — Currently in-app only; add email digest option
-- **Rate limiting** — No rate limiting on API routes
-- **File attachments** — No file upload support for contributions
-- **Real-time updates** — Polling-based notifications; could upgrade to WebSockets/SSE
-- **Admin panel** — Admin routes exist in middleware but no admin UI built yet
-- **Tests** — No test suite yet
-- **PostgreSQL migration** — Currently using SQLite; swap `provider` in schema.prisma and adjust Json field queries for production
-
-## Operator
-
-Sustainability of Sustainability Foundation — a 501(c)(3) public charity (EIN: 41-3097632), Cambridge, MA.
-
-## License
-
-Code: AGPL-3.0
+Alpha, live, in active development. What's done and what's next is tracked in
+[docs/ROADMAP.md](docs/ROADMAP.md).
