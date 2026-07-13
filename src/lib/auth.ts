@@ -82,22 +82,27 @@ export const authOptions: NextAuthOptions = {
         ]
       : []),
   ],
+  // JWT sessions everywhere (not database) so `next-auth/middleware` — which
+  // only reads the JWT — can authorize protected routes (/sealed, /settings,
+  // /profile, /threads/new, …). With the database strategy the middleware
+  // couldn't see the session and bounced logged-in users back to sign-in.
   session: {
-    strategy: useCredentialsDev ? "jwt" : "database",
+    strategy: "jwt",
   },
   callbacks: {
-    async session({ session, user, token }) {
-      if (session.user) {
-        if (useCredentialsDev && token) {
-          session.user.id = token.sub!;
-          const dbUser = await prisma.user.findUnique({ where: { id: token.sub! } });
-          session.user.trustLevel = (dbUser as any)?.trustLevel ?? "new_member";
-          session.user.displayName = (dbUser as any)?.displayName ?? session.user.name;
-        } else if (user) {
-          session.user.id = user.id;
-          session.user.trustLevel = (user as any).trustLevel ?? "new_member";
-          session.user.displayName = (user as any).displayName ?? session.user.name;
-        }
+    // Persist the DB user id onto the token at sign-in so both the middleware
+    // and the session callback can read it (with adapter + OAuth, `user.id` is
+    // the database id on first call).
+    async jwt({ token, user }) {
+      if (user?.id) token.sub = user.id;
+      return token;
+    },
+    async session({ session, token }) {
+      if (session.user && token?.sub) {
+        session.user.id = token.sub;
+        const dbUser = await prisma.user.findUnique({ where: { id: token.sub } });
+        session.user.trustLevel = (dbUser as any)?.trustLevel ?? "new_member";
+        session.user.displayName = (dbUser as any)?.displayName ?? session.user.name;
       }
       return session;
     },
