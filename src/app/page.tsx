@@ -31,12 +31,12 @@ export default async function HomePage() {
 
   return (
     <div className="flex flex-col">
-      {/* Hero — photo at /public/images/hero.jpg layered under a theme scrim so
+      {/* Hero — photo at /public/images/hero.png layered under a theme scrim so
           text stays readable in both light and dark. Tune the scrim opacity if
           your image is very light/dark. */}
       <section className="py-24 px-4 relative overflow-hidden dc-hero dc-hero-image">
         <div
-          className="absolute inset-0 bg-gradient-to-b from-background/85 via-background/70 to-background/85"
+          className="absolute inset-0 bg-gradient-to-b from-background/70 via-background/55 to-background/80"
           aria-hidden
         />
         <div className="container mx-auto max-w-4xl text-center relative">

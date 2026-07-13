@@ -82,10 +82,10 @@
       linear-gradient(180deg, hsl(var(--muted) / 0.5), transparent 40%);
   }
 
-  /* Optional real hero image: place a file at /public/images/hero.jpg and add
-     class `dc-hero-image` — it layers on top of the gradient. */
+  /* Real hero image at /public/images/hero.png, layered on top of the gradient
+     via the `dc-hero-image` class on the hero section. */
   .dc-hero-image {
-    background-image: url("/images/hero.jpg");
+    background-image: url("/images/hero.png");
     background-size: cover;
     background-position: center;
   }
