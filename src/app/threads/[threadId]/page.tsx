@@ -27,6 +27,7 @@ import { TypeIcon } from "@/components/contribution/type-icon";
 import { CommentSection } from "@/components/contribution/comment-section";
 import { RevealButton } from "@/components/contribution/reveal-button";
 import { SealButton } from "@/components/contribution/seal-button";
+import { ShareManager } from "@/components/contribution/share-manager";
 import { StageAdvance } from "@/components/thread/stage-advance";
 import { VerificationBadge } from "@/components/thread/VerificationBadge";
 import { CreditDistribution } from "@/components/credit/CreditDistribution";
@@ -496,6 +497,12 @@ export default async function ThreadDetailPage({
                               while proving priority with its hash.
                             </span>
                             <SealButton contributionId={contribution.id} />
+                          </div>
+                        )}
+                      {isContribAuthor &&
+                        contribution.visibility === "shared" && (
+                          <div className="mb-3">
+                            <ShareManager contributionId={contribution.id} />
                           </div>
                         )}
                     </>

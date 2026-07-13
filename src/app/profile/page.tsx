@@ -13,6 +13,9 @@ import {
 } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
 import Link from "next/link";
+import { AvatarBadge } from "@/components/ui/avatar-badge";
+import { CreditDistribution } from "@/components/credit/CreditDistribution";
+import { summarizeCredits } from "@/lib/credits";
 
 export default async function ProfilePage() {
   const session = await getSession();
@@ -47,6 +50,13 @@ export default async function ProfilePage() {
     orderBy: { timestamp: "desc" },
   });
 
+  // 5-dimension credit portfolio (CreditV2).
+  const creditsV2 = await prisma.creditV2.findMany({
+    where: { contributorId: user.id },
+    select: { creditType: true, weight: true },
+  });
+  const creditSummary = summarizeCredits(creditsV2);
+
   // Contribution breakdown by type
   const typeCounts: Record<string, number> = {};
   for (const credit of allCredits) {
@@ -73,7 +83,25 @@ export default async function ProfilePage() {
 
   return (
     <div className="container mx-auto max-w-4xl px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8">Your Profile</h1>
+      <div className="mb-8 flex items-center gap-4">
+        <AvatarBadge
+          name={user.displayName || user.name}
+          seed={user.id}
+          image={user.image}
+          size="lg"
+        />
+        <div>
+          <h1 className="text-3xl font-bold">
+            {user.displayName || user.name || "Your Profile"}
+          </h1>
+          <Link
+            href={`/profile/${user.id}`}
+            className="text-sm text-primary hover:underline"
+          >
+            View public profile →
+          </Link>
+        </div>
+      </div>
 
       <div className="grid md:grid-cols-2 gap-6">
         {/* User Info */}
@@ -140,6 +168,21 @@ export default async function ProfilePage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Credit portfolio — 5 colored dimensions */}
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle>
+            Credit Portfolio{" "}
+            <span className="text-sm font-normal text-muted-foreground">
+              ({creditSummary.total.toFixed(2)} total across 5 dimensions)
+            </span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <CreditDistribution byDimension={creditSummary.byDimension} />
+        </CardContent>
+      </Card>
 
       {/* Contribution Breakdown Chart */}
       <Card className="mt-6">
