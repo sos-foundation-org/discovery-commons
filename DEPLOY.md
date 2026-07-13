@@ -30,12 +30,21 @@ export DATABASE_URL="postgresql://postgres.<ref>:<pwd>@<host>:5432/postgres?sslm
 
 npm run prisma:provider          # rewrites schema provider -> postgresql
 npx prisma db push               # creates all tables in Supabase
-psql "$DATABASE_URL" -f src/prisma/triggers.sql   # immutability triggers
 
-# (optional) seed demo content:
+# (optional) seed demo content — do this BEFORE applying triggers:
 npm run db:seed
+
+# immutability triggers — apply LAST:
+psql "$DATABASE_URL" -f src/prisma/triggers.sql
 ```
 
+> **Order matters.** The triggers make hashes/timestamps immutable and block
+> deletes on credit tables. The seed clears + rewrites its own credit rows, so
+> seed **before** applying triggers. After the triggers are on, **do not
+> re-run the seed against production** (a re-seed's delete/downgrade would be
+> rejected by the triggers — which is the point). Re-seeding is a local-dev
+> convenience only.
+>
 > On Windows PowerShell use `$env:DATABASE_PROVIDER="postgresql"` etc.
 > After running, `git checkout src/prisma/schema.prisma` to restore the local
 > (sqlite) provider line if it was modified.
