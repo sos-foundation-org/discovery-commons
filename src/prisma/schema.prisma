@@ -82,6 +82,7 @@ model User {
   visibilityChanges   VisibilityLog[]
   threadCollaborations ThreadCollaborator[]
   contributionShares  ContributionShare[]
+  contributionLikes   ContributionLike[]
 
   @@map("users")
 }
@@ -129,6 +130,9 @@ model Contribution {
   // exposing contentHash + serverTimestamp. sealedAt/revealedAt are the audit trail.
   sealedAt    DateTime? @map("sealed_at")
   revealedAt  DateTime? @map("revealed_at")
+  // "Unlisted" share link (like YouTube unlisted): anyone with this token can
+  // view the contribution via /share/[token] even when it isn't public.
+  shareToken  String?   @unique @map("share_token")
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
   parentId    String?  @map("parent_id")
@@ -149,11 +153,27 @@ model Contribution {
   creditsV2  CreditV2[]
   sealedReg  SealedRegistration?
   sharedWith ContributionShare[]
+  likes      ContributionLike[]
 
   @@index([threadId])
   @@index([authorId])
   @@index([contentHash])
   @@map("contributions")
+}
+
+// A simple like/upvote — one per (contribution, user).
+model ContributionLike {
+  id             String   @id @default(uuid())
+  contributionId String   @map("contribution_id")
+  userId         String   @map("user_id")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  contribution Contribution @relation(fields: [contributionId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id])
+
+  @@unique([contributionId, userId])
+  @@index([contributionId])
+  @@map("contribution_likes")
 }
 
 model ContributionVersion {

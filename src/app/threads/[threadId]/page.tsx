@@ -28,6 +28,9 @@ import { CommentSection } from "@/components/contribution/comment-section";
 import { RevealButton } from "@/components/contribution/reveal-button";
 import { SealButton } from "@/components/contribution/seal-button";
 import { ShareManager } from "@/components/contribution/share-manager";
+import { LikeButton } from "@/components/contribution/like-button";
+import { CopyLinkButton } from "@/components/contribution/copy-link-button";
+import { ShareLinkButton } from "@/components/contribution/share-link-button";
 import { StageAdvance } from "@/components/thread/stage-advance";
 import { VerificationBadge } from "@/components/thread/VerificationBadge";
 import { CreditDistribution } from "@/components/credit/CreditDistribution";
@@ -52,6 +55,7 @@ export default async function ThreadDetailPage({
   params: { threadId: string };
 }) {
   const session = await getSession();
+  const userId = session?.user?.id ?? null;
   const thread = await prisma.thread
     .findUnique({
       where: { id: params.threadId },
@@ -81,7 +85,8 @@ export default async function ThreadDetailPage({
               select: { id: true, registeredAt: true, status: true },
             },
             sharedWith: { select: { userId: true } },
-            _count: { select: { comments: true } },
+            likes: { where: { userId: userId ?? "" }, select: { id: true } },
+            _count: { select: { comments: true, likes: true } },
           },
         },
         collaborators: { select: { userId: true } },
@@ -91,8 +96,6 @@ export default async function ThreadDetailPage({
     .catch(() => null);
 
   if (!thread) notFound();
-
-  const userId = session?.user?.id ?? null;
   const collaboratorIds = thread.collaborators.map((c) => c.userId);
   const isOwner = thread.creatorId === userId;
   const isCollaborator = userId !== null && collaboratorIds.includes(userId);
@@ -351,7 +354,8 @@ export default async function ThreadDetailPage({
             return (
               <Card
                 key={contribution.id}
-                className={`relative border-l-4 ${stageColor}`}
+                id={`c-${contribution.id}`}
+                className={`relative scroll-mt-24 border-l-4 ${stageColor}`}
               >
                 <CardHeader className="pb-2">
                   <div className="flex items-start gap-3">
@@ -517,6 +521,29 @@ export default async function ThreadDetailPage({
                     </Link>
                     <span>|</span>
                     <span>{formatDateTime(contribution.createdAt)}</span>
+                  </div>
+
+                  {/* Actions: like · copy link · private (unlisted) link */}
+                  <div className="mt-2 flex flex-wrap items-center gap-4 border-t pt-2">
+                    <LikeButton
+                      contributionId={contribution.id}
+                      initialCount={contribution._count.likes}
+                      initialLiked={contribution.likes.length > 0}
+                    />
+                    <CopyLinkButton
+                      path={`/threads/${thread.id}#c-${contribution.id}`}
+                    />
+                    {isContribAuthor &&
+                      contribution.visibility !== "public" && (
+                        <ShareLinkButton
+                          contributionId={contribution.id}
+                          initialPath={
+                            contribution.shareToken
+                              ? `/share/${contribution.shareToken}`
+                              : null
+                          }
+                        />
+                      )}
                   </div>
 
                   {/* Comments */}
