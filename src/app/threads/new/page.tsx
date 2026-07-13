@@ -7,7 +7,14 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { THREAD_VISIBILITY, VISIBILITY_LABELS, type VisibilityLevel } from "@/lib/types";
+import {
+  THREAD_VISIBILITY,
+  VISIBILITY_LABELS,
+  DISCIPLINES,
+  DISCIPLINE_CONFIG,
+  type VisibilityLevel,
+  type Discipline,
+} from "@/lib/types";
 
 const DOMAIN_SUGGESTIONS = [
   "ecology",
@@ -29,6 +36,7 @@ export default function NewThreadPage() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [visibility, setVisibility] = useState<VisibilityLevel>("private");
+  const [discipline, setDiscipline] = useState<Discipline | "">("");
   const [domainTags, setDomainTags] = useState<string[]>([]);
   const [customTag, setCustomTag] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -57,7 +65,13 @@ export default function NewThreadPage() {
       const res = await fetch("/api/threads", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, description, visibility, domainTags }),
+        body: JSON.stringify({
+          title,
+          description,
+          visibility,
+          domainTags,
+          ...(discipline ? { discipline } : {}),
+        }),
       });
 
       if (!res.ok) {
@@ -118,6 +132,36 @@ export default function NewThreadPage() {
               />
               <p className="text-xs text-muted-foreground mt-1">
                 Markdown supported
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Discipline
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {DISCIPLINES.map((d) => {
+                  const cfg = DISCIPLINE_CONFIG[d];
+                  const active = discipline === d;
+                  return (
+                    <button
+                      key={d}
+                      type="button"
+                      onClick={() => setDiscipline(active ? "" : d)}
+                      className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium transition-all ${cfg.badge} ${
+                        active
+                          ? "ring-2 ring-ring ring-offset-1"
+                          : "opacity-75 hover:opacity-100"
+                      }`}
+                    >
+                      <span className={`h-2 w-2 rounded-full ${cfg.dot}`} />
+                      {cfg.label}
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Pick the closest top-level field — it colors your thread&apos;s badge.
               </p>
             </div>
 

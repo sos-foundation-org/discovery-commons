@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { timeAgo } from "@/lib/utils";
+import { AvatarPicker } from "@/components/profile/avatar-picker";
 
 interface CircleMember {
   id: string;
@@ -90,8 +91,10 @@ export default function SettingsPage() {
     <div className="container mx-auto max-w-3xl px-4 py-8">
       <h1 className="text-3xl font-bold mb-2">Settings</h1>
       <p className="text-muted-foreground mb-8">
-        Manage your trusted circle for Shared visibility.
+        Manage your avatar and your trusted circle for Shared visibility.
       </p>
+
+      <AvatarPicker />
 
       {/* Add member */}
       <Card className="mb-6">

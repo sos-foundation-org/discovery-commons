@@ -5,6 +5,7 @@ import { useSession, signIn, signOut } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
+import { AvatarBadge } from "@/components/ui/avatar-badge";
 
 export function Navbar() {
   const { data: session, status } = useSession();
@@ -126,10 +127,19 @@ export function Navbar() {
                   </span>
                 )}
               </Link>
-              <Link href="/profile">
-                <Button variant="ghost" size="sm">
+              <Link
+                href="/profile"
+                className="flex items-center gap-2 rounded-md px-2 py-1 hover:bg-accent transition-colors"
+              >
+                <AvatarBadge
+                  name={session.user.displayName || session.user.name}
+                  seed={session.user.id}
+                  image={session.user.image}
+                  size="sm"
+                />
+                <span className="text-sm font-medium hidden lg:inline">
                   {session.user.displayName || session.user.name || "Profile"}
-                </Button>
+                </span>
               </Link>
               <Button
                 variant="outline"

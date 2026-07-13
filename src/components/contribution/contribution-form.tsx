@@ -13,8 +13,11 @@ import {
   CONTRIBUTION_TYPES,
   THREAD_VISIBILITY,
   VISIBILITY_LABELS,
+  METHOD_APPLIES_TO,
+  METHOD_APPLIES_TO_CONFIG,
   type ContributionType,
   type VisibilityLevel,
+  type MethodAppliesTo,
 } from "@/lib/types";
 
 interface CircleMember {
@@ -39,6 +42,7 @@ export function ContributionForm({
   const [content, setContent] = useState("");
   const [visibility, setVisibility] = useState<VisibilityLevel>(threadVisibility);
   const [sealed, setSealed] = useState(false);
+  const [methodAppliesTo, setMethodAppliesTo] = useState<MethodAppliesTo[]>([]);
   const [showAdvancedTypes, setShowAdvancedTypes] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -96,6 +100,9 @@ export function ContributionForm({
           content,
           visibility,
           sealed,
+          ...(type === "methodology" && methodAppliesTo.length > 0
+            ? { methodAppliesTo }
+            : {}),
           ...(visibility === "shared" && selectedCircleUserIds.length > 0
             ? { circleUserIds: selectedCircleUserIds }
             : {}),
@@ -186,6 +193,40 @@ export function ContributionForm({
               {CONTRIBUTION_TYPE_CONFIG[type].description}
             </p>
           </div>
+
+          {/* Method: which activities does it support? */}
+          {type === "methodology" && (
+            <div className="rounded-lg border p-3">
+              <p className="text-sm font-medium mb-2">
+                This method applies to…{" "}
+                <span className="text-xs font-normal text-muted-foreground">
+                  (pick all that fit)
+                </span>
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {METHOD_APPLIES_TO.map((a) => {
+                  const cfg = METHOD_APPLIES_TO_CONFIG[a];
+                  const active = methodAppliesTo.includes(a);
+                  return (
+                    <Badge
+                      key={a}
+                      variant={active ? "default" : "outline"}
+                      className={`cursor-pointer ${active ? "" : cfg.color}`}
+                      onClick={() =>
+                        setMethodAppliesTo((prev) =>
+                          prev.includes(a)
+                            ? prev.filter((x) => x !== a)
+                            : [...prev, a]
+                        )
+                      }
+                    >
+                      {cfg.label}
+                    </Badge>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Content */}
           <div>

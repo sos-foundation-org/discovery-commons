@@ -5,6 +5,8 @@ import {
   COMMENT_TYPES,
   CREDIT_DIMENSIONS,
   REPLICATION_OUTCOMES,
+  METHOD_APPLIES_TO,
+  DISCIPLINES,
 } from "./types";
 
 export const createThreadSchema = z.object({
@@ -17,6 +19,7 @@ export const createThreadSchema = z.object({
     .min(20, "Description must be at least 20 characters")
     .max(10000),
   visibility: z.enum(VISIBILITY_LEVELS).default("private"),
+  discipline: z.enum(DISCIPLINES).optional(),
   domainTags: z.array(z.string()).min(1, "Select at least one domain tag").max(5),
 });
 
@@ -31,6 +34,8 @@ export const createContributionSchema = z.object({
   parentId: z.string().min(1).optional(),
   sealed: z.boolean().default(false),
   circleUserIds: z.array(z.string()).optional(),
+  // Method only: which research activities the method supports.
+  methodAppliesTo: z.array(z.enum(METHOD_APPLIES_TO)).max(3).optional(),
 });
 
 export const createCommentSchema = z.object({

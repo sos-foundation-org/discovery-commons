@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { timeAgo } from "@/lib/utils";
+import { DisciplineBadge } from "@/components/thread/discipline-badge";
 
 export default async function HomePage() {
   const session = await getSession();
@@ -29,9 +30,9 @@ export default async function HomePage() {
 
   return (
     <div className="flex flex-col">
-      {/* Hero */}
-      <section className="py-20 px-4 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/5" />
+      {/* Hero — swap the gradient for a photo by adding class `dc-hero-image`
+          after dropping /public/images/hero.jpg */}
+      <section className="py-24 px-4 relative overflow-hidden dc-hero">
         <div className="container mx-auto max-w-4xl text-center relative">
           <Badge variant="secondary" className="mb-4">
             Open-source research platform
@@ -303,13 +304,16 @@ export default async function HomePage() {
                 <Link key={thread.id} href={`/threads/${thread.id}`}>
                   <Card className="hover:shadow-md transition-shadow cursor-pointer">
                     <CardHeader className="pb-2">
-                      <div className="flex items-start justify-between">
+                      <div className="flex items-start justify-between gap-3">
                         <CardTitle className="text-lg">
                           {thread.title}
                         </CardTitle>
-                        <Badge variant="secondary">
-                          {thread.currentStage}
-                        </Badge>
+                        <div className="flex gap-2 flex-shrink-0 flex-wrap justify-end">
+                          <DisciplineBadge discipline={thread.discipline} />
+                          <Badge variant="secondary">
+                            {thread.currentStage}
+                          </Badge>
+                        </div>
                       </div>
                     </CardHeader>
                     <CardContent>

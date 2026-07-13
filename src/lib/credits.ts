@@ -4,10 +4,10 @@ import type { CreditDimension } from "./types";
 
 /**
  * Maps a contribution type to the credit dimension(s) it generates.
- * The prototype uses the 4-dimension model (idea/data/analysis/validation —
- * see PROTOTYPE_CREDIT_DIMENSIONS): method folds into analysis and there is no
- * separate communication dimension yet. The full 9-dim set is reintroduced in
- * the production credit system.
+ * The prototype uses the 5-dimension model (idea/data/method/analysis/
+ * validation — see PROTOTYPE_CREDIT_DIMENSIONS). Method contributions earn the
+ * dedicated "method" dimension; there is no separate communication dimension
+ * yet. The full 9-dim set is reintroduced in the production credit system.
  */
 export const CREDIT_TYPE_MAP: Record<string, CreditDimension[]> = {
   question: ["idea"],
@@ -17,7 +17,7 @@ export const CREDIT_TYPE_MAP: Record<string, CreditDimension[]> = {
   statistics: ["analysis"],
   interpretation: ["analysis"],
   insight: ["idea"],
-  methodology: ["analysis"],
+  methodology: ["method"],
   replication: ["validation"],
 };
 

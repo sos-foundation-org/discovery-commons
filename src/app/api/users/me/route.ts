@@ -54,6 +54,15 @@ export async function PATCH(request: NextRequest) {
     if (body.displayName !== undefined) updates.displayName = body.displayName;
     if (body.bio !== undefined) updates.bio = body.bio;
     if (body.interests !== undefined) updates.interests = body.interests;
+    // Avatar: a chosen icon path (/avatars/xx.png) or null to clear it.
+    if (body.image !== undefined) {
+      updates.image =
+        typeof body.image === "string" && body.image.startsWith("/avatars/")
+          ? body.image
+          : body.image === null
+            ? null
+            : undefined;
+    }
 
     const user = await prisma.user.update({
       where: { id: session.user.id },

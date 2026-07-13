@@ -99,10 +99,11 @@ export const CONTRIBUTION_TYPE_CONFIG: Record<
     description: "Higher-level synthesis, cross-domain connections, breakthroughs",
   },
   methodology: {
-    label: "Methodology",
+    label: "Method",
     icon: "Pentagon",
     color: "text-emerald-500",
-    description: "Experimental or analytical approaches, protocols, and procedures",
+    description:
+      "A standalone method: a new statistical approach, R package, instrument, or protocol — applicable to data collection, analysis, or simulation",
   },
   replication: {
     label: "Replication",
@@ -116,8 +117,104 @@ export const PRIMARY_CONTRIBUTION_TYPES: ContributionType[] = [
   "question",
   "hypothesis",
   "data",
+  "methodology",
   "insight",
 ];
+
+// A Method contribution can declare which research activities it supports.
+// Stored in Contribution.metadata as { methodAppliesTo: MethodAppliesTo[] }.
+export const METHOD_APPLIES_TO = [
+  "data_collection",
+  "analysis",
+  "simulation",
+] as const;
+export type MethodAppliesTo = (typeof METHOD_APPLIES_TO)[number];
+
+export const METHOD_APPLIES_TO_CONFIG: Record<
+  MethodAppliesTo,
+  { label: string; color: string }
+> = {
+  data_collection: { label: "Data collection", color: "text-green-600" },
+  analysis: { label: "Analysis", color: "text-purple-600" },
+  simulation: { label: "Simulation", color: "text-cyan-600" },
+};
+
+// ============================================================
+// Disciplines — top-level subject categories with badge colors
+// ============================================================
+
+export const DISCIPLINES = [
+  "life_sciences",
+  "physical_sciences",
+  "math_cs",
+  "earth_environment",
+  "social_sciences",
+  "engineering",
+  "medicine_health",
+  "humanities",
+  "interdisciplinary",
+] as const;
+export type Discipline = (typeof DISCIPLINES)[number];
+
+export const DISCIPLINE_CONFIG: Record<
+  Discipline,
+  { label: string; badge: string; dot: string }
+> = {
+  life_sciences: {
+    label: "Life Sciences",
+    badge:
+      "bg-green-100 text-green-800 border-green-300 dark:bg-green-950 dark:text-green-300 dark:border-green-800",
+    dot: "bg-green-500",
+  },
+  physical_sciences: {
+    label: "Physical Sciences",
+    badge:
+      "bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-950 dark:text-blue-300 dark:border-blue-800",
+    dot: "bg-blue-500",
+  },
+  math_cs: {
+    label: "Math & CS",
+    badge:
+      "bg-purple-100 text-purple-800 border-purple-300 dark:bg-purple-950 dark:text-purple-300 dark:border-purple-800",
+    dot: "bg-purple-500",
+  },
+  earth_environment: {
+    label: "Earth & Environment",
+    badge:
+      "bg-teal-100 text-teal-800 border-teal-300 dark:bg-teal-950 dark:text-teal-300 dark:border-teal-800",
+    dot: "bg-teal-500",
+  },
+  social_sciences: {
+    label: "Social Sciences",
+    badge:
+      "bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-950 dark:text-amber-300 dark:border-amber-800",
+    dot: "bg-amber-500",
+  },
+  engineering: {
+    label: "Engineering",
+    badge:
+      "bg-orange-100 text-orange-800 border-orange-300 dark:bg-orange-950 dark:text-orange-300 dark:border-orange-800",
+    dot: "bg-orange-500",
+  },
+  medicine_health: {
+    label: "Medicine & Health",
+    badge:
+      "bg-red-100 text-red-800 border-red-300 dark:bg-red-950 dark:text-red-300 dark:border-red-800",
+    dot: "bg-red-500",
+  },
+  humanities: {
+    label: "Humanities",
+    badge:
+      "bg-pink-100 text-pink-800 border-pink-300 dark:bg-pink-950 dark:text-pink-300 dark:border-pink-800",
+    dot: "bg-pink-500",
+  },
+  interdisciplinary: {
+    label: "Interdisciplinary",
+    badge:
+      "bg-gray-100 text-gray-800 border-gray-300 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600",
+    dot: "bg-gray-500",
+  },
+};
 
 export const TRUST_LEVELS = [
   "new_member",
@@ -240,11 +337,13 @@ export const CREDIT_DIMENSIONS = [
 ] as const;
 export type CreditDimension = (typeof CREDIT_DIMENSIONS)[number];
 
-// The prototype tracks a 4-dimension subset (brief §3.1 B3). The full 9-dim
-// config above is retained for forward-compatibility with the production system.
+// The prototype tracks a 5-dimension subset (brief §3.1 B3 had 4; "method"
+// was promoted to first-class alongside the standalone Method contribution
+// type). The full 9-dim config above is retained for the production system.
 export const PROTOTYPE_CREDIT_DIMENSIONS: CreditDimension[] = [
   "idea",
   "data",
+  "method",
   "analysis",
   "validation",
 ];

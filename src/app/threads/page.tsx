@@ -11,6 +11,7 @@ import {
   type VisibilityLevel,
 } from "@/lib/types";
 import { ThreadFilters } from "@/components/thread/thread-filters";
+import { DisciplineBadge } from "@/components/thread/discipline-badge";
 
 export default async function ThreadsPage({
   searchParams,
@@ -192,7 +193,8 @@ export default async function ThreadsPage({
                     <div className="flex-1">
                       <CardTitle className="text-lg">{thread.title}</CardTitle>
                     </div>
-                    <div className="flex gap-2 flex-shrink-0">
+                    <div className="flex gap-2 flex-shrink-0 flex-wrap justify-end">
+                      <DisciplineBadge discipline={thread.discipline} />
                       <Badge variant="secondary">{thread.currentStage}</Badge>
                       <Badge variant="outline">
                         {VISIBILITY_LABELS[thread.visibility as VisibilityLevel]}

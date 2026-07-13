@@ -122,13 +122,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { title, description, visibility, domainTags } = parsed.data;
+    const { title, description, visibility, discipline, domainTags } = parsed.data;
 
     const thread = await prisma.thread.create({
       data: {
         title,
         description,
         visibility,
+        discipline,
         domainTags,
         creatorId: session.user.id,
       },

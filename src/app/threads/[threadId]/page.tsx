@@ -9,14 +9,17 @@ import {
   VISIBILITY_LABELS,
   STAGE_LEVEL,
   STAGE_LEVELS,
+  METHOD_APPLIES_TO_CONFIG,
   type ContributionType,
   type VisibilityLevel,
+  type MethodAppliesTo,
 } from "@/lib/types";
 import { formatDateTime, timeAgo } from "@/lib/utils";
 import { truncateHash } from "@/lib/hash";
 import { ContributionForm } from "@/components/contribution/contribution-form";
 import { VisibilityUpgrade } from "@/components/thread/visibility-upgrade";
 import { CollaboratorManager } from "@/components/thread/collaborator-manager";
+import { DisciplineBadge } from "@/components/thread/discipline-badge";
 import { CommentSection } from "@/components/contribution/comment-section";
 import { RevealButton } from "@/components/contribution/reveal-button";
 import { SealButton } from "@/components/contribution/seal-button";
@@ -144,6 +147,7 @@ export default async function ThreadDetailPage({
         <div className="flex items-start justify-between gap-4 mb-4">
           <h1 className="text-3xl font-bold">{thread.title}</h1>
           <div className="flex gap-2 flex-shrink-0 flex-wrap justify-end">
+            <DisciplineBadge discipline={thread.discipline} />
             <VerificationBadge badge={thread.verificationBadge} />
             <Badge variant="secondary">{thread.currentStage}</Badge>
             <Badge variant="outline">
@@ -361,6 +365,23 @@ export default async function ThreadDetailPage({
                       >
                         {typeConfig.label}
                       </Badge>
+                      {contribution.type === "methodology" &&
+                        (
+                          (contribution.metadata as { methodAppliesTo?: string[] } | null)
+                            ?.methodAppliesTo ?? []
+                        ).map((a) => {
+                          const cfg =
+                            METHOD_APPLIES_TO_CONFIG[a as MethodAppliesTo];
+                          return cfg ? (
+                            <Badge
+                              key={a}
+                              variant="secondary"
+                              className={`text-[10px] ${cfg.color}`}
+                            >
+                              → {cfg.label}
+                            </Badge>
+                          ) : null;
+                        })}
                       <span className="text-sm text-muted-foreground">
                         by{" "}
                         <Link

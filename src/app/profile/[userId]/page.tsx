@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CreditDistribution } from "@/components/credit/CreditDistribution";
 import { OrcidBadge } from "@/components/profile/OrcidBadge";
+import { AvatarBadge } from "@/components/ui/avatar-badge";
 import { summarizeCredits } from "@/lib/credits";
 import { TRUST_LEVEL_CONFIG, type TrustLevel } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
@@ -70,18 +71,12 @@ export default async function PublicProfilePage({
   return (
     <div className="container mx-auto max-w-3xl px-4 py-8">
       <div className="flex items-center gap-4 mb-6">
-        {user.image ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={user.image}
-            alt={displayName}
-            className="h-16 w-16 rounded-full"
-          />
-        ) : (
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-2xl font-bold text-primary">
-            {displayName.charAt(0).toUpperCase()}
-          </div>
-        )}
+        <AvatarBadge
+          name={displayName}
+          seed={user.id}
+          image={user.image}
+          size="lg"
+        />
         <div>
           <h1 className="text-2xl font-bold">{displayName}</h1>
           <div className="mt-1 flex flex-wrap items-center gap-2">

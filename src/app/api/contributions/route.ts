@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { threadId, type, content, visibility, parentId, sealed, circleUserIds } = parsed.data;
+    const { threadId, type, content, visibility, parentId, sealed, circleUserIds, methodAppliesTo } = parsed.data;
 
     // When visibility is "shared", circleUserIds can restrict which collaborators
     // see this contribution. Persisted via ContributionShare in the seal/collab pass;
@@ -63,6 +63,11 @@ export async function POST(request: NextRequest) {
           visibility: effectiveVisibility,
           sealedAt: sealed ? now : null,
           parentId,
+          // Method contributions record which activities they support.
+          metadata:
+            type === "methodology" && methodAppliesTo?.length
+              ? { methodAppliesTo }
+              : undefined,
           createdAt: now,
         },
         include: {

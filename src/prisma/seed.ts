@@ -81,7 +81,7 @@ async function main() {
   // ---- Thread 1: Soundscape — fully public ----
   const thread1 = await prisma.thread.upsert({
     where: { id: "seed-thread-soundscape" },
-    update: { visibility: "public" },
+    update: { visibility: "public", discipline: "earth_environment" },
     create: {
       id: "seed-thread-soundscape",
       creatorId: admin.id,
@@ -90,6 +90,7 @@ async function main() {
       description:
         "Exploring the relationship between soundscape complexity metrics and the reproducibility of information extraction from acoustic recordings. As ecological monitoring increasingly relies on automated analysis of soundscapes, understanding how complexity affects extraction reliability becomes critical for methodology validation.",
       visibility: "public",
+      discipline: "earth_environment",
       currentStage: "question",
       domainTags: ["ecology", "acoustics", "methodology"],
     },
@@ -109,7 +110,7 @@ async function main() {
   // ---- Thread 2: Brain resolution — public thread, full visibility range ----
   const thread2 = await prisma.thread.upsert({
     where: { id: "seed-thread-brain-dimensions" },
-    update: { visibility: "public" },
+    update: { visibility: "public", discipline: "interdisciplinary" },
     create: {
       id: "seed-thread-brain-dimensions",
       creatorId: admin.id,
@@ -118,6 +119,7 @@ async function main() {
       description:
         "A speculative thread exploring whether the temporal resolution limits of human perception (e.g., the ~40ms binding window) could be understood as information compression artifacts — as if a higher-dimensional universe's information is being projected through the bottleneck of neural temporal processing.",
       visibility: "public",
+      discipline: "interdisciplinary",
       currentStage: "hypothesis",
       domainTags: ["neuroscience", "physics", "philosophy"],
     },
@@ -188,7 +190,7 @@ async function main() {
   // ---- Thread 3: Emergence — fully public ----
   const thread3 = await prisma.thread.upsert({
     where: { id: "seed-thread-emergence" },
-    update: { visibility: "public" },
+    update: { visibility: "public", discipline: "physical_sciences" },
     create: {
       id: "seed-thread-emergence",
       creatorId: admin.id,
@@ -197,6 +199,7 @@ async function main() {
       description:
         "Investigating whether emergent properties in complex systems can be understood as the visible projection of information propagation occurring in higher-dimensional abstract spaces. This connects information geometry, complex systems theory, and theoretical physics.",
       visibility: "public",
+      discipline: "physical_sciences",
       currentStage: "question",
       domainTags: ["complex systems", "information theory", "cosmology"],
     },
@@ -262,7 +265,7 @@ async function main() {
 
   console.log("Seed complete!");
   console.log(`  2 users, 3 threads, ${contributions.length} contributions`);
-  console.log(`  Demonstrates: public / sealed / shared / private + 4-dim credits`);
+  console.log(`  Demonstrates: public / sealed / shared / private + 5-dim credits`);
 }
 
 main()

@@ -93,6 +93,8 @@ model Thread {
   description  String
   visibility   String   @default("private")
   currentStage String   @default("question") @map("current_stage")
+  // Top-level discipline (DISCIPLINE_CONFIG key) — colored badge in the UI.
+  discipline   String?
   domainTags   Json     @default("[]") @map("domain_tags")
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
@@ -131,6 +133,8 @@ model Contribution {
   updatedAt   DateTime @updatedAt @map("updated_at")
   parentId    String?  @map("parent_id")
   attachments Json     @default("[]")
+  // Structured extras per type — e.g. Method: { methodAppliesTo: ["analysis"] }
+  metadata    Json?
   // v2: replication metadata (Task 2) — { originalThreadId, outcome }
   replicationMeta Json? @map("replication_meta")
 
