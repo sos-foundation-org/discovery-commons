@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TypeIcon } from "@/components/contribution/type-icon";
@@ -44,6 +45,7 @@ export function ContributionForm({
   const [visibility, setVisibility] = useState<VisibilityLevel>(threadVisibility);
   const [sealed, setSealed] = useState(false);
   const [methodAppliesTo, setMethodAppliesTo] = useState<MethodAppliesTo[]>([]);
+  const [dataUrl, setDataUrl] = useState("");
   const [showAdvancedTypes, setShowAdvancedTypes] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -104,6 +106,7 @@ export function ContributionForm({
           ...(type === "methodology" && methodAppliesTo.length > 0
             ? { methodAppliesTo }
             : {}),
+          ...(type === "data" && dataUrl.trim() ? { dataUrl: dataUrl.trim() } : {}),
           ...(visibility === "shared" && selectedCircleUserIds.length > 0
             ? { circleUserIds: selectedCircleUserIds }
             : {}),
@@ -231,6 +234,27 @@ export function ContributionForm({
             </div>
           )}
 
+          {/* Data: link to the raw dataset (not uploaded — hosted elsewhere) */}
+          {type === "data" && (
+            <div className="rounded-lg border p-3">
+              <label className="block text-sm font-medium mb-1">
+                Raw data link{" "}
+                <span className="text-xs font-normal text-muted-foreground">
+                  (optional)
+                </span>
+              </label>
+              <Input
+                type="url"
+                value={dataUrl}
+                onChange={(e) => setDataUrl(e.target.value)}
+                placeholder="https://zenodo.org/… · OSF · GitHub · a CSV URL"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Link to where the dataset lives so others (and code) can fetch it.
+              </p>
+            </div>
+          )}
+
           {/* Content */}
           <div>
             <Textarea
@@ -241,7 +265,9 @@ export function ContributionForm({
               required
             />
             <p className="text-xs text-muted-foreground mt-1">
-              {content.length}/10,000 &middot; Markdown supported
+              {content.length}/10,000 &middot; Markdown supported &middot; embed an
+              image with <code>![alt](url)</code>, a chart with a{" "}
+              <code>```chart</code> block, or a video with <code>```embed</code>
             </p>
           </div>
 

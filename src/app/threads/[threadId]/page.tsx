@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Database } from "lucide-react";
 import { notFound, redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
@@ -461,6 +462,22 @@ export default async function ThreadDetailPage({
                         content={contribution.content}
                         className="mb-3"
                       />
+                      {contribution.type === "data" &&
+                        (contribution.metadata as { dataUrl?: string } | null)
+                          ?.dataUrl && (
+                          <a
+                            href={
+                              (contribution.metadata as { dataUrl?: string })
+                                .dataUrl
+                            }
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="mb-3 inline-flex items-center gap-1.5 rounded-md border border-green-300 bg-green-50 px-2.5 py-1 text-xs font-medium text-green-800 hover:bg-green-100 dark:border-green-800 dark:bg-green-950 dark:text-green-300"
+                          >
+                            <Database className="h-3.5 w-3.5" />
+                            Raw dataset
+                          </a>
+                        )}
                       {isSealed && isContribAuthor && (
                         <div className="mb-3 p-2 rounded bg-amber-50 dark:bg-amber-950 flex items-center justify-between gap-2">
                           <span className="text-xs text-amber-700 dark:text-amber-300">

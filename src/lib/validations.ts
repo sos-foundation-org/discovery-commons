@@ -36,6 +36,9 @@ export const createContributionSchema = z.object({
   circleUserIds: z.array(z.string()).optional(),
   // Method only: which research activities the method supports.
   methodAppliesTo: z.array(z.enum(METHOD_APPLIES_TO)).max(3).optional(),
+  // Data only: a link to the raw dataset (Zenodo/OSF/GitHub/CSV/…). Files are
+  // not uploaded to the DB — only the URL is stored.
+  dataUrl: z.string().url().max(2000).optional().or(z.literal("")),
 });
 
 export const createCommentSchema = z.object({

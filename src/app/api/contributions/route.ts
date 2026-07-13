@@ -1,10 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { createContributionSchema } from "@/lib/validations";
 import { generatePriorityHash } from "@/lib/hash";
 import { STAGE_LEVEL } from "@/lib/types";
 import { generateCredits } from "@/lib/credits";
+
+// Assemble the per-type metadata JSON (undefined when empty so we don't store {}).
+function buildMetadata(
+  type: string,
+  opts: { methodAppliesTo?: string[]; dataUrl?: string }
+): Prisma.InputJsonValue | undefined {
+  const meta: Record<string, string | string[]> = {};
+  if (type === "methodology" && opts.methodAppliesTo?.length) {
+    meta.methodAppliesTo = opts.methodAppliesTo;
+  }
+  if (type === "data" && opts.dataUrl) {
+    meta.dataUrl = opts.dataUrl;
+  }
+  return Object.keys(meta).length ? meta : undefined;
+}
 
 export async function POST(request: NextRequest) {
   const session = await getSession();
@@ -28,7 +44,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { threadId, type, content, visibility, parentId, sealed, circleUserIds, methodAppliesTo } = parsed.data;
+    const { threadId, type, content, visibility, parentId, sealed, circleUserIds, methodAppliesTo, dataUrl } = parsed.data;
 
     // When visibility is "shared", circleUserIds can restrict which collaborators
     // see this contribution. Persisted via ContributionShare in the seal/collab pass;
@@ -63,11 +79,8 @@ export async function POST(request: NextRequest) {
           visibility: effectiveVisibility,
           sealedAt: sealed ? now : null,
           parentId,
-          // Method contributions record which activities they support.
-          metadata:
-            type === "methodology" && methodAppliesTo?.length
-              ? { methodAppliesTo }
-              : undefined,
+          // Per-type structured extras stored on the contribution.
+          metadata: buildMetadata(type, { methodAppliesTo, dataUrl }),
           createdAt: now,
         },
         include: {

@@ -1,16 +1,18 @@
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { SimpleChart } from "./simple-chart";
+import { EmbedBlock } from "./embed-block";
 
 // Renders contribution / thread body text as real Markdown (GFM: tables, lists,
-// code, links) and turns ```chart fenced blocks into reproducible SVG charts.
-// Splitting the chart blocks out first keeps the markdown pipeline simple and
-// lets charts render as block-level figures rather than inside <pre>.
+// code, links, `![](img)` images) and turns special fenced blocks into
+// reproducible visuals: ```chart (SVG chart) and ```embed (YouTube/Vimeo).
+// Splitting these blocks out first keeps the markdown pipeline simple and lets
+// them render as block-level figures rather than inside <pre>.
 
-type Segment = { type: "md" | "chart"; text: string };
+type Segment = { type: "md" | "chart" | "embed"; text: string };
 
-function splitChartBlocks(content: string): Segment[] {
-  const re = /```chart\s*\n([\s\S]*?)```/g;
+function splitBlocks(content: string): Segment[] {
+  const re = /```(chart|embed)\s*\n([\s\S]*?)```/g;
   const out: Segment[] = [];
   let last = 0;
   let m: RegExpExecArray | null;
@@ -18,7 +20,7 @@ function splitChartBlocks(content: string): Segment[] {
     if (m.index > last) {
       out.push({ type: "md", text: content.slice(last, m.index) });
     }
-    out.push({ type: "chart", text: m[1].trim() });
+    out.push({ type: m[1] as "chart" | "embed", text: m[2].trim() });
     last = re.lastIndex;
   }
   if (last < content.length) {
@@ -34,12 +36,14 @@ export function ContributionContent({
   content: string;
   className?: string;
 }) {
-  const segments = splitChartBlocks(content);
+  const segments = splitBlocks(content);
   return (
     <div className={`space-y-2 ${className}`}>
       {segments.map((seg, i) =>
         seg.type === "chart" ? (
           <SimpleChart key={i} spec={seg.text} />
+        ) : seg.type === "embed" ? (
+          <EmbedBlock key={i} url={seg.text} />
         ) : seg.text.trim() ? (
           <div
             key={i}
