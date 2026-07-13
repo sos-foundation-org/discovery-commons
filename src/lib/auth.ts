@@ -90,19 +90,27 @@ export const authOptions: NextAuthOptions = {
     strategy: "jwt",
   },
   callbacks: {
-    // Persist the DB user id onto the token at sign-in so both the middleware
-    // and the session callback can read it (with adapter + OAuth, `user.id` is
-    // the database id on first call).
+    // Persist id + profile fields onto the token at sign-in so the session
+    // callback (and middleware) never has to hit the database on subsequent
+    // requests — the DB is only queried once, when `user` is present.
     async jwt({ token, user }) {
-      if (user?.id) token.sub = user.id;
+      if (user?.id) {
+        token.sub = user.id;
+        const dbUser = await prisma.user.findUnique({ where: { id: user.id } });
+        (token as any).trustLevel = (dbUser as any)?.trustLevel ?? "new_member";
+        (token as any).displayName =
+          (dbUser as any)?.displayName ?? user.name ?? null;
+        token.picture = (dbUser as any)?.image ?? token.picture ?? null;
+      }
       return token;
     },
     async session({ session, token }) {
       if (session.user && token?.sub) {
         session.user.id = token.sub;
-        const dbUser = await prisma.user.findUnique({ where: { id: token.sub } });
-        session.user.trustLevel = (dbUser as any)?.trustLevel ?? "new_member";
-        session.user.displayName = (dbUser as any)?.displayName ?? session.user.name;
+        session.user.trustLevel = (token as any).trustLevel ?? "new_member";
+        session.user.displayName =
+          (token as any).displayName ?? session.user.name;
+        if (token.picture) session.user.image = token.picture as string;
       }
       return session;
     },
