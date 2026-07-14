@@ -24,6 +24,14 @@ export function Footer() {
               <Link href="/sealed" className="hover:text-foreground transition-colors">
                 Seal Your Ideas
               </Link>
+              <a
+                href="https://forms.gle/g4suToFzzHDaVuUr6"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-foreground transition-colors"
+              >
+                Contact
+              </a>
             </nav>
           </div>
           <div>
@@ -42,11 +50,33 @@ export function Footer() {
           </div>
         </div>
         <div className="mt-8 pt-4 border-t text-center text-xs text-muted-foreground">
-          <p>
-            Operated by{" "}
-            <strong>Sustainability of Sustainability Foundation</strong> — a
-            501(c)(3) public charity (EIN 41-3097632, Massachusetts)
-          </p>
+          <div className="flex items-center justify-center gap-2">
+            <a
+              href="https://sos-commons.vercel.app/"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Sustainability of Sustainability Foundation"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/images/SOS-LOGO_v2.svg"
+                alt="SOS Foundation logo"
+                className="h-7 w-auto"
+              />
+            </a>
+            <p>
+              Operated by{" "}
+              <a
+                href="https://sos-commons.vercel.app/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-semibold underline hover:text-foreground"
+              >
+                Sustainability of Sustainability Foundation
+              </a>{" "}
+              — a 501(c)(3) public charity (EIN 41-3097632, Massachusetts)
+            </p>
+          </div>
           <p className="mt-1">
             All contributions are timestamped and SHA-256 hashed for priority
             protection. Code licensed under AGPL-3.0.
