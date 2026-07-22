@@ -19,14 +19,17 @@
 -- 1. content_hash immutability (contributions + contribution_versions)
 -- ---------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION prevent_hash_modification()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SET search_path = ''
+AS $$
 BEGIN
   IF OLD.content_hash IS DISTINCT FROM NEW.content_hash THEN
     RAISE EXCEPTION 'content_hash is immutable and cannot be modified';
   END IF;
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$;
 
 DROP TRIGGER IF EXISTS trg_contributions_hash_immutable ON contributions;
 CREATE TRIGGER trg_contributions_hash_immutable
@@ -42,14 +45,17 @@ CREATE TRIGGER trg_cv_hash_immutable
 -- 2. created_at (priority timestamp) immutability on contributions
 -- ---------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION prevent_created_at_modification()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SET search_path = ''
+AS $$
 BEGIN
   IF OLD.created_at IS DISTINCT FROM NEW.created_at THEN
     RAISE EXCEPTION 'created_at is immutable (priority timestamp)';
   END IF;
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$;
 
 DROP TRIGGER IF EXISTS trg_contributions_created_immutable ON contributions;
 CREATE TRIGGER trg_contributions_created_immutable
@@ -61,14 +67,17 @@ CREATE TRIGGER trg_contributions_created_immutable
 --    that produced the public hash can never change.
 -- ---------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION prevent_sealed_content_edit()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SET search_path = ''
+AS $$
 BEGIN
   IF OLD.visibility = 'sealed' AND OLD.content IS DISTINCT FROM NEW.content THEN
     RAISE EXCEPTION 'sealed contribution content cannot be modified';
   END IF;
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$;
 
 DROP TRIGGER IF EXISTS trg_contributions_sealed_immutable ON contributions;
 CREATE TRIGGER trg_contributions_sealed_immutable
@@ -81,7 +90,10 @@ CREATE TRIGGER trg_contributions_sealed_immutable
 --    sealed can be revealed (→ shared/public) but never reverted to private.
 -- ---------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION prevent_visibility_downgrade()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SET search_path = ''
+AS $$
 BEGIN
   IF OLD.visibility = 'public' AND NEW.visibility <> 'public' THEN
     RAISE EXCEPTION 'cannot downgrade visibility from public';
@@ -91,7 +103,7 @@ BEGIN
   END IF;
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$;
 
 DROP TRIGGER IF EXISTS trg_contributions_visibility_rules ON contributions;
 CREATE TRIGGER trg_contributions_visibility_rules
@@ -107,7 +119,10 @@ CREATE TRIGGER trg_threads_visibility_rules
 -- 5. Credit records are append-only: hash + timestamp immutable (credits + credits_v2)
 -- ---------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION prevent_credit_hash_modification()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SET search_path = ''
+AS $$
 BEGIN
   IF OLD.hash IS DISTINCT FROM NEW.hash THEN
     RAISE EXCEPTION 'credit hash is immutable';
@@ -117,7 +132,7 @@ BEGIN
   END IF;
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$;
 
 DROP TRIGGER IF EXISTS trg_credits_immutable ON credits;
 CREATE TRIGGER trg_credits_immutable
@@ -133,7 +148,10 @@ CREATE TRIGGER trg_credits_v2_immutable
 -- 6. Sealed registration hash + timestamp immutable (legacy seal table)
 -- ---------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION prevent_sealed_hash_modification()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SET search_path = ''
+AS $$
 BEGIN
   IF OLD.content_hash IS DISTINCT FROM NEW.content_hash THEN
     RAISE EXCEPTION 'sealed registration hash is immutable';
@@ -143,7 +161,7 @@ BEGIN
   END IF;
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$;
 
 DROP TRIGGER IF EXISTS trg_sealed_hash_immutable ON sealed_registrations;
 CREATE TRIGGER trg_sealed_hash_immutable
@@ -154,11 +172,14 @@ CREATE TRIGGER trg_sealed_hash_immutable
 -- 7. No deletes on hash-bearing / append-only tables (P-2: data integrity)
 -- ---------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION prevent_delete()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SET search_path = ''
+AS $$
 BEGIN
   RAISE EXCEPTION 'Deletion is not allowed on this table (Policy P-2: data integrity)';
 END;
-$$ LANGUAGE plpgsql;
+$$;
 
 DROP TRIGGER IF EXISTS trg_contributions_no_delete ON contributions;
 CREATE TRIGGER trg_contributions_no_delete
