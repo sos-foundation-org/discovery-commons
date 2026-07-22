@@ -804,4 +804,12 @@ Anonymous comments 在 response 中將 author 替換為硬編碼的 `{ id: "anon
 
 ---
 
+## 9. 修復記錄
+
+| 日期 | 修復項目 | 說明 |
+|------|---------|------|
+| 2026-07-22 | Supabase RLS 啟用 | 對所有 20 張 public schema 表啟用 Row-Level Security（無 policy = 拒絕所有 REST API 存取），並撤銷 `anon` / `authenticated` 角色的直接 table 權限。Prisma（postgres 角色）不受影響。修復 Supabase Security Advisory: `rls_disabled_in_public` + `sensitive_columns_exposed`。SQL 腳本保存於 `src/prisma/rls.sql`。 |
+
+---
+
 > **免責聲明**: 本報告為靜態程式碼審計（static code review），未執行 penetration testing 或動態分析。實際風險可能因部署環境而異。建議定期執行安全審計並設定 CI/CD pipeline 的 dependency scanning（如 `npm audit` 或 Snyk）。
