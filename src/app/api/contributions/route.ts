@@ -78,6 +78,10 @@ export async function POST(request: NextRequest) {
           contentHash,
           visibility: effectiveVisibility,
           sealedAt: sealed ? now : null,
+          // Credit timestamp: a contribution created directly public is
+          // published on the spot (Web Prototype §3B). Non-public → null (no
+          // credit priority yet). Mirrors the Postgres INSERT guard trigger.
+          publishedAt: effectiveVisibility === "public" ? now : null,
           parentId,
           // Per-type structured extras stored on the contribution.
           metadata: buildMetadata(type, { methodAppliesTo, dataUrl }),

@@ -97,6 +97,11 @@ export function ShareManager({ contributionId }: { contributionId: string }) {
           {busy ? "…" : "Share"}
         </Button>
       </div>
+      {/* Web Prototype §3B.7: sharing does not establish credit priority. */}
+      <p className="mb-2 text-[11px] text-muted-foreground">
+        Sharing with collaborators does not create a credit timestamp. To protect
+        priority, seal first, then share.
+      </p>
       {error && <p className="mb-2 text-xs text-red-600">{error}</p>}
       {shares.length === 0 ? (
         <p className="text-xs text-muted-foreground">

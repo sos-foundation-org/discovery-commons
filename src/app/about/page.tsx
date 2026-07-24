@@ -218,6 +218,57 @@ export default function AboutPage() {
         </p>
       </section>
 
+      {/* Credit timestamps: publishing establishes priority */}
+      <section id="credit-timestamps" className="mb-12 scroll-mt-24">
+        <h2 className="text-2xl font-bold mb-6">
+          Credit Timestamps: Publishing Establishes Priority
+        </h2>
+        <p className="text-muted-foreground mb-6">
+          Discovery Commons follows the same principle as a patent&apos;s
+          publication date: your credit priority is counted from the moment you
+          make a contribution <strong>public</strong> — not from when you first
+          wrote it, and not from when you sealed it. An idea kept private earns no
+          claimable priority, which keeps people sharing openly rather than
+          hoarding timestamps.
+        </p>
+        <div className="grid sm:grid-cols-2 gap-6">
+          <Card className="border-amber-300 dark:border-amber-800">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg">Seal — Proof of Existence</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                Sealing publishes your SHA-256 hash and timestamp while hiding the
+                content. It proves <em>&ldquo;I already had this idea at this
+                time&rdquo;</em> and can serve as supporting evidence in a
+                dispute — but it does{" "}
+                <strong className="text-foreground">not</strong> establish credit
+                priority on its own.
+              </p>
+            </CardContent>
+          </Card>
+          <Card className="border-green-300 dark:border-green-800">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg">Publish — Credit Priority</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                Publishing makes the full content public and records your{" "}
+                <strong className="text-foreground">credit timestamp</strong> —
+                the official time used to order priority. It is irreversible: once
+                public, a contribution can never go back to private or shared.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+        <p className="text-sm text-muted-foreground mt-4">
+          A common path: create privately → <strong>seal</strong> to lock in
+          proof of existence → run your experiment → <strong>publish</strong> to
+          claim credit and reveal the full story. Sealing is your insurance;
+          publishing is your priority.
+        </p>
+      </section>
+
       {/* Community Covenant */}
       <section className="mb-12">
         <h2 className="text-2xl font-bold mb-6">Community Covenant</h2>

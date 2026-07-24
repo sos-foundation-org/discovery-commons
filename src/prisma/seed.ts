@@ -23,6 +23,9 @@ async function seedContribution(opts: {
   sealedAt?: Date;
 }) {
   const contentHash = priorityHash(opts.authorId, opts.content, opts.createdAt);
+  // Seeded public contributions are treated as published at creation time so
+  // they carry a credit timestamp (Web Prototype §3B). Non-public → null.
+  const publishedAt = opts.visibility === "public" ? opts.createdAt : null;
   await prisma.contribution.upsert({
     where: { id: opts.id },
     update: {
@@ -31,6 +34,7 @@ async function seedContribution(opts: {
       contentHash,
       sealedAt: opts.sealedAt ?? null,
       revealedAt: null,
+      publishedAt,
     },
     create: {
       id: opts.id,
@@ -41,6 +45,7 @@ async function seedContribution(opts: {
       contentHash,
       visibility: opts.visibility,
       sealedAt: opts.sealedAt ?? null,
+      publishedAt,
       createdAt: opts.createdAt,
     },
   });

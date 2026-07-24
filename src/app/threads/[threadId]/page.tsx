@@ -27,6 +27,9 @@ import { TypeIcon } from "@/components/contribution/type-icon";
 import { CommentSection } from "@/components/contribution/comment-section";
 import { RevealButton } from "@/components/contribution/reveal-button";
 import { SealButton } from "@/components/contribution/seal-button";
+import { PublishButton } from "@/components/contribution/publish-button";
+import { CreditTimestampStatus } from "@/components/contribution/credit-timestamp-status";
+import { OnboardingCreditHint } from "@/components/contribution/onboarding-credit-hint";
 import { ShareManager } from "@/components/contribution/share-manager";
 import { LikeButton } from "@/components/contribution/like-button";
 import { CopyLinkButton } from "@/components/contribution/copy-link-button";
@@ -484,23 +487,47 @@ export default async function ThreadDetailPage({
                           </a>
                         )}
                       {isSealed && isContribAuthor && (
-                        <div className="mb-3 p-2 rounded bg-amber-50 dark:bg-amber-950 flex items-center justify-between gap-2">
-                          <span className="text-xs text-amber-700 dark:text-amber-300">
-                            This contribution is sealed. Others can only see the
-                            hash{contribution.revealedAt ? "" : " until you reveal it"}.
-                          </span>
+                        <div className="mb-3 flex flex-wrap items-start justify-between gap-2 rounded bg-amber-50 p-2 dark:bg-amber-950">
+                          <div className="flex flex-col gap-0.5 text-xs">
+                            {/* Existence proof — positive framing. */}
+                            <span className="text-green-700 dark:text-green-400">
+                              ✓ Proof of existence recorded
+                              {contribution.sealedAt
+                                ? `: ${formatDateTime(contribution.sealedAt)}`
+                                : contribution.sealedReg
+                                  ? `: ${formatDateTime(contribution.sealedReg.registeredAt)}`
+                                  : ""}
+                            </span>
+                            {/* Credit timestamp — neutral framing. */}
+                            <span className="text-muted-foreground">
+                              Credit timestamp: not yet established (requires
+                              publishing)
+                            </span>
+                            <span className="mt-0.5 font-medium text-amber-700 dark:text-amber-300">
+                              Ready? Publish and claim credit →
+                            </span>
+                          </div>
                           <RevealButton contributionId={contribution.id} />
                         </div>
                       )}
                       {!isSealed &&
                         isContribAuthor &&
                         contribution.visibility !== "public" && (
-                          <div className="mb-3 p-2 rounded bg-muted/50 flex items-center justify-between gap-2">
+                          <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded bg-muted/50 p-2">
                             <span className="text-xs text-muted-foreground">
-                              Not ready to share? Seal this to lock the content
-                              while proving priority with its hash.
+                              Publish to make it public and record your credit
+                              timestamp — or seal to lock the content while proving
+                              priority with its hash.
                             </span>
-                            <SealButton contributionId={contribution.id} />
+                            <div className="flex items-center gap-2">
+                              <PublishButton
+                                contributionId={contribution.id}
+                                content={contribution.content}
+                                typeLabel={typeConfig.label}
+                                threadTitle={thread.title}
+                              />
+                              <SealButton contributionId={contribution.id} />
+                            </div>
                           </div>
                         )}
                       {isContribAuthor &&
@@ -511,7 +538,7 @@ export default async function ThreadDetailPage({
                         )}
                     </>
                   )}
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground font-mono">
+                  <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground font-mono">
                     <Link
                       href={`/verify/${contribution.contentHash}`}
                       title={`Verify ${contribution.contentHash}`}
@@ -521,6 +548,11 @@ export default async function ThreadDetailPage({
                     </Link>
                     <span>|</span>
                     <span>{formatDateTime(contribution.createdAt)}</span>
+                    <span>|</span>
+                    {/* Layer-2 credit-timestamp status (Web Prototype §3B.7). */}
+                    <CreditTimestampStatus
+                      publishedAt={contribution.publishedAt}
+                    />
                   </div>
 
                   {/* Actions: like · copy link · private (unlisted) link */}
@@ -557,10 +589,13 @@ export default async function ThreadDetailPage({
 
       {/* Add Contribution Form */}
       {session && (
-        <ContributionForm
-          threadId={thread.id}
-          threadVisibility={thread.visibility as VisibilityLevel}
-        />
+        <>
+          <OnboardingCreditHint />
+          <ContributionForm
+            threadId={thread.id}
+            threadVisibility={thread.visibility as VisibilityLevel}
+          />
+        </>
       )}
     </div>
   );

@@ -63,6 +63,7 @@ export function RevealButton({ contributionId }: { contributionId: string }) {
           variant="default"
           onClick={() => handleReveal("public")}
           disabled={isLoading}
+          title="Also records your credit timestamp"
           className="text-xs"
         >
           Public
@@ -82,7 +83,7 @@ export function RevealButton({ contributionId }: { contributionId: string }) {
       <span className="text-[11px] text-muted-foreground">
         {isLoading
           ? "Verifying hash…"
-          : "Reveal is irreversible. The hash is re-checked before unlocking."}
+          : "Reveal is irreversible. The hash is re-checked before unlocking. Revealing to Public also records your credit timestamp."}
       </span>
       {error && <span className="text-[11px] text-red-600">{error}</span>}
     </div>

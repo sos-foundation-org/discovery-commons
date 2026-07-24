@@ -68,7 +68,15 @@ export async function POST(
     const updated = await prisma.$transaction(async (tx) => {
       const c = await tx.contribution.update({
         where: { id: contribution.id },
-        data: { visibility, revealedAt: now },
+        data: {
+          visibility,
+          revealedAt: now,
+          // Revealing to public is a publish: it establishes credit priority
+          // (Web Prototype §3B). Revealing to shared does not. On Postgres the
+          // guard trigger stamps published_at authoritatively; we set it here so
+          // local SQLite (no triggers) stays consistent.
+          ...(visibility === "public" ? { publishedAt: now } : {}),
+        },
       });
       // Keep the legacy SealedRegistration in sync if one exists.
       if (contribution.sealedReg && contribution.sealedReg.status === "sealed") {
@@ -84,6 +92,7 @@ export async function POST(
       success: true,
       visibility: updated.visibility,
       revealedAt: now,
+      publishedAt: updated.publishedAt,
       hashVerified: true,
     });
   } catch (error) {

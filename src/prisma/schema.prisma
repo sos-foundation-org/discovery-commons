@@ -132,6 +132,12 @@ model Contribution {
   // exposing contentHash + serverTimestamp. sealedAt/revealedAt are the audit trail.
   sealedAt    DateTime? @map("sealed_at")
   revealedAt  DateTime? @map("revealed_at")
+  // Credit timestamp (Web Prototype §3B): set ONLY when the contribution is made
+  // public — the instant credit priority is established (patent-style publication
+  // date). null = never published (private/shared/sealed), so no credit priority.
+  // Set automatically when visibility → public and immutable thereafter (prod:
+  // contributions_before_update_guard trigger; local SQLite: app discipline).
+  publishedAt DateTime? @map("published_at")
   // "Unlisted" share link (like YouTube unlisted): anyone with this token can
   // view the contribution via /share/[token] even when it isn't public.
   shareToken  String?   @unique @map("share_token")
