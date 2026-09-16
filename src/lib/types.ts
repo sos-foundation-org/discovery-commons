@@ -216,6 +216,39 @@ export const DISCIPLINE_CONFIG: Record<
   },
 };
 
+/**
+ * Scope feature flag: disciplines offered in selection UI (e.g. New Thread).
+ * Hidden disciplines stay fully defined — existing threads keep their badges
+ * and the API still accepts every code. Only the pickers are narrowed.
+ */
+export const DEFAULT_VISIBLE_DISCIPLINES: readonly Discipline[] = [
+  "life_sciences",
+  "physical_sciences",
+  "math_cs",
+  "earth_environment",
+  "humanities",
+  "interdisciplinary",
+];
+
+/**
+ * NEXT_PUBLIC_VISIBLE_DISCIPLINES overrides the default: a comma-separated
+ * list of codes, or "all" to show every discipline. Unknown codes are ignored;
+ * unset/empty (or a list with no valid codes) uses DEFAULT_VISIBLE_DISCIPLINES.
+ */
+export function getVisibleDisciplines(
+  flag: string | undefined = process.env.NEXT_PUBLIC_VISIBLE_DISCIPLINES
+): readonly Discipline[] {
+  const raw = flag?.trim();
+  if (raw === "all") return DISCIPLINES;
+  const allow = raw
+    ? raw.split(",").map((s) => s.trim())
+    : [...DEFAULT_VISIBLE_DISCIPLINES];
+  const visible = DISCIPLINES.filter((d) => allow.includes(d));
+  return visible.length > 0
+    ? visible
+    : DISCIPLINES.filter((d) => DEFAULT_VISIBLE_DISCIPLINES.includes(d));
+}
+
 export const TRUST_LEVELS = [
   "new_member",
   "contributor",

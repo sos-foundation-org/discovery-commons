@@ -41,7 +41,7 @@ export default async function HomePage() {
         />
         <div className="container mx-auto max-w-4xl text-center relative">
           <Badge variant="secondary" className="mb-4">
-            Open-source research platform
+            Open research platform &mdash; all backgrounds welcome
           </Badge>
           <h1 className="text-4xl font-bold tracking-tight sm:text-6xl mb-6">
             The Antilibrary of Science
@@ -50,9 +50,11 @@ export default async function HomePage() {
             What you don&apos;t know matters more than what you do.
           </p>
           <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Share your unanswered questions, build on others&apos; unknowns, and
-            watch ideas evolve transparently &mdash; with SHA-256
-            priority protection baked into every contribution.
+            Whether you&apos;re a field naturalist, a theoretical physicist, or
+            a curious citizen &mdash; share your observations and ideas, build
+            on others&apos; unknowns, and watch discoveries evolve
+            transparently. Every insight is SHA-256 protected from the moment
+            you type it.
           </p>
           <div className="flex gap-4 justify-center flex-wrap">
             {session ? (
@@ -92,7 +94,7 @@ export default async function HomePage() {
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold">{stats[2]}</div>
-              <div className="text-xs text-muted-foreground">Researchers</div>
+              <div className="text-xs text-muted-foreground">Contributors</div>
             </div>
           </div>
         </div>
@@ -114,7 +116,12 @@ export default async function HomePage() {
               </p>
               <p className="text-muted-foreground">
                 Discovery Commons is the first platform where a thoughtful
-                question earns the same credit as a published result. Every
+                question earns the same credit as a published result &mdash; and
+                where a birdwatcher&apos;s field note can spark a collaboration
+                with a university lab. Traditional citizen science asks
+                volunteers to collect data. Here, your insights have their own
+                value: they can seed academic partnerships, inspire new research
+                directions, or even be licensed commercially. Every
                 contribution is hashed, timestamped, and permanently attributed.
               </p>
             </div>
@@ -146,7 +153,7 @@ export default async function HomePage() {
               {
                 step: "1",
                 title: "Ask a Question",
-                desc: "Start a thread with an unusual question. The weirder the better — that's where breakthroughs hide.",
+                desc: "Start a thread with an unusual question — whether it comes from a research lab, a forest trail, or your grandmother's bookshelf. The weirder the better.",
                 color: "from-blue-500/20 to-blue-600/20",
               },
               {
@@ -263,9 +270,9 @@ export default async function HomePage() {
               },
               {
                 quote:
-                  "As a grad student, my questions used to disappear into lab notebooks. Here they're first-class contributions with my name and timestamp on them.",
+                  "As a grad student, my questions used to disappear into lab notebooks. Here they're first-class contributions with my name and timestamp on them — and a retired naturalist added an observation that completely changed my approach.",
                 name: "C. Student",
-                role: "Neuroscience PhD Candidate",
+                role: "Mathematics PhD Candidate",
                 color: "bg-purple-100 dark:bg-purple-950",
               },
             ].map((t) => (
@@ -357,8 +364,9 @@ export default async function HomePage() {
               Your next great question is waiting
             </h2>
             <p className="text-lg text-muted-foreground mb-8">
-              Join a community where curiosity is currency and every idea is
-              protected from the moment you type it.
+              Join a community where curiosity is currency &mdash; no PhD
+              required. Every observation, question, and insight is protected
+              from the moment you type it.
             </p>
             <Link href="/auth/signin">
               <Button size="lg">Create Your Free Account</Button>

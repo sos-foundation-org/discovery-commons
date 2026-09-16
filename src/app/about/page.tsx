@@ -22,6 +22,14 @@ export default function AboutPage() {
           unanswered questions, half-formed hypotheses, and early observations
           are first-class contributions.
         </p>
+        <p className="text-lg text-muted-foreground max-w-2xl mx-auto mt-4">
+          Discovery Commons welcomes contributors across all backgrounds and
+          education levels — from field naturalists and amateur astronomers to
+          theoretical physicists and humanities scholars. Unlike traditional
+          citizen science platforms that only collect data, here your insights
+          carry independent value and can lead to academic collaborations or
+          commercial opportunities.
+        </p>
       </div>
 
       {/* Placeholder image */}
@@ -333,7 +341,8 @@ export default function AboutPage() {
       {/* Placeholder image */}
       <div className="w-full h-36 rounded-lg bg-gradient-to-r from-indigo-500/20 to-pink-500/20 flex items-center justify-center mb-12 border">
         <p className="text-sm text-muted-foreground">
-          Photo: Diverse researchers collaborating around a shared whiteboard
+          Photo: A field naturalist, a theorist, and a curious citizen building
+          an idea together
         </p>
       </div>
 
@@ -341,7 +350,8 @@ export default function AboutPage() {
       <section className="text-center py-8">
         <h2 className="text-2xl font-bold mb-4">Ready to Contribute?</h2>
         <p className="text-muted-foreground mb-6">
-          Join a community where your questions matter as much as your answers.
+          Join a community where your questions matter as much as your answers — no
+          lab coat required.
         </p>
         <div className="flex gap-4 justify-center">
           <Link href="/threads">

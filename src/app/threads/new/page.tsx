@@ -10,25 +10,31 @@ import { Badge } from "@/components/ui/badge";
 import {
   THREAD_VISIBILITY,
   VISIBILITY_LABELS,
-  DISCIPLINES,
+  getVisibleDisciplines,
   DISCIPLINE_CONFIG,
   type VisibilityLevel,
   type Discipline,
 } from "@/lib/types";
 
+const VISIBLE_DISCIPLINES = getVisibleDisciplines();
+
 const DOMAIN_SUGGESTIONS = [
   "ecology",
   "acoustics",
-  "neuroscience",
   "physics",
   "complex systems",
   "information theory",
   "methodology",
-  "education",
   "cosmology",
   "philosophy",
   "biology",
   "mathematics",
+  "geology",
+  "astronomy",
+  "taxonomy",
+  "natural history",
+  "literature",
+  "archaeology",
 ];
 
 export default function NewThreadPage() {
@@ -140,7 +146,7 @@ export default function NewThreadPage() {
                 Discipline
               </label>
               <div className="flex flex-wrap gap-2">
-                {DISCIPLINES.map((d) => {
+                {VISIBLE_DISCIPLINES.map((d) => {
                   const cfg = DISCIPLINE_CONFIG[d];
                   const active = discipline === d;
                   return (

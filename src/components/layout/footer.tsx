@@ -9,7 +9,8 @@ export function Footer() {
             <h3 className="font-semibold mb-3">Discovery Commons</h3>
             <p className="text-sm text-muted-foreground">
               The Antilibrary of Science — where great questions are as
-              valuable as great answers.
+              valuable as great answers, and every background brings
+              something new.
             </p>
           </div>
           <div>
