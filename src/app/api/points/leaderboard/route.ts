@@ -21,14 +21,15 @@ export async function GET() {
     },
   });
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const leaderboard = accounts.map((a: any, i: number) => ({
-    rank: i + 1,
-    user: a.user,
-    reputation: a.reputation,
-    level: getLevel(a.reputation),
-    lifetimeEarned: a.lifetimeEarned,
-  }));
+  const leaderboard = accounts.map(
+    (a: { reputation: number; lifetimeEarned: number; user: unknown }, i: number) => ({
+      rank: i + 1,
+      user: a.user,
+      reputation: a.reputation,
+      level: getLevel(a.reputation),
+      lifetimeEarned: a.lifetimeEarned,
+    })
+  );
 
   return NextResponse.json(leaderboard);
 }
