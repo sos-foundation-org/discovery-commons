@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ThreadRow } from "@/components/thread/thread-row";
+import { T } from "@/components/t";
 
 export default async function HomePage() {
   const session = await getSession();
@@ -41,41 +42,37 @@ export default async function HomePage() {
         />
         <div className="container mx-auto max-w-4xl text-center relative">
           <Badge variant="secondary" className="mb-4">
-            Open research platform &mdash; all backgrounds welcome
+            <T k="home.badge" />
           </Badge>
           <h1 className="text-4xl font-bold tracking-tight sm:text-6xl mb-6">
-            The Antilibrary of Science
+            <T k="home.title" />
           </h1>
           <p className="text-xl text-muted-foreground mb-2 max-w-2xl mx-auto">
-            What you don&apos;t know matters more than what you do.
+            <T k="home.subtitle" />
           </p>
           <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Whether you&apos;re a field naturalist, a theoretical physicist, or
-            a curious citizen &mdash; share your observations and ideas, build
-            on others&apos; unknowns, and watch discoveries evolve
-            transparently. Every insight is SHA-256 protected from the moment
-            you type it.
+            <T k="home.description" />
           </p>
           <div className="flex gap-4 justify-center flex-wrap">
             {session ? (
               <>
                 <Link href="/threads">
-                  <Button size="lg">Browse Threads</Button>
+                  <Button size="lg"><T k="home.browseThreads" /></Button>
                 </Link>
                 <Link href="/threads/new">
                   <Button size="lg" variant="outline">
-                    Start a Thread
+                    <T k="home.startThread" />
                   </Button>
                 </Link>
               </>
             ) : (
               <>
                 <Link href="/auth/signin">
-                  <Button size="lg">Get Started &mdash; Free</Button>
+                  <Button size="lg"><T k="home.getStarted" /></Button>
                 </Link>
                 <a href="#how-it-works">
                   <Button size="lg" variant="outline">
-                    How It Works
+                    <T k="home.howItWorks" />
                   </Button>
                 </a>
               </>
@@ -86,15 +83,15 @@ export default async function HomePage() {
           <div className="flex justify-center gap-8 mt-12">
             <div className="text-center">
               <div className="text-2xl font-bold">{stats[0]}</div>
-              <div className="text-xs text-muted-foreground">Threads</div>
+              <div className="text-xs text-muted-foreground"><T k="home.threads" /></div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold">{stats[1]}</div>
-              <div className="text-xs text-muted-foreground">Contributions</div>
+              <div className="text-xs text-muted-foreground"><T k="home.contributions" /></div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold">{stats[2]}</div>
-              <div className="text-xs text-muted-foreground">Contributors</div>
+              <div className="text-xs text-muted-foreground"><T k="home.contributors" /></div>
             </div>
           </div>
         </div>
@@ -250,21 +247,18 @@ export default async function HomePage() {
       <section className="py-16 px-4 bg-muted/50">
         <div className="container mx-auto max-w-5xl">
           <h2 className="text-3xl font-bold text-center mb-4">
-            Why Discovery Commons?
+            <T k="why.title" />
           </h2>
           <p className="text-center text-muted-foreground mb-10 max-w-2xl mx-auto">
-            Traditional science rewards only finished papers. We reward every
-            step of the journey.
+            <T k="why.subtitle" />
           </p>
           <div className="grid md:grid-cols-3 gap-6">
             <Card className="bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
               <CardContent className="pt-6">
                 <div className="text-3xl mb-3">&#x1F512;</div>
-                <h3 className="font-semibold mb-2">Priority Without Risk</h3>
+                <h3 className="font-semibold mb-2"><T k="why.priority.title" /></h3>
                 <p className="text-sm text-muted-foreground">
-                  Seal your idea with SHA-256 before anyone sees it. When
-                  you&apos;re ready, reveal the content &mdash; the timestamp
-                  proves you had it first.
+                  <T k="why.priority.desc" />
                 </p>
               </CardContent>
             </Card>
@@ -272,23 +266,19 @@ export default async function HomePage() {
               <CardContent className="pt-6">
                 <div className="text-3xl mb-3">&#x1F91D;</div>
                 <h3 className="font-semibold mb-2">
-                  Cross-Boundary Collaboration
+                  <T k="why.collab.title" />
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                  A field naturalist&apos;s observation can spark a
-                  collaboration with a university lab. No PhD required &mdash;
-                  every background brings something new.
+                  <T k="why.collab.desc" />
                 </p>
               </CardContent>
             </Card>
             <Card className="bg-purple-50 dark:bg-purple-950 border-purple-200 dark:border-purple-800">
               <CardContent className="pt-6">
                 <div className="text-3xl mb-3">&#x2696;</div>
-                <h3 className="font-semibold mb-2">Fair Credit, Always</h3>
+                <h3 className="font-semibold mb-2"><T k="why.credit.title" /></h3>
                 <p className="text-sm text-muted-foreground">
-                  Every contribution is credited across nine dimensions &mdash;
-                  idea, data, method, analysis, validation &mdash; not just
-                  &ldquo;first author vs. last author.&rdquo;
+                  <T k="why.credit.desc" />
                 </p>
               </CardContent>
             </Card>
@@ -324,7 +314,7 @@ export default async function HomePage() {
         <section className="py-16 px-4">
           <div className="container mx-auto max-w-5xl">
             <h2 className="text-3xl font-bold text-center mb-2">
-              Active Threads
+              <T k="general.activeThreads" />
             </h2>
             <p className="text-center text-muted-foreground mb-8">
               See what the community is exploring
@@ -336,7 +326,7 @@ export default async function HomePage() {
             </div>
             <div className="text-center mt-6">
               <Link href="/threads">
-                <Button variant="outline">View All Threads</Button>
+                <Button variant="outline"><T k="general.viewAll" /></Button>
               </Link>
             </div>
           </div>

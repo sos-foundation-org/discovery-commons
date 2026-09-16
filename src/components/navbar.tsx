@@ -7,9 +7,10 @@ import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { AvatarBadge } from "@/components/ui/avatar-badge";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { LanguageSelector } from "@/components/language-provider";
+import { LanguageSelector, useI18n } from "@/components/language-provider";
 
 export function Navbar() {
+  const { t } = useI18n();
   const { data: session, status } = useSession();
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -42,14 +43,14 @@ export function Navbar() {
   }, [session, fetchUnread]);
 
   const navLinks = [
-    { href: "/threads", label: "Threads" },
-    { href: "/about", label: "About" },
+    { href: "/threads", label: t("nav.threads") },
+    { href: "/about", label: t("nav.about") },
     ...(session
       ? [
-          { href: "/sealed", label: "Sealed Ideas" },
-          { href: "/points", label: "Points" },
-          { href: "/credits", label: "Credits" },
-          { href: "/settings", label: "Settings" },
+          { href: "/sealed", label: t("nav.sealed") },
+          { href: "/points", label: t("nav.points") },
+          { href: "/credits", label: t("nav.credits") },
+          { href: "/settings", label: t("nav.settings") },
         ]
       : []),
   ];
@@ -170,12 +171,12 @@ export function Navbar() {
                 size="sm"
                 onClick={() => signOut({ callbackUrl: "/" })}
               >
-                Sign Out
+                {t("nav.signOut")}
               </Button>
             </>
           ) : (
             <Button size="sm" onClick={() => signIn()}>
-              Sign In
+              {t("nav.signIn")}
             </Button>
           )}
         </div>
@@ -229,13 +230,13 @@ export function Navbar() {
                   onClick={() => setMobileOpen(false)}
                   className="block px-3 py-2 rounded-md text-sm text-muted-foreground"
                 >
-                  Profile
+                  {t("nav.profile")}
                 </Link>
                 <button
                   onClick={() => signOut({ callbackUrl: "/" })}
                   className="block w-full text-left px-3 py-2 rounded-md text-sm text-muted-foreground"
                 >
-                  Sign Out
+                  {t("nav.signOut")}
                 </button>
               </>
             ) : (
@@ -243,7 +244,7 @@ export function Navbar() {
                 onClick={() => signIn()}
                 className="block w-full text-left px-3 py-2 rounded-md text-sm font-medium"
               >
-                Sign In
+                {t("nav.signIn")}
               </button>
             )}
           </div>
