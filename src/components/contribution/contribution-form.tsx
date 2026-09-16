@@ -17,9 +17,20 @@ import {
   VISIBILITY_LABELS,
   METHOD_APPLIES_TO,
   METHOD_APPLIES_TO_CONFIG,
+  ACCESS_MODES,
+  ACCESS_MODE_LABELS,
+  COLLAB_SEEKING_TYPES,
+  COLLAB_SEEKING_LABELS,
+  LEVELS,
+  CONTENT_LICENSES,
+  CONTENT_LICENSE_CONFIG,
+  getDefaultLicense,
   type ContributionType,
   type VisibilityLevel,
   type MethodAppliesTo,
+  type AccessMode,
+  type CollabSeekingType,
+  type ContentLicense,
 } from "@/lib/types";
 
 interface CircleMember {
@@ -49,6 +60,15 @@ export function ContributionForm({
   const [showAdvancedTypes, setShowAdvancedTypes] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
+  // Pricing & collaboration (Phase 2)
+  const [accessMode, setAccessMode] = useState<AccessMode>("open");
+  const [price, setPrice] = useState<number>(0);
+  const [whyGated, setWhyGated] = useState("");
+  const [collabSeekingType, setCollabSeekingType] = useState<CollabSeekingType>("either");
+  const [collabMinLevel, setCollabMinLevel] = useState<number>(1);
+  const [collabDescription, setCollabDescription] = useState("");
+  const [license, setLicense] = useState<ContentLicense>("cc_by");
+  const [showLicenseConfirm, setShowLicenseConfirm] = useState(false);
   const [circleMembers, setCircleMembers] = useState<CircleMember[]>([]);
   const [circleLoading, setCircleLoading] = useState(false);
   const [selectedCircleUserIds, setSelectedCircleUserIds] = useState<string[]>([]);
@@ -109,6 +129,27 @@ export function ContributionForm({
           ...(type === "data" && dataUrl.trim() ? { dataUrl: dataUrl.trim() } : {}),
           ...(visibility === "shared" && selectedCircleUserIds.length > 0
             ? { circleUserIds: selectedCircleUserIds }
+            : {}),
+          // License
+          license,
+          // Pricing metadata (Phase 2)
+          ...(accessMode !== "open"
+            ? {
+                accessMode,
+                ...(price > 0 ? { price } : {}),
+                ...(whyGated.trim() ? { whyGated: whyGated.trim() } : {}),
+                ...(accessMode.includes("collab")
+                  ? {
+                      collaborationGate: {
+                        seekingType: collabSeekingType,
+                        minLevel: collabMinLevel,
+                        ...(collabDescription.trim()
+                          ? { description: collabDescription.trim() }
+                          : {}),
+                      },
+                    }
+                  : {}),
+              }
             : {}),
         }),
       });
@@ -351,6 +392,205 @@ export function ContributionForm({
               )}
             </div>
           )}
+
+          {/* Access & Pricing — progressive disclosure */}
+          <div className="rounded-lg border p-3 space-y-3">
+            <label className="block text-sm font-medium">
+              Access &amp; Pricing
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {(
+                [
+                  { mode: "open" as AccessMode, label: "🌐 Free & Open" },
+                  { mode: "priced" as AccessMode, label: "🔓 Priced" },
+                  { mode: "collab_open" as AccessMode, label: "🤝 Collaboration" },
+                  { mode: "priced_collab" as AccessMode, label: "🔓+🤝 Both" },
+                ] as const
+              ).map(({ mode, label }) => (
+                <button
+                  key={mode}
+                  type="button"
+                  onClick={() => setAccessMode(mode)}
+                  className={`px-3 py-2 min-h-[44px] rounded-md text-sm border transition-colors ${
+                    accessMode === mode
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-background border-border hover:bg-accent"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            {/* Priced options */}
+            {(accessMode === "priced" || accessMode === "priced_collab") && (
+              <div className="space-y-2 pl-1">
+                <div className="flex items-center gap-2">
+                  <label className="text-xs text-muted-foreground">Price:</label>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={1000}
+                    value={price || ""}
+                    onChange={(e) => setPrice(Number(e.target.value))}
+                    placeholder="e.g. 50"
+                    className="w-24 h-8 text-sm"
+                  />
+                  <span className="text-xs text-muted-foreground">DP</span>
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground">
+                    Why gated? (helps buyers understand the value)
+                  </label>
+                  <Input
+                    value={whyGated}
+                    onChange={(e) => setWhyGated(e.target.value)}
+                    placeholder="e.g. 3 years of field recordings + calibration pipeline"
+                    className="h-8 text-sm mt-1"
+                    maxLength={200}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Collaboration options */}
+            {(accessMode === "collab_open" ||
+              accessMode === "collab_gated" ||
+              accessMode === "priced_collab") && (
+              <div className="space-y-2 pl-1">
+                <div className="flex items-center gap-2">
+                  <label className="text-xs text-muted-foreground">Type:</label>
+                  {COLLAB_SEEKING_TYPES.map((t) => {
+                    const cfg = COLLAB_SEEKING_LABELS[t];
+                    return (
+                      <button
+                        key={t}
+                        type="button"
+                        onClick={() => setCollabSeekingType(t)}
+                        className={`px-2 py-1 rounded text-xs border transition-colors ${
+                          collabSeekingType === t
+                            ? "bg-primary text-primary-foreground border-primary"
+                            : "bg-background border-border hover:bg-accent"
+                        }`}
+                      >
+                        {cfg.icon} {cfg.label}
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="flex items-center gap-2">
+                  <label className="text-xs text-muted-foreground">Min level:</label>
+                  <select
+                    value={collabMinLevel}
+                    onChange={(e) => setCollabMinLevel(Number(e.target.value))}
+                    className="px-2 py-1 rounded border bg-background text-xs"
+                  >
+                    {LEVELS.map((l) => (
+                      <option key={l.level} value={l.level}>
+                        {l.icon} Lv.{l.level} {l.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground">
+                    What are you looking for?
+                  </label>
+                  <Input
+                    value={collabDescription}
+                    onChange={(e) => setCollabDescription(e.target.value)}
+                    placeholder="e.g. Statistician to validate density estimation model"
+                    className="h-8 text-sm mt-1"
+                    maxLength={300}
+                  />
+                </div>
+                {accessMode !== "priced_collab" && !whyGated && (
+                  <div>
+                    <label className="text-xs text-muted-foreground">
+                      Why gated?
+                    </label>
+                    <Input
+                      value={whyGated}
+                      onChange={(e) => setWhyGated(e.target.value)}
+                      placeholder="e.g. Unpublished methodology — seeking co-author"
+                      className="h-8 text-sm mt-1"
+                      maxLength={200}
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+
+            {accessMode === "open" && (
+              <p className="text-xs text-muted-foreground">
+                Everyone can read the full content. You earn DP from likes,
+                citations, and reviews.
+              </p>
+            )}
+          </div>
+
+          {/* License selector */}
+          <div className="rounded-lg border p-3 space-y-2">
+            <label className="block text-sm font-medium">
+              License (Intellectual Property)
+            </label>
+            <select
+              value={license}
+              onChange={(e) => {
+                const newLicense = e.target.value as ContentLicense;
+                const cfg = CONTENT_LICENSE_CONFIG[newLicense];
+                if (cfg.irrevocable) {
+                  setShowLicenseConfirm(true);
+                }
+                setLicense(newLicense);
+              }}
+              className="w-full px-3 py-2 min-h-[44px] rounded-md border bg-background text-sm"
+            >
+              {CONTENT_LICENSES.map((l) => {
+                const cfg = CONTENT_LICENSE_CONFIG[l];
+                return (
+                  <option key={l} value={l}>
+                    {cfg.shortLabel}{cfg.irrevocable ? " (irrevocable)" : ""}
+                  </option>
+                );
+              })}
+            </select>
+            <p className="text-xs text-muted-foreground">
+              {CONTENT_LICENSE_CONFIG[license].description}
+            </p>
+            {CONTENT_LICENSE_CONFIG[license].url && (
+              <a
+                href={CONTENT_LICENSE_CONFIG[license].url!}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-primary hover:underline"
+              >
+                Read the full license text &rarr;
+              </a>
+            )}
+            {/* Irrevocable warning + confirmation */}
+            {showLicenseConfirm && CONTENT_LICENSE_CONFIG[license].irrevocable && (
+              <div className="rounded-md border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950 p-3 text-sm space-y-2">
+                <p className="font-medium text-amber-800 dark:text-amber-200">
+                  &#x26A0; This license is irrevocable
+                </p>
+                <p className="text-xs text-amber-700 dark:text-amber-300">
+                  Once you publish under <strong>{CONTENT_LICENSE_CONFIG[license].shortLabel}</strong>,
+                  you cannot later change to a more restrictive license.
+                  Others who have accessed this content under this license
+                  retain their rights permanently. You still own the work —
+                  you just cannot revoke the permissions already granted.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setShowLicenseConfirm(false)}
+                  className="px-3 py-1.5 min-h-[44px] rounded-md text-sm font-medium bg-amber-600 text-white hover:bg-amber-700 transition-colors"
+                >
+                  I understand — proceed with {CONTENT_LICENSE_CONFIG[license].shortLabel}
+                </button>
+              </div>
+            )}
+          </div>
 
           {/* Seal checkbox */}
           <label className="flex items-start gap-3 p-3 rounded-lg border cursor-pointer hover:bg-muted/50 transition-colors">

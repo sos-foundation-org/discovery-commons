@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { AvatarBadge } from "@/components/ui/avatar-badge";
 import { ContributionContent } from "@/components/contribution/contribution-content";
 import { TypeIcon } from "@/components/contribution/type-icon";
-import { CONTRIBUTION_TYPE_CONFIG, type ContributionType } from "@/lib/types";
+import { CONTRIBUTION_TYPE_CONFIG, type ContributionType, type ContributionPricingMeta } from "@/lib/types";
 import { formatDateTime } from "@/lib/utils";
 import { truncateHash } from "@/lib/hash";
 
@@ -81,9 +81,26 @@ export default async function SharedContributionPage({
                 SHA-256: {contribution.contentHash}
               </p>
             </div>
-          ) : (
-            <ContributionContent content={contribution.content} />
-          )}
+          ) : (() => {
+            // Gated content check: share link does NOT bypass paywall
+            const meta = contribution.metadata as ContributionPricingMeta | null;
+            const accessMode = meta?.accessMode ?? "open";
+            if (accessMode !== "open") {
+              const breakPoint = meta?.outlineBreak ?? Math.min(280, contribution.content.length);
+              const outline = contribution.content.slice(0, breakPoint);
+              return (
+                <div>
+                  <ContributionContent content={outline} />
+                  <div className="mt-3 rounded-lg border border-dashed border-muted-foreground/30 bg-muted/30 p-3 text-center">
+                    <p className="text-sm text-muted-foreground">
+                      🔒 Full details are gated. Visit the thread to purchase or propose collaboration.
+                    </p>
+                  </div>
+                </div>
+              );
+            }
+            return <ContributionContent content={contribution.content} />;
+          })()}
           <div className="mt-3 font-mono text-xs text-muted-foreground">
             <Link
               href={`/verify/${contribution.contentHash}`}

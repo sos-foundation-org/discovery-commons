@@ -85,6 +85,16 @@ model User {
   threadCollaborations ThreadCollaborator[]
   contributionShares  ContributionShare[]
   contributionLikes   ContributionLike[]
+  // v3: Points economy
+  pointsAccount       PointsAccount?
+  contentPurchases    ContentPurchase[]
+  collabRequestsSent  CollaborationRequest[] @relation("CollabApplicant")
+  // v3: Access rules, access logs, bounties
+  accessRulesOwned    ContentAccessRule[]    @relation("RulesOwner")
+  accessRulesTargeted ContentAccessRule[]    @relation("RulesTarget")
+  contentAccessLogs   ContentAccessLog[]
+  bountiesCreated     Bounty[]
+  bountyAwards        BountyAward[]
 
   @@map("users")
 }
@@ -162,6 +172,12 @@ model Contribution {
   sealedReg  SealedRegistration?
   sharedWith ContributionShare[]
   likes      ContributionLike[]
+  // v3: Points economy
+  purchases      ContentPurchase[]
+  collabRequests CollaborationRequest[]
+  accessRules    ContentAccessRule[]
+  accessLogs     ContentAccessLog[]
+  bounties       Bounty[]
 
   @@index([threadId])
   @@index([authorId])
@@ -424,4 +440,169 @@ model ResearchObject {
   thread Thread @relation(fields: [threadId], references: [id])
 
   @@map("research_objects")
+}
+
+// ============================================================
+// v3 — Points Economy (Discovery Points)
+// ============================================================
+
+model PointsAccount {
+  id             String   @id @default(uuid())
+  userId         String   @unique @map("user_id")
+  balance        Int      @default(0)
+  lifetimeEarned Int      @default(0) @map("lifetime_earned")
+  frozenBalance  Int      @default(0) @map("frozen_balance")
+  reputation     Int      @default(0)
+  level          Int      @default(1)
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  user         User                @relation(fields: [userId], references: [id])
+  transactions PointsTransaction[]
+
+  @@map("points_accounts")
+}
+
+model PointsTransaction {
+  id             String   @id @default(uuid())
+  accountId      String   @map("account_id")
+  type           String
+  amount         Int
+  reason         String
+  referenceId    String?  @map("reference_id")
+  referenceType  String?  @map("reference_type")
+  counterpartyId String?  @map("counterparty_id")
+  balanceAfter   Int      @map("balance_after")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  account PointsAccount @relation(fields: [accountId], references: [id])
+
+  @@index([accountId, createdAt])
+  @@index([referenceId])
+  @@map("points_transactions")
+}
+
+model ContentPurchase {
+  id             String   @id @default(uuid())
+  buyerId        String   @map("buyer_id")
+  contributionId String   @map("contribution_id")
+  pricePaid      Int      @map("price_paid")
+  platformFee    Int      @map("platform_fee")
+  sellerReceived Int      @map("seller_received")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  buyer        User         @relation(fields: [buyerId], references: [id])
+  contribution Contribution @relation(fields: [contributionId], references: [id])
+
+  @@unique([buyerId, contributionId])
+  @@map("content_purchases")
+}
+
+model CollaborationRequest {
+  id             String    @id @default(uuid())
+  applicantId    String    @map("applicant_id")
+  contributionId String    @map("contribution_id")
+  status         String    @default("pending")
+  seekingType    String    @default("either") @map("seeking_type")
+  message        String    @default("")
+  depositAmount  Int       @default(0) @map("deposit_amount")
+  messages       Json      @default("[]")
+  terms          Json?
+  respondedAt    DateTime? @map("responded_at")
+  completedAt    DateTime? @map("completed_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  applicant    User         @relation("CollabApplicant", fields: [applicantId], references: [id])
+  contribution Contribution @relation(fields: [contributionId], references: [id])
+
+  @@index([contributionId])
+  @@index([applicantId])
+  @@map("collaboration_requests")
+}
+
+// ============================================================
+// v3 — Access Control Rules (Block/Allow List)
+// ============================================================
+
+// Per-user or per-contribution access rules for IP protection.
+// action="block": targetUser cannot see owner's content (or specific contribution).
+// action="allow": used in allowOnly mode — only listed users can access.
+// targetContributionId=null → applies to ALL owner's contributions.
+model ContentAccessRule {
+  id                   String   @id @default(uuid())
+  ownerId              String   @map("owner_id")
+  targetUserId         String   @map("target_user_id")
+  targetContributionId String?  @map("target_contribution_id")
+  action               String   // "block" | "allow"
+  reason               String?
+  createdAt            DateTime @default(now()) @map("created_at")
+
+  owner        User          @relation("RulesOwner", fields: [ownerId], references: [id])
+  targetUser   User          @relation("RulesTarget", fields: [targetUserId], references: [id])
+  contribution Contribution? @relation(fields: [targetContributionId], references: [id])
+
+  @@unique([ownerId, targetUserId, targetContributionId])
+  @@index([ownerId])
+  @@index([targetUserId])
+  @@map("content_access_rules")
+}
+
+// Audit log of who viewed gated content and when.
+model ContentAccessLog {
+  id             String   @id @default(uuid())
+  userId         String   @map("user_id")
+  contributionId String   @map("contribution_id")
+  action         String   // "view" | "copy_attempt" | "download_attempt"
+  ipHash         String?  @map("ip_hash")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  user         User         @relation(fields: [userId], references: [id])
+  contribution Contribution @relation(fields: [contributionId], references: [id])
+
+  @@index([contributionId, createdAt])
+  @@index([userId])
+  @@map("content_access_logs")
+}
+
+// ============================================================
+// v3 — Bounties (Author Tipping / Rewards)
+// ============================================================
+
+// A DP bounty attached to a contribution — author offers rewards for reviews,
+// answers, data, or other valuable responses.
+model Bounty {
+  id              String    @id @default(uuid())
+  contributionId  String    @map("contribution_id")
+  authorId        String    @map("author_id")
+  totalPool       Int       @map("total_pool")
+  perRewardAmount Int       @map("per_reward_amount")
+  maxRecipients   Int       @default(1) @map("max_recipients")
+  seekingType     String?   @map("seeking_type")  // expected contribution type
+  criteria        String?
+  expiresAt       DateTime? @map("expires_at")
+  status          String    @default("active") // active | completed | expired | cancelled
+  createdAt       DateTime  @default(now()) @map("created_at")
+
+  author       User          @relation(fields: [authorId], references: [id])
+  contribution Contribution  @relation(fields: [contributionId], references: [id])
+  awards       BountyAward[]
+
+  @@index([contributionId])
+  @@index([status])
+  @@map("bounties")
+}
+
+// Record of a bounty award given to a specific user.
+model BountyAward {
+  id          String   @id @default(uuid())
+  bountyId    String   @map("bounty_id")
+  recipientId String   @map("recipient_id")
+  amount      Int
+  awardedAt   DateTime @default(now()) @map("awarded_at")
+
+  bounty    Bounty @relation(fields: [bountyId], references: [id])
+  recipient User   @relation(fields: [recipientId], references: [id])
+
+  @@unique([bountyId, recipientId])
+  @@map("bounty_awards")
 }

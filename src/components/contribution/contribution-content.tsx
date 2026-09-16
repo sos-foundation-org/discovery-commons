@@ -1,7 +1,16 @@
-import ReactMarkdown from "react-markdown";
+"use client";
+
+import dynamic from "next/dynamic";
 import remarkGfm from "remark-gfm";
 import { SimpleChart } from "./simple-chart";
 import { EmbedBlock } from "./embed-block";
+
+// Lazy-load react-markdown (~45 KB gzipped) — only fetched when a contribution
+// with markdown content actually renders. remark-gfm stays static (~5 KB).
+const ReactMarkdown = dynamic(
+  () => import("react-markdown").then((m) => m.default),
+  { loading: () => <div className="animate-pulse h-4 bg-muted rounded w-3/4" /> }
+);
 
 // Renders contribution / thread body text as real Markdown (GFM: tables, lists,
 // code, links, `![](img)` images) and turns special fenced blocks into

@@ -6,12 +6,14 @@ import { usePathname } from "next/navigation";
 import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { AvatarBadge } from "@/components/ui/avatar-badge";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export function Navbar() {
   const { data: session, status } = useSession();
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [dpBalance, setDpBalance] = useState<number | null>(null);
 
   const fetchUnread = useCallback(async () => {
     const res = await fetch("/api/notifications").catch(() => null);
@@ -21,10 +23,19 @@ export function Navbar() {
     }
   }, []);
 
+  const fetchDP = useCallback(async () => {
+    const res = await fetch("/api/points").catch(() => null);
+    if (res?.ok) {
+      const data = await res.json();
+      setDpBalance(data.balance);
+    }
+  }, []);
+
   useEffect(() => {
     if (session) {
       fetchUnread();
-      const interval = setInterval(fetchUnread, 30000);
+      fetchDP();
+      const interval = setInterval(fetchUnread, 60000);
       return () => clearInterval(interval);
     }
   }, [session, fetchUnread]);
@@ -35,6 +46,7 @@ export function Navbar() {
     ...(session
       ? [
           { href: "/sealed", label: "Sealed Ideas" },
+          { href: "/points", label: "Points" },
           { href: "/credits", label: "Credits" },
           { href: "/settings", label: "Settings" },
         ]
@@ -101,12 +113,22 @@ export function Navbar() {
           </svg>
         </button>
 
-        {/* Auth + notifications */}
+        {/* Theme toggle + Auth + notifications */}
         <div className="hidden md:flex items-center space-x-2">
+          <ThemeToggle />
           {status === "loading" ? (
             <div className="h-8 w-20 animate-pulse rounded bg-muted" />
           ) : session ? (
             <>
+              {dpBalance !== null && (
+                <Link
+                  href="/points"
+                  className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded-md hover:bg-accent"
+                  title="Discovery Points"
+                >
+                  {dpBalance.toLocaleString()} DP
+                </Link>
+              )}
               <Link href="/notifications" className="relative p-2">
                 <svg
                   className="w-5 h-5 text-muted-foreground hover:text-foreground transition-colors"
@@ -174,6 +196,11 @@ export function Navbar() {
               {link.label}
             </Link>
           ))}
+          {session && dpBalance !== null && (
+            <div className="px-3 py-2 text-sm font-medium text-muted-foreground">
+              {dpBalance.toLocaleString()} DP
+            </div>
+          )}
           {session && (
             <Link
               href="/notifications"
@@ -189,6 +216,10 @@ export function Navbar() {
             </Link>
           )}
           <div className="pt-2 border-t">
+            <div className="flex items-center gap-2 px-3 py-2">
+              <ThemeToggle />
+              <span className="text-xs text-muted-foreground">Theme</span>
+            </div>
             {session ? (
               <>
                 <Link

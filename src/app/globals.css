@@ -82,12 +82,26 @@
       linear-gradient(180deg, hsl(var(--muted) / 0.5), transparent 40%);
   }
 
-  /* Real hero image at /public/images/hero.png, layered on top of the gradient
-     via the `dc-hero-image` class on the hero section. */
+  /* Real hero image, layered on top of the gradient via the `dc-hero-image`
+     class on the hero section. Prefer WebP (155 KB) over the original PNG
+     (2.2 MB). Mobile gets a smaller crop via media query. */
   .dc-hero-image {
-    background-image: url("/images/hero.png");
+    background-image: url("/images/hero.webp");
     background-size: cover;
     background-position: center;
+  }
+
+  @media (max-width: 640px) {
+    .dc-hero-image {
+      background-image: url("/images/hero-mobile.webp");
+    }
+  }
+
+  /* Fallback for browsers that don't support WebP (rare in 2026) */
+  @supports not (background-image: url("/images/hero.webp")) {
+    .dc-hero-image {
+      background-image: url("/images/hero.png");
+    }
   }
 
   .dc-card-gradient {

@@ -8,6 +8,8 @@ import {
   TRUST_LEVEL_CONFIG,
   CREDIT_WEIGHTS,
   CONTRIBUTION_TYPE_CONFIG,
+  getLevel,
+  getLevelProgress,
   type TrustLevel,
   type ContributionType,
 } from "@/lib/types";
@@ -37,6 +39,13 @@ export default async function ProfilePage() {
   });
 
   if (!user) redirect("/auth/signin");
+
+  // Points account (may not exist yet — lazy-created on first earn)
+  const pointsAccount = await prisma.pointsAccount
+    .findUnique({ where: { userId: user.id } })
+    .catch(() => null);
+  const levelInfo = pointsAccount ? getLevel(pointsAccount.reputation) : getLevel(0);
+  const levelProgress = pointsAccount ? getLevelProgress(pointsAccount.reputation) : 0;
 
   const trustConfig =
     TRUST_LEVEL_CONFIG[(user.trustLevel as TrustLevel) || "new_member"];
@@ -91,9 +100,23 @@ export default async function ProfilePage() {
           size="lg"
         />
         <div>
-          <h1 className="text-3xl font-bold">
-            {user.displayName || user.name || "Your Profile"}
-          </h1>
+          <div className="flex items-center gap-2 mb-1">
+            <h1 className="text-3xl font-bold">
+              {user.displayName || user.name || "Your Profile"}
+            </h1>
+            <span
+              className="text-sm font-medium text-muted-foreground bg-muted rounded-full px-2.5 py-0.5"
+              title={`${levelInfo.name} — Reputation ${pointsAccount?.reputation ?? 0}`}
+            >
+              {levelInfo.icon} {levelInfo.name} (Lv.{levelInfo.level})
+            </span>
+          </div>
+          {pointsAccount && (
+            <p className="text-sm text-muted-foreground mb-1">
+              {pointsAccount.balance.toLocaleString()} DP &middot; Rep{" "}
+              {pointsAccount.reputation.toLocaleString()}
+            </p>
+          )}
           <Link
             href={`/profile/${user.id}`}
             className="text-sm text-primary hover:underline"

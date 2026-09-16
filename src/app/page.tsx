@@ -246,59 +246,76 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Testimonial placeholders */}
+      {/* Why Discovery Commons — value props replacing placeholder testimonials */}
       <section className="py-16 px-4 bg-muted/50">
         <div className="container mx-auto max-w-5xl">
-          <h2 className="text-3xl font-bold text-center mb-12">
-            What Researchers Say
+          <h2 className="text-3xl font-bold text-center mb-4">
+            Why Discovery Commons?
           </h2>
-          <div className="grid md:grid-cols-3 gap-6">
-            {[
-              {
-                quote:
-                  "I posted a half-baked hypothesis about information geometry and three people built on it within a week. Two of them I'd never have met at a conference.",
-                name: "Dr. A. Researcher",
-                role: "Theoretical Physics, MIT",
-                color: "bg-blue-100 dark:bg-blue-950",
-              },
-              {
-                quote:
-                  "The seal-then-reveal feature gave me the confidence to share early-stage ideas. I proved priority on a finding three months before my paper was published.",
-                name: "Dr. B. Scientist",
-                role: "Ecology, Oxford",
-                color: "bg-green-100 dark:bg-green-950",
-              },
-              {
-                quote:
-                  "As a grad student, my questions used to disappear into lab notebooks. Here they're first-class contributions with my name and timestamp on them — and a retired naturalist added an observation that completely changed my approach.",
-                name: "C. Student",
-                role: "Mathematics PhD Candidate",
-                color: "bg-purple-100 dark:bg-purple-950",
-              },
-            ].map((t) => (
-              <Card key={t.name} className={t.color}>
-                <CardContent className="pt-6">
-                  <p className="text-sm italic mb-4">&ldquo;{t.quote}&rdquo;</p>
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-xs font-bold text-muted-foreground">
-                      {t.name
-                        .split(" ")
-                        .map((n) => n[0])
-                        .join("")}
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">{t.name}</p>
-                      <p className="text-xs text-muted-foreground">{t.role}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-          <p className="text-center text-xs text-muted-foreground mt-6">
-            Placeholder testimonials &mdash; real quotes will be added from early
-            adopters
+          <p className="text-center text-muted-foreground mb-10 max-w-2xl mx-auto">
+            Traditional science rewards only finished papers. We reward every
+            step of the journey.
           </p>
+          <div className="grid md:grid-cols-3 gap-6">
+            <Card className="bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
+              <CardContent className="pt-6">
+                <div className="text-3xl mb-3">&#x1F512;</div>
+                <h3 className="font-semibold mb-2">Priority Without Risk</h3>
+                <p className="text-sm text-muted-foreground">
+                  Seal your idea with SHA-256 before anyone sees it. When
+                  you&apos;re ready, reveal the content &mdash; the timestamp
+                  proves you had it first.
+                </p>
+              </CardContent>
+            </Card>
+            <Card className="bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800">
+              <CardContent className="pt-6">
+                <div className="text-3xl mb-3">&#x1F91D;</div>
+                <h3 className="font-semibold mb-2">
+                  Cross-Boundary Collaboration
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  A field naturalist&apos;s observation can spark a
+                  collaboration with a university lab. No PhD required &mdash;
+                  every background brings something new.
+                </p>
+              </CardContent>
+            </Card>
+            <Card className="bg-purple-50 dark:bg-purple-950 border-purple-200 dark:border-purple-800">
+              <CardContent className="pt-6">
+                <div className="text-3xl mb-3">&#x2696;</div>
+                <h3 className="font-semibold mb-2">Fair Credit, Always</h3>
+                <p className="text-sm text-muted-foreground">
+                  Every contribution is credited across nine dimensions &mdash;
+                  idea, data, method, analysis, validation &mdash; not just
+                  &ldquo;first author vs. last author.&rdquo;
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+          {/* Live stats */}
+          {(stats[0] > 0 || stats[1] > 0 || stats[2] > 0) && (
+            <div className="flex justify-center gap-10 mt-10">
+              <div className="text-center">
+                <div className="text-3xl font-bold">{stats[0]}</div>
+                <div className="text-xs text-muted-foreground">
+                  Active Threads
+                </div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl font-bold">{stats[1]}</div>
+                <div className="text-xs text-muted-foreground">
+                  Contributions
+                </div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl font-bold">{stats[2]}</div>
+                <div className="text-xs text-muted-foreground">
+                  Contributors
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </section>
 

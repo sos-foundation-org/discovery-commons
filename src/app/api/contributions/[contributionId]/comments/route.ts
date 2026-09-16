@@ -2,12 +2,24 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { createCommentSchema } from "@/lib/validations";
+import { rewardCommentPosted, rewardReviewReceived } from "@/lib/points";
+import { checkContributionAccess } from "@/lib/access-control";
 
 export async function GET(
   request: NextRequest,
   { params }: { params: { contributionId: string } }
 ) {
   try {
+    // Access check: don't expose comments for contributions the user can't view
+    const session = await getSession();
+    const access = await checkContributionAccess(
+      params.contributionId,
+      session?.user?.id ?? null
+    );
+    if (!access.canView) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+
     const comments = await prisma.comment.findMany({
       where: { contributionId: params.contributionId, parentId: null },
       include: {
@@ -122,6 +134,18 @@ export async function POST(
         },
       },
     });
+
+    // Award DP to commenter + contribution author (non-blocking)
+    rewardCommentPosted(prisma, session.user.id, params.contributionId).catch(() => {});
+    // If this is a review-type comment, also reward the contribution author
+    if (["method_review", "stat_review", "critique"].includes(commentType)) {
+      const contrib = await prisma.contribution
+        .findUnique({ where: { id: params.contributionId }, select: { authorId: true } })
+        .catch(() => null);
+      if (contrib && contrib.authorId !== session.user.id) {
+        rewardReviewReceived(prisma, contrib.authorId, params.contributionId, session.user.id).catch(() => {});
+      }
+    }
 
     const result = isAnonymous ? maskAnonymous(comment) : comment;
     return NextResponse.json(result, { status: 201 });

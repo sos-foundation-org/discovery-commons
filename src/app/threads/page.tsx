@@ -66,18 +66,7 @@ export default async function ThreadsPage({
     where.AND = andConditions;
   }
 
-  // Collect all domain tags for the filter dropdown
-  const allThreads = await prisma.thread
-    .findMany({
-      where: { isArchived: false },
-      select: { domainTags: true },
-    })
-    .catch(() => []);
-
-  const allDomains = Array.from(
-    new Set(allThreads.flatMap((t) => t.domainTags as string[]))
-  ).sort();
-
+  // Fetch threads + collect domain tags in one pass (was two separate queries)
   const threads = await prisma.thread
     .findMany({
       where,
@@ -91,6 +80,11 @@ export default async function ThreadsPage({
       take: 50,
     })
     .catch(() => []);
+
+  // Extract unique domain tags from the fetched threads for the filter dropdown
+  const allDomains = Array.from(
+    new Set(threads.flatMap((t) => t.domainTags as string[]))
+  ).sort();
 
   const hasFilters =
     !!searchParams.q ||

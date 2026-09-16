@@ -7,6 +7,9 @@ import {
   REPLICATION_OUTCOMES,
   METHOD_APPLIES_TO,
   DISCIPLINES,
+  ACCESS_MODES,
+  COLLAB_SEEKING_TYPES,
+  CONTENT_LICENSES,
 } from "./types";
 
 export const createThreadSchema = z.object({
@@ -39,6 +42,19 @@ export const createContributionSchema = z.object({
   // Data only: a link to the raw dataset (Zenodo/OSF/GitHub/CSV/…). Files are
   // not uploaded to the DB — only the URL is stored.
   dataUrl: z.string().url().max(2000).optional().or(z.literal("")),
+  // v3: License + Pricing & collaboration (stored in metadata JSON)
+  license: z.enum(CONTENT_LICENSES).optional(),
+  accessMode: z.enum(ACCESS_MODES).optional(),
+  price: z.number().int().min(1).max(1000).optional(),
+  whyGated: z.string().max(200).optional(),
+  collaborationGate: z
+    .object({
+      seekingType: z.enum(COLLAB_SEEKING_TYPES).optional(),
+      minLevel: z.number().int().min(1).max(6).optional(),
+      description: z.string().max(300).optional(),
+      requiredDisciplines: z.array(z.string()).max(5).optional(),
+    })
+    .optional(),
 });
 
 export const createCommentSchema = z.object({

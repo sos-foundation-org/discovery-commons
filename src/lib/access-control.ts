@@ -19,6 +19,12 @@ export interface AccessCheckResult {
   /** Can the user edit it? */
   canEdit: boolean;
   reason?: string;
+  /** v3: Has the user purchased access to this gated content? */
+  hasPurchased?: boolean;
+  /** v3: Is this content gated (priced/collab)? */
+  isGated?: boolean;
+  /** v3: Is the viewer blocked by the author? */
+  isBlocked?: boolean;
 }
 
 const DENY: AccessCheckResult = {
@@ -47,8 +53,59 @@ export async function checkContributionAccess(
 
   if (!contribution) return { ...DENY, reason: "not_found" };
 
+  // Query block rules, purchases, and accepted collabs for this viewer.
+  // This is the single-contribution path (used by API routes); the thread
+  // page uses the batch path with pre-loaded sets instead.
+  let blockedByAuthorIds = new Set<string>();
+  let blockedContributionIds = new Set<string>();
+  let purchasedContributionIds = new Set<string>();
+  let collabAcceptedContributionIds = new Set<string>();
+
+  if (userId) {
+    const [blockRules, purchases, collabs] = await Promise.all([
+      prisma.contentAccessRule
+        .findMany({
+          where: {
+            ownerId: contribution.authorId,
+            targetUserId: userId,
+            action: "block",
+          },
+          select: { targetContributionId: true },
+        })
+        .catch(() => []),
+      prisma.contentPurchase
+        .findMany({
+          where: { buyerId: userId, contributionId },
+          select: { contributionId: true },
+        })
+        .catch(() => []),
+      prisma.collaborationRequest
+        .findMany({
+          where: { applicantId: userId, contributionId, status: "accepted" },
+          select: { contributionId: true },
+        })
+        .catch(() => []),
+    ]);
+
+    // User-level blocks
+    blockedByAuthorIds = new Set(
+      blockRules
+        .filter((r: { targetContributionId: string | null }) => !r.targetContributionId)
+        .map(() => contribution.authorId)
+    );
+    // Contribution-level blocks
+    blockedContributionIds = new Set(
+      blockRules
+        .filter((r: { targetContributionId: string | null }) => !!r.targetContributionId)
+        .map((r: { targetContributionId: string | null }) => r.targetContributionId as string)
+    );
+    purchasedContributionIds = new Set(purchases.map((p: { contributionId: string }) => p.contributionId));
+    collabAcceptedContributionIds = new Set(collabs.map((c: { contributionId: string }) => c.contributionId));
+  }
+
   return evaluateContributionAccess(
     {
+      id: contributionId,
       authorId: contribution.authorId,
       visibility: contribution.visibility,
       sharedWith: contribution.sharedWith.map((s) => s.userId),
@@ -57,8 +114,15 @@ export async function checkContributionAccess(
         visibility: contribution.thread.visibility,
         collaboratorIds: contribution.thread.collaborators.map((c) => c.userId),
       },
+      metadata: contribution.metadata as { accessMode?: string; price?: number } | null,
     },
-    userId
+    userId,
+    {
+      blockedByAuthorIds,
+      blockedContributionIds,
+      purchasedContributionIds,
+      collabAcceptedContributionIds,
+    }
   );
 }
 
@@ -68,6 +132,7 @@ export async function checkContributionAccess(
  */
 export function evaluateContributionAccess(
   contribution: {
+    id?: string; // v3: needed for gated-content lookups
     authorId: string;
     visibility: string; // private | shared | public | sealed
     sharedWith: string[];
@@ -76,8 +141,19 @@ export function evaluateContributionAccess(
       visibility: string; // private | shared | public
       collaboratorIds: string[];
     };
+    // v3: pricing metadata (from Contribution.metadata JSON)
+    metadata?: { accessMode?: string; price?: number } | null;
   },
-  userId: string | null
+  userId: string | null,
+  /** v3: pre-loaded sets for batch rendering (avoids N+1 queries) */
+  preloaded?: {
+    purchasedContributionIds?: Set<string>;
+    collabAcceptedContributionIds?: Set<string>;
+    /** Set of authorIds who have blocked the current viewer (user-level) */
+    blockedByAuthorIds?: Set<string>;
+    /** Set of contributionIds specifically blocked for the current viewer */
+    blockedContributionIds?: Set<string>;
+  }
 ): AccessCheckResult {
   const { thread } = contribution;
   const isAuthor = userId !== null && userId === contribution.authorId;
@@ -96,10 +172,45 @@ export function evaluateContributionAccess(
     return { ...DENY, reason: "thread_shared" };
   }
 
-  // 2. Contribution-level gate.
+  // 2. Block list check — runs before visibility, so blocked users cannot see
+  //    even public content from this author. Already-purchased content is an
+  //    exception (completed transaction — not revoked).
+  const isUserBlocked = !isAuthor && userId && preloaded?.blockedByAuthorIds?.has(contribution.authorId);
+  const isContribBlocked = !isAuthor && userId && contribution.id && preloaded?.blockedContributionIds?.has(contribution.id);
+  if (isUserBlocked || isContribBlocked) {
+    const purchased = preloaded?.purchasedContributionIds?.has(contribution.id ?? "") ?? false;
+    if (!purchased) {
+      return {
+        canView: true,        // card shell is visible (shows "restricted" message)
+        canViewContent: false,
+        canEdit: false,
+        isBlocked: true,
+        reason: "blocked_by_author",
+      };
+    }
+    // Purchased before block → still has access (completed transaction)
+  }
+
+  // 3. Contribution-level gate.
   switch (contribution.visibility) {
-    case "public":
+    case "public": {
+      // v3: Check if content is gated (priced/collab).
+      // The `contributionId` field is optionally passed for gated-content checks.
+      const meta = contribution.metadata;
+      const accessMode = (meta?.accessMode as string) ?? "open";
+      const contribId = contribution.id;
+
+      if (accessMode !== "open" && !isAuthor && contribId) {
+        const purchased = preloaded?.purchasedContributionIds?.has(contribId) ?? false;
+        const collabAccepted = preloaded?.collabAcceptedContributionIds?.has(contribId) ?? false;
+
+        if (purchased || collabAccepted) {
+          return { canView: true, canViewContent: true, canEdit: isAuthor, hasPurchased: purchased, isGated: true };
+        }
+        return { canView: true, canViewContent: false, canEdit: isAuthor, isGated: true, hasPurchased: false };
+      }
       return { canView: true, canViewContent: true, canEdit: isAuthor };
+    }
 
     case "shared": {
       const ok = isAuthor || isThreadCreator || isCollaborator || isSharedWith;

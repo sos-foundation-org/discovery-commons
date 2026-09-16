@@ -1,4 +1,5 @@
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { Database } from "lucide-react";
 import { notFound, redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
@@ -14,15 +15,19 @@ import {
   type ContributionType,
   type VisibilityLevel,
   type MethodAppliesTo,
+  type ContributionPricingMeta,
+  CONTENT_LICENSE_CONFIG,
+  type ContentLicense,
 } from "@/lib/types";
 import { formatDateTime, timeAgo } from "@/lib/utils";
 import { truncateHash } from "@/lib/hash";
-import { ContributionForm } from "@/components/contribution/contribution-form";
 import { VisibilityUpgrade } from "@/components/thread/visibility-upgrade";
 import { CollaboratorManager } from "@/components/thread/collaborator-manager";
 import { DisciplineBadge } from "@/components/thread/discipline-badge";
 import { AvatarBadge } from "@/components/ui/avatar-badge";
 import { ContributionContent } from "@/components/contribution/contribution-content";
+import { GatedContent } from "@/components/contribution/gated-content";
+import { CollabManagePanel } from "@/components/contribution/collab-manage-panel";
 import { TypeIcon } from "@/components/contribution/type-icon";
 import { CommentSection } from "@/components/contribution/comment-section";
 import { RevealButton } from "@/components/contribution/reveal-button";
@@ -37,10 +42,29 @@ import { ShareLinkButton } from "@/components/contribution/share-link-button";
 import { StageAdvance } from "@/components/thread/stage-advance";
 import { VerificationBadge } from "@/components/thread/VerificationBadge";
 import { CreditDistribution } from "@/components/credit/CreditDistribution";
-import { AIReviewSection } from "@/components/ai/AIReviewSection";
-import { ReplicationSection } from "@/components/replication/ReplicationSection";
 import { summarizeCredits } from "@/lib/credits";
 import { evaluateContributionAccess } from "@/lib/access-control";
+
+// Lazy-load heavy below-fold components
+const ContributionForm = dynamic(
+  () =>
+    import("@/components/contribution/contribution-form").then(
+      (m) => m.ContributionForm
+    ),
+  { ssr: false }
+);
+const AIReviewSection = dynamic(
+  () =>
+    import("@/components/ai/AIReviewSection").then((m) => m.AIReviewSection),
+  { ssr: false }
+);
+const ReplicationSection = dynamic(
+  () =>
+    import("@/components/replication/ReplicationSection").then(
+      (m) => m.ReplicationSection
+    ),
+  { ssr: false }
+);
 
 const STAGE_COLORS: Record<string, string> = {
   question: "border-l-blue-500",
@@ -119,15 +143,64 @@ export default async function ThreadDetailPage({
   });
   const creditSummary = summarizeCredits(threadCredits);
 
+  // v3: Pre-load user's purchases and accepted collaborations for this thread
+  // (batch query to avoid N+1 — SE review R3).
+  const contributionIds = thread.contributions.map((c) => c.id);
+  const [userPurchases, userCollabs] = userId
+    ? await Promise.all([
+        prisma.contentPurchase
+          .findMany({
+            where: { buyerId: userId, contributionId: { in: contributionIds } },
+            select: { contributionId: true },
+          })
+          .catch(() => []),
+        prisma.collaborationRequest
+          .findMany({
+            where: {
+              applicantId: userId,
+              contributionId: { in: contributionIds },
+              status: "accepted",
+            },
+            select: { contributionId: true },
+          })
+          .catch(() => []),
+      ])
+    : [[], []];
+  const purchasedIds = new Set(userPurchases.map((p) => p.contributionId));
+  const collabIds = new Set(userCollabs.map((c) => c.contributionId));
+
+  // Pre-load block rules: which authors have blocked the current viewer?
+  const authorIds = Array.from(new Set(thread.contributions.map((c) => c.authorId)));
+  const blockRules = userId
+    ? await prisma.contentAccessRule
+        .findMany({
+          where: {
+            ownerId: { in: authorIds },
+            targetUserId: userId,
+            action: "block",
+          },
+          select: { ownerId: true, targetContributionId: true },
+        })
+        .catch(() => [])
+    : [];
+  // User-level blocks (targetContributionId is null) — block ALL content from this author
+  const blockedByAuthorIds = new Set<string>(
+    blockRules.filter((r: { targetContributionId: string | null }) => !r.targetContributionId).map((r: { ownerId: string }) => r.ownerId)
+  );
+  // Contribution-level blocks — block specific contributions
+  const blockedContributionIds = new Set<string>(
+    blockRules
+      .filter((r: { targetContributionId: string | null }) => !!r.targetContributionId)
+      .map((r: { targetContributionId: string | null }) => r.targetContributionId as string)
+  );
+
   // Filter contributions by visibility
-  // Resolve per-contribution access via the canonical helper. canView decides
-  // whether the card is shown at all; canViewContent decides whether the body
-  // is revealed or masked (sealed → hash only for non-authors).
   const visibleContributions = thread.contributions
     .map((c) => ({
       c,
       access: evaluateContributionAccess(
         {
+          id: c.id,
           authorId: c.authorId,
           visibility: c.visibility,
           sharedWith: c.sharedWith.map((s) => s.userId),
@@ -136,8 +209,15 @@ export default async function ThreadDetailPage({
             visibility: thread.visibility,
             collaboratorIds,
           },
+          metadata: c.metadata as { accessMode?: string; price?: number } | null,
         },
-        userId
+        userId,
+        {
+          purchasedContributionIds: purchasedIds,
+          collabAcceptedContributionIds: collabIds,
+          blockedByAuthorIds,
+          blockedContributionIds,
+        }
       ),
     }))
     .filter((x) => x.access.canView);
@@ -155,9 +235,9 @@ export default async function ThreadDetailPage({
     <div className="container mx-auto max-w-4xl px-4 py-8">
       {/* Thread Header */}
       <div className="mb-8">
-        <div className="flex items-start justify-between gap-4 mb-4">
-          <h1 className="text-3xl font-bold">{thread.title}</h1>
-          <div className="flex gap-2 flex-shrink-0 flex-wrap justify-end">
+        <div className="mb-4">
+          <h1 className="text-2xl sm:text-3xl font-bold mb-3">{thread.title}</h1>
+          <div className="flex gap-2 flex-wrap">
             <DisciplineBadge discipline={thread.discipline} />
             <VerificationBadge badge={thread.verificationBadge} />
             <Badge variant="secondary">{thread.currentStage}</Badge>
@@ -186,8 +266,8 @@ export default async function ThreadDetailPage({
           </div>
         </div>
 
-        {/* Stage Progress Bar */}
-        <div className="mt-4 flex items-center gap-1 flex-wrap">
+        {/* Stage Progress Bar — horizontally scrollable on mobile */}
+        <div className="mt-4 flex items-center gap-1 overflow-x-auto pb-2 scrollbar-thin">
           {STAGE_LEVELS.map((level, li) => {
             const stages = Array.isArray(level) ? level : [level];
             const isParallel = stages.length > 1;
@@ -195,7 +275,7 @@ export default async function ThreadDetailPage({
             const levelPassed = li < currentLevel;
 
             return (
-              <div key={li} className="flex items-center gap-1">
+              <div key={li} className="flex items-center gap-1 shrink-0">
                 {isParallel ? (
                   <div className="flex items-center gap-1">
                     <div className="flex flex-col gap-0.5">
@@ -466,10 +546,45 @@ export default async function ThreadDetailPage({
                     </div>
                   ) : (
                     <>
-                      <ContributionContent
-                        content={contribution.content}
-                        className="mb-3"
-                      />
+                      {(() => {
+                        const pricingMeta = contribution.metadata as ContributionPricingMeta | null;
+                        const am = pricingMeta?.accessMode ?? "open";
+                        // SECURITY: Only send full content if user has access.
+                        // Otherwise, server-side truncate to outline only.
+                        const canSeeAll = access.canViewContent || isContribAuthor;
+                        const outlineBreakPos = pricingMeta?.outlineBreak ??
+                          (() => {
+                            const pp = contribution.content.indexOf("\n\n");
+                            return pp > 0 && pp < 600 ? pp : Math.min(280, contribution.content.length);
+                          })();
+                        const safeContent = canSeeAll
+                          ? contribution.content
+                          : contribution.content.slice(0, outlineBreakPos);
+                        const detailLength = contribution.content.length - outlineBreakPos;
+                        const detailParagraphs = canSeeAll ? 0 :
+                          contribution.content.slice(outlineBreakPos).split(/\n\n+/).filter(Boolean).length;
+
+                        return am !== "open" ? (
+                          <GatedContent
+                            contributionId={contribution.id}
+                            content={safeContent}
+                            accessMode={am}
+                            price={pricingMeta?.price}
+                            outlineBreak={canSeeAll ? pricingMeta?.outlineBreak : safeContent.length}
+                            whyGated={pricingMeta?.whyGated}
+                            collaborationGate={pricingMeta?.collaborationGate}
+                            hasAccess={canSeeAll}
+                            hasPurchased={access.hasPurchased ?? false}
+                            isAuthor={isContribAuthor}
+                            detailStats={canSeeAll ? undefined : `${detailParagraphs} paragraph${detailParagraphs !== 1 ? "s" : ""} · ${detailLength} chars`}
+                          />
+                        ) : (
+                          <ContributionContent
+                            content={contribution.content}
+                            className="mb-3"
+                          />
+                        );
+                      })()}
                       {contribution.type === "data" &&
                         (contribution.metadata as { dataUrl?: string } | null)
                           ?.dataUrl && (
@@ -553,6 +668,31 @@ export default async function ThreadDetailPage({
                     <CreditTimestampStatus
                       publishedAt={contribution.publishedAt}
                     />
+                    {/* License badge */}
+                    {(() => {
+                      const licenseKey = (contribution.metadata as ContributionPricingMeta | null)?.license;
+                      if (!licenseKey) return null;
+                      const lcfg = CONTENT_LICENSE_CONFIG[licenseKey as ContentLicense];
+                      if (!lcfg) return null;
+                      return (
+                        <>
+                          <span>|</span>
+                          {lcfg.url ? (
+                            <a
+                              href={lcfg.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="hover:text-foreground hover:underline"
+                              title={lcfg.label}
+                            >
+                              {lcfg.shortLabel}
+                            </a>
+                          ) : (
+                            <span title={lcfg.label}>{lcfg.shortLabel}</span>
+                          )}
+                        </>
+                      );
+                    })()}
                   </div>
 
                   {/* Actions: like · copy link · private (unlisted) link */}
@@ -577,6 +717,11 @@ export default async function ThreadDetailPage({
                         />
                       )}
                   </div>
+
+                  {/* Collaboration requests (visible on gated content) */}
+                  {access.isGated && (
+                    <CollabManagePanel contributionId={contribution.id} />
+                  )}
 
                   {/* Comments */}
                   <CommentSection contributionId={contribution.id} />

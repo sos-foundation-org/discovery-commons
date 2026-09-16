@@ -548,3 +548,278 @@ export const AI_ROLE_CONFIG: Record<
     description: "Audience-appropriate summaries and explanations",
   },
 };
+
+// ============================================================
+// v3 — Points Economy (Discovery Points)
+// ============================================================
+
+/** DP reward for publishing a contribution (by type). */
+export const DP_PUBLISH_REWARDS: Record<string, number> = {
+  question: 10,
+  hypothesis: 15,
+  data: 30,
+  simulation: 30,
+  statistics: 25,
+  methodology: 35,
+  interpretation: 30,
+  insight: 40,
+  replication: 30,
+};
+
+/** DP rewards for social/interaction events. */
+export const DP_EVENT_REWARDS = {
+  like_received: 2,
+  endorsement_received: 5,
+  review_received: 5, // method_review, stat_review, critique
+  comment_posted: 2,
+  thread_created: 5,
+  daily_login: 1,
+  weekly_streak: 10,
+  citation_received: 10,
+  cross_thread_citation: 15,
+  welcome_bonus: 20,
+  collab_completed: 30,
+} as const;
+
+/** Like milestone bonuses (one-time). */
+export const DP_LIKE_MILESTONES: { threshold: number; bonus: number }[] = [
+  { threshold: 10, bonus: 15 },
+  { threshold: 50, bonus: 50 },
+];
+
+/** Platform fee on purchases (percentage as 0-1). */
+export const DP_PLATFORM_FEE = 0.10;
+
+// ── Access Modes ────────────────────────────────────────────
+
+export const ACCESS_MODES = [
+  "open",
+  "priced",
+  "collab_open",
+  "collab_gated",
+  "priced_collab",
+] as const;
+export type AccessMode = (typeof ACCESS_MODES)[number];
+
+export const ACCESS_MODE_LABELS: Record<AccessMode, string> = {
+  open: "Free & Open",
+  priced: "Priced",
+  collab_open: "Seeking Collaboration",
+  collab_gated: "Gated Collaboration",
+  priced_collab: "Priced + Collaboration",
+};
+
+export const COLLAB_SEEKING_TYPES = ["academic", "commercial", "either"] as const;
+export type CollabSeekingType = (typeof COLLAB_SEEKING_TYPES)[number];
+
+export const COLLAB_SEEKING_LABELS: Record<CollabSeekingType, { label: string; icon: string }> = {
+  academic: { label: "Academic", icon: "🎓" },
+  commercial: { label: "Commercial", icon: "💼" },
+  either: { label: "Either", icon: "🔬" },
+};
+
+export const COLLAB_STATUSES = [
+  "pending",
+  "chatting",
+  "accepted",
+  "declined",
+  "withdrawn",
+  "completed",
+] as const;
+export type CollabStatus = (typeof COLLAB_STATUSES)[number];
+
+// ── Level System — Terra Incognita ──────────────────────────
+
+export const LEVELS = [
+  { level: 1, name: "Glimmer",      nameZh: "微光",   icon: "🕯", minRep: 0 },
+  { level: 2, name: "Compass",      nameZh: "羅盤",   icon: "🧭", minRep: 100 },
+  { level: 3, name: "Cartographer", nameZh: "製圖師", icon: "🗺", minRep: 500 },
+  { level: 4, name: "Navigator",    nameZh: "領航者", icon: "⛵", minRep: 2000 },
+  { level: 5, name: "Trailblazer",  nameZh: "開拓者", icon: "🏔", minRep: 8000 },
+  { level: 6, name: "Horizon",      nameZh: "地平線", icon: "🌅", minRep: 25000 },
+] as const;
+
+/** Given a reputation score, return the level (1-6). */
+export function getLevel(reputation: number): (typeof LEVELS)[number] {
+  for (let i = LEVELS.length - 1; i >= 0; i--) {
+    if (reputation >= LEVELS[i].minRep) return LEVELS[i];
+  }
+  return LEVELS[0];
+}
+
+/** Progress toward the next level as 0-1 (1 = already at max). */
+export function getLevelProgress(reputation: number): number {
+  const current = getLevel(reputation);
+  const nextIdx = LEVELS.findIndex((l) => l.level === current.level + 1);
+  if (nextIdx === -1) return 1; // max level
+  const next = LEVELS[nextIdx];
+  return (reputation - current.minRep) / (next.minRep - current.minRep);
+}
+
+// ── Contribution Pricing Metadata (stored in Contribution.metadata) ──
+
+export interface CollaborationGate {
+  minLevel?: number;
+  minReputation?: number;
+  requiredDisciplines?: string[];
+  description?: string;
+  seekingType?: CollabSeekingType;
+}
+
+export interface ContributionPricingMeta {
+  accessMode?: AccessMode;
+  price?: number;
+  outlineBreak?: number; // char position where outline ends in content
+  whyGated?: string; // author explanation for why content is gated
+  collaborationGate?: CollaborationGate;
+  license?: ContentLicense; // IP license for this contribution
+}
+
+// ── Content Licensing ───────────────────────────────────────
+
+/**
+ * License types for contributions. Stored in Contribution.metadata.license.
+ *
+ * Irrevocability rules (mirrors Creative Commons legal code):
+ * - All CC licenses are irrevocable once applied. A contribution published
+ *   under CC BY cannot later be changed to All Rights Reserved.
+ * - "all_rights_reserved" CAN be upgraded to any CC license (opening up).
+ * - "dc_collab" CAN be changed to a CC license when collaboration completes.
+ * - Direction is always: more restrictive → less restrictive (never reverse).
+ */
+export const CONTENT_LICENSES = [
+  "cc_by",         // CC BY 4.0 — default for public content
+  "cc_by_sa",      // CC BY-SA 4.0
+  "cc_by_nc",      // CC BY-NC 4.0
+  "cc_by_nc_sa",   // CC BY-NC-SA 4.0
+  "cc_by_nd",      // CC BY-ND 4.0
+  "cc_by_nc_nd",   // CC BY-NC-ND 4.0 — most restrictive CC
+  "all_rights_reserved", // Traditional copyright — default for gated/priced content
+  "dc_collab",     // DC Collaboration License — for active collaborations
+] as const;
+export type ContentLicense = (typeof CONTENT_LICENSES)[number];
+
+export const CONTENT_LICENSE_CONFIG: Record<
+  ContentLicense,
+  {
+    label: string;
+    shortLabel: string;
+    description: string;
+    url: string | null;
+    irrevocable: boolean; // once chosen, cannot switch to more restrictive
+    allowCommercial: boolean;
+    allowDerivatives: boolean;
+  }
+> = {
+  cc_by: {
+    label: "CC BY 4.0 — Attribution",
+    shortLabel: "CC BY",
+    description: "Anyone may use, adapt, and share — even commercially — with attribution to you.",
+    url: "https://creativecommons.org/licenses/by/4.0/",
+    irrevocable: true,
+    allowCommercial: true,
+    allowDerivatives: true,
+  },
+  cc_by_sa: {
+    label: "CC BY-SA 4.0 — Attribution-ShareAlike",
+    shortLabel: "CC BY-SA",
+    description: "Same as CC BY, but derivatives must use the same license.",
+    url: "https://creativecommons.org/licenses/by-sa/4.0/",
+    irrevocable: true,
+    allowCommercial: true,
+    allowDerivatives: true,
+  },
+  cc_by_nc: {
+    label: "CC BY-NC 4.0 — Attribution-NonCommercial",
+    shortLabel: "CC BY-NC",
+    description: "Others may use and adapt with attribution, but not for commercial purposes.",
+    url: "https://creativecommons.org/licenses/by-nc/4.0/",
+    irrevocable: true,
+    allowCommercial: false,
+    allowDerivatives: true,
+  },
+  cc_by_nc_sa: {
+    label: "CC BY-NC-SA 4.0 — Attribution-NonCommercial-ShareAlike",
+    shortLabel: "CC BY-NC-SA",
+    description: "Non-commercial use with attribution; derivatives must use the same license.",
+    url: "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+    irrevocable: true,
+    allowCommercial: false,
+    allowDerivatives: true,
+  },
+  cc_by_nd: {
+    label: "CC BY-ND 4.0 — Attribution-NoDerivatives",
+    shortLabel: "CC BY-ND",
+    description: "Others may redistribute with attribution, but may not adapt or modify.",
+    url: "https://creativecommons.org/licenses/by-nd/4.0/",
+    irrevocable: true,
+    allowCommercial: true,
+    allowDerivatives: false,
+  },
+  cc_by_nc_nd: {
+    label: "CC BY-NC-ND 4.0 — Most Restrictive CC",
+    shortLabel: "CC BY-NC-ND",
+    description: "Non-commercial redistribution only, no modifications, with attribution.",
+    url: "https://creativecommons.org/licenses/by-nc-nd/4.0/",
+    irrevocable: true,
+    allowCommercial: false,
+    allowDerivatives: false,
+  },
+  all_rights_reserved: {
+    label: "All Rights Reserved",
+    shortLabel: "All Rights Reserved",
+    description: "Traditional copyright. Others need your explicit permission to use this content.",
+    url: null,
+    irrevocable: false, // CAN be upgraded to CC later
+    allowCommercial: false,
+    allowDerivatives: false,
+  },
+  dc_collab: {
+    label: "DC Collaboration License",
+    shortLabel: "DC Collab",
+    description: "Content is shared under the DC Collaboration Covenant with accepted collaborators. Can be relicensed when collaboration completes.",
+    url: null,
+    irrevocable: false, // temporary — changes when collab resolves
+    allowCommercial: false,
+    allowDerivatives: true,
+  },
+};
+
+/** Default license by access mode. */
+export function getDefaultLicense(accessMode: AccessMode): ContentLicense {
+  switch (accessMode) {
+    case "open": return "cc_by";
+    case "priced": return "all_rights_reserved";
+    case "collab_open":
+    case "collab_gated": return "dc_collab";
+    case "priced_collab": return "all_rights_reserved";
+    default: return "cc_by";
+  }
+}
+
+/**
+ * Check if switching from oldLicense to newLicense is allowed.
+ * Rule: CC licenses are irrevocable — can only open up, never restrict.
+ */
+export function isLicenseChangeAllowed(
+  oldLicense: ContentLicense,
+  newLicense: ContentLicense
+): boolean {
+  if (oldLicense === newLicense) return true;
+  const oldConfig = CONTENT_LICENSE_CONFIG[oldLicense];
+  // If old license is irrevocable (any CC), can only switch to same or more permissive
+  if (oldConfig.irrevocable) {
+    // CC → All Rights Reserved: NOT allowed
+    if (newLicense === "all_rights_reserved" || newLicense === "dc_collab") return false;
+    // CC BY → CC BY-NC: adding restrictions, NOT allowed
+    // General rule: can't add NC or ND restrictions after the fact
+    const newConfig = CONTENT_LICENSE_CONFIG[newLicense];
+    if (!oldConfig.allowCommercial && newConfig.allowCommercial) return true; // opening up
+    if (oldConfig.allowCommercial && !newConfig.allowCommercial) return false; // restricting
+    if (!oldConfig.allowDerivatives && newConfig.allowDerivatives) return true;
+    if (oldConfig.allowDerivatives && !newConfig.allowDerivatives) return false;
+    return true; // same permissiveness level
+  }
+  // Non-irrevocable (All Rights Reserved, DC Collab) → anything is fine
+  return true;
+}

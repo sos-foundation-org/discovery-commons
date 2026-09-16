@@ -6,20 +6,40 @@ import { createContributionSchema } from "@/lib/validations";
 import { generatePriorityHash } from "@/lib/hash";
 import { STAGE_LEVEL } from "@/lib/types";
 import { generateCredits } from "@/lib/credits";
+import { rewardPublish, rewardWelcomeBonus } from "@/lib/points";
 
 // Assemble the per-type metadata JSON (undefined when empty so we don't store {}).
 function buildMetadata(
   type: string,
-  opts: { methodAppliesTo?: string[]; dataUrl?: string }
+  opts: {
+    methodAppliesTo?: string[];
+    dataUrl?: string;
+    license?: string;
+    accessMode?: string;
+    price?: number;
+    whyGated?: string;
+    collaborationGate?: Record<string, unknown>;
+  }
 ): Prisma.InputJsonValue | undefined {
-  const meta: Record<string, string | string[]> = {};
+  const meta: Record<string, unknown> = {};
   if (type === "methodology" && opts.methodAppliesTo?.length) {
     meta.methodAppliesTo = opts.methodAppliesTo;
   }
   if (type === "data" && opts.dataUrl) {
     meta.dataUrl = opts.dataUrl;
   }
-  return Object.keys(meta).length ? meta : undefined;
+  // v3: License
+  if (opts.license) {
+    meta.license = opts.license;
+  }
+  // v3: Pricing & collaboration
+  if (opts.accessMode && opts.accessMode !== "open") {
+    meta.accessMode = opts.accessMode;
+    if (opts.price && opts.price > 0) meta.price = opts.price;
+    if (opts.whyGated) meta.whyGated = opts.whyGated;
+    if (opts.collaborationGate) meta.collaborationGate = opts.collaborationGate;
+  }
+  return Object.keys(meta).length ? (meta as Prisma.InputJsonValue) : undefined;
 }
 
 export async function POST(request: NextRequest) {
@@ -44,7 +64,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { threadId, type, content, visibility, parentId, sealed, circleUserIds, methodAppliesTo, dataUrl } = parsed.data;
+    const { threadId, type, content, visibility, parentId, sealed, circleUserIds, methodAppliesTo, dataUrl, license, accessMode, price, whyGated, collaborationGate } = parsed.data;
 
     // When visibility is "shared", circleUserIds can restrict which collaborators
     // see this contribution. Persisted via ContributionShare in the seal/collab pass;
@@ -84,7 +104,7 @@ export async function POST(request: NextRequest) {
           publishedAt: effectiveVisibility === "public" ? now : null,
           parentId,
           // Per-type structured extras stored on the contribution.
-          metadata: buildMetadata(type, { methodAppliesTo, dataUrl }),
+          metadata: buildMetadata(type, { methodAppliesTo, dataUrl, license, accessMode, price, whyGated, collaborationGate }),
           createdAt: now,
         },
         include: {
@@ -151,6 +171,12 @@ export async function POST(request: NextRequest) {
 
       return contrib;
     });
+
+    // Award DP for publishing (outside main transaction, non-blocking)
+    if (contribution.publishedAt) {
+      rewardPublish(prisma, session.user.id, type, contribution.id).catch(() => {});
+      rewardWelcomeBonus(prisma, session.user.id, contribution.id).catch(() => {});
+    }
 
     // Notify thread creator (outside transaction, non-blocking)
     if (thread.creatorId !== session.user.id) {

@@ -26,10 +26,14 @@ export default function TermsPage() {
       <h2>Your content</h2>
       <p>
         You retain ownership of the content you post. By posting, you grant the
-        Foundation a non-exclusive license to store and display that content in
-        accordance with the visibility setting you choose for it. Publicly shared
-        contributions are made available to the community under the{" "}
-        <Link href="/legal/cla">Contributor License</Link>.
+        Foundation a non-exclusive license to store, display, and index that
+        content in accordance with the visibility and license settings you
+        choose. Each contribution carries a license you select (CC BY 4.0 by
+        default for public content, or All Rights Reserved for gated content).
+        The Foundation exercises only the rights your chosen license grants —
+        nothing more. See the{" "}
+        <Link href="/legal/cla">Contributor License</Link> for full details,
+        including irrevocability of Creative Commons licenses.
       </p>
 
       <h2>Priority hashes are evidence, not legal claims</h2>

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { rewardLikeReceived } from "@/lib/points";
 
 // POST — toggle the current user's like on a contribution. Returns { liked, count }.
 export async function POST(
@@ -24,6 +25,14 @@ export async function POST(
     await prisma.contributionLike
       .create({ data: { contributionId, userId } })
       .catch(() => {});
+
+    // Award DP to the contribution author (non-blocking, only on new like)
+    const contribution = await prisma.contribution
+      .findUnique({ where: { id: contributionId }, select: { authorId: true } })
+      .catch(() => null);
+    if (contribution && contribution.authorId !== userId) {
+      rewardLikeReceived(prisma, contribution.authorId, contributionId, userId).catch(() => {});
+    }
   }
 
   const count = await prisma.contributionLike.count({ where: { contributionId } });

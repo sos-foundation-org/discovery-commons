@@ -2,12 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { generatePriorityHash } from "@/lib/hash";
+import { checkContributionAccess } from "@/lib/access-control";
+import type { ContributionPricingMeta } from "@/lib/types";
 
 export async function GET(
   request: NextRequest,
   { params }: { params: { contributionId: string } }
 ) {
   try {
+    const session = await getSession();
+    const userId = session?.user?.id ?? null;
+
     const contribution = await prisma.contribution.findUnique({
       where: { id: params.contributionId },
       include: {
@@ -20,7 +25,11 @@ export async function GET(
             trustLevel: true,
           },
         },
-        thread: { select: { id: true, title: true, creatorId: true } },
+        thread: {
+          select: { id: true, title: true, creatorId: true },
+          include: { collaborators: { select: { userId: true } } },
+        },
+        sharedWith: { select: { userId: true } },
         versions: { orderBy: { versionNumber: "desc" } },
         comments: {
           orderBy: { createdAt: "asc" },
@@ -38,7 +47,33 @@ export async function GET(
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
-    return NextResponse.json(contribution);
+    // Access control: check visibility + gated content
+    const access = await checkContributionAccess(params.contributionId, userId);
+    if (!access.canView) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+
+    // Mask content if sealed or gated without access
+    let responseContent = contribution.content;
+    if (!access.canViewContent) {
+      if (contribution.visibility === "sealed") {
+        responseContent = ""; // Sealed: hash only
+      } else {
+        // Gated: return outline only
+        const meta = contribution.metadata as ContributionPricingMeta | null;
+        const breakPoint = meta?.outlineBreak ?? Math.min(280, contribution.content.length);
+        responseContent = contribution.content.slice(0, breakPoint);
+      }
+    }
+
+    return NextResponse.json({
+      ...contribution,
+      content: responseContent,
+      _access: {
+        canViewContent: access.canViewContent,
+        isGated: access.isGated ?? false,
+      },
+    });
   } catch (error) {
     console.error("Failed to get contribution:", error);
     return NextResponse.json(
@@ -65,6 +100,14 @@ export async function PATCH(
 
     if (!contribution || contribution.authorId !== session.user.id) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+
+    // Sealed contributions are immutable — reject edits
+    if (contribution.visibility === "sealed") {
+      return NextResponse.json(
+        { error: "Sealed contributions cannot be edited" },
+        { status: 403 }
+      );
     }
 
     let body;
