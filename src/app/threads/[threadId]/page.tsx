@@ -28,6 +28,7 @@ import { AvatarBadge } from "@/components/ui/avatar-badge";
 import { ContributionContent } from "@/components/contribution/contribution-content";
 import { GatedContent } from "@/components/contribution/gated-content";
 import { CollabManagePanel } from "@/components/contribution/collab-manage-panel";
+import { TranslateButton } from "@/components/contribution/translate-button";
 import { TypeIcon } from "@/components/contribution/type-icon";
 import { CommentSection } from "@/components/contribution/comment-section";
 import { RevealButton } from "@/components/contribution/reveal-button";
@@ -585,6 +586,13 @@ export default async function ThreadDetailPage({
                           />
                         );
                       })()}
+                      {/* Translate button — FB style */}
+                      {access.canViewContent && (
+                        <TranslateButton
+                          contributionId={contribution.id}
+                          originalContent={contribution.content}
+                        />
+                      )}
                       {contribution.type === "data" &&
                         (contribution.metadata as { dataUrl?: string } | null)
                           ?.dataUrl && (

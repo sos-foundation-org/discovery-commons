@@ -7,6 +7,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { AvatarBadge } from "@/components/ui/avatar-badge";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { LanguageSelector } from "@/components/language-provider";
 
 export function Navbar() {
   const { data: session, status } = useSession();
@@ -113,8 +114,9 @@ export function Navbar() {
           </svg>
         </button>
 
-        {/* Theme toggle + Auth + notifications */}
+        {/* Language + Theme + Auth + notifications */}
         <div className="hidden md:flex items-center space-x-2">
+          <LanguageSelector />
           <ThemeToggle />
           {status === "loading" ? (
             <div className="h-8 w-20 animate-pulse rounded bg-muted" />
@@ -216,9 +218,9 @@ export function Navbar() {
             </Link>
           )}
           <div className="pt-2 border-t">
-            <div className="flex items-center gap-2 px-3 py-2">
+            <div className="flex items-center gap-3 px-3 py-2">
+              <LanguageSelector />
               <ThemeToggle />
-              <span className="text-xs text-muted-foreground">Theme</span>
             </div>
             {session ? (
               <>
