@@ -103,23 +103,13 @@ export default async function HomePage() {
           <div className="grid md:grid-cols-2 gap-8 items-center">
             <div>
               <h2 className="text-3xl font-bold mb-4">
-                Science&apos;s greatest asset is what it hasn&apos;t figured out yet
+                <T k="anti.title" />
               </h2>
               <p className="text-muted-foreground mb-4">
-                Nassim Taleb&apos;s &ldquo;antilibrary&rdquo; is the collection of
-                unread books &mdash; representing what we don&apos;t yet know. In
-                science, the unasked questions and untested hypotheses are where
-                breakthroughs hide.
+                <T k="anti.p1" />
               </p>
               <p className="text-muted-foreground">
-                Discovery Commons is the first platform where a thoughtful
-                question earns the same credit as a published result &mdash; and
-                where a birdwatcher&apos;s field note can spark a collaboration
-                with a university lab. Traditional citizen science asks
-                volunteers to collect data. Here, your insights have their own
-                value: they can seed academic partnerships, inspire new research
-                directions, or even be licensed commercially. Every
-                contribution is hashed, timestamped, and permanently attributed.
+                <T k="anti.p2" />
               </p>
             </div>
             <div className="rounded-xl bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-orange-500/10 p-8 border flex items-center justify-center min-h-[240px]">
@@ -140,37 +130,17 @@ export default async function HomePage() {
       <section id="how-it-works" className="py-16 px-4 bg-muted/50">
         <div className="container mx-auto max-w-5xl">
           <h2 className="text-3xl font-bold text-center mb-4">
-            How Discovery Works
+            <T k="how.title" />
           </h2>
           <p className="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
-            Four steps from curiosity to credited discovery
+            <T k="how.subtitle" />
           </p>
           <div className="grid md:grid-cols-4 gap-6">
             {[
-              {
-                step: "1",
-                title: "Ask a Question",
-                desc: "Start a thread with an unusual question — whether it comes from a research lab, a forest trail, or your grandmother's bookshelf. The weirder the better.",
-                color: "from-blue-500/20 to-blue-600/20",
-              },
-              {
-                step: "2",
-                title: "Build Together",
-                desc: "Others add hypotheses, data, simulations, statistics, interpretations. Each step advances the thread and earns credit.",
-                color: "from-green-500/20 to-green-600/20",
-              },
-              {
-                step: "3",
-                title: "Protect Priority",
-                desc: "Every contribution gets a SHA-256 hash. Seal ideas you're not ready to share — reveal when ready.",
-                color: "from-amber-500/20 to-amber-600/20",
-              },
-              {
-                step: "4",
-                title: "Graduate Visibility",
-                desc: "Start private, share with your circle, open to community, or go fully public. You control the pace.",
-                color: "from-purple-500/20 to-purple-600/20",
-              },
+              { step: "1", titleKey: "how.step1.title", descKey: "how.step1.desc", color: "from-blue-500/20 to-blue-600/20" },
+              { step: "2", titleKey: "how.step2.title", descKey: "how.step2.desc", color: "from-green-500/20 to-green-600/20" },
+              { step: "3", titleKey: "how.step3.title", descKey: "how.step3.desc", color: "from-amber-500/20 to-amber-600/20" },
+              { step: "4", titleKey: "how.step4.title", descKey: "how.step4.desc", color: "from-purple-500/20 to-purple-600/20" },
             ].map((item) => (
               <div key={item.step} className="relative">
                 <div
@@ -179,8 +149,8 @@ export default async function HomePage() {
                   <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold mb-3">
                     {item.step}
                   </div>
-                  <h3 className="font-semibold mb-2">{item.title}</h3>
-                  <p className="text-sm text-muted-foreground">{item.desc}</p>
+                  <h3 className="font-semibold mb-2"><T k={item.titleKey} /></h3>
+                  <p className="text-sm text-muted-foreground"><T k={item.descKey} /></p>
                 </div>
               </div>
             ))}
@@ -197,13 +167,11 @@ export default async function HomePage() {
                 <div className="text-2xl font-mono text-primary mb-2">
                   Q &rarr; H &rarr; D/S &rarr; I
                 </div>
-                <CardTitle className="text-lg">Structured Discovery</CardTitle>
+                <CardTitle className="text-lg"><T k="feat.structured.title" /></CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground">
-                  Contributions follow a natural path: Question, Hypothesis,
-                  Data &amp; Simulation (parallel), Statistics, Interpretation, Insight.
-                  Every step is credited and timestamped.
+                  <T k="feat.structured.desc" />
                 </p>
               </CardContent>
             </Card>
@@ -213,14 +181,12 @@ export default async function HomePage() {
                   SHA-256
                 </div>
                 <CardTitle className="text-lg">
-                  Anti-Scooping Protection
+                  <T k="feat.antiscooping.title" />
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground">
-                  Every contribution gets a SHA-256 hash + timestamp. &ldquo;Seal
-                  Your Idea&rdquo; lets you prove priority without revealing
-                  content.
+                  <T k="feat.antiscooping.desc" />
                 </p>
               </CardContent>
             </Card>
@@ -229,13 +195,11 @@ export default async function HomePage() {
                 <div className="text-2xl font-mono text-primary mb-2">
                   Private &rarr; Public
                 </div>
-                <CardTitle className="text-lg">Graduated Visibility</CardTitle>
+                <CardTitle className="text-lg"><T k="feat.visibility.title" /></CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground">
-                  Start private, share with your trusted circle, or go fully
-                  public — and seal ideas you&rsquo;re not ready to reveal. You
-                  control who sees what, when.
+                  <T k="feat.visibility.desc" />
                 </p>
               </CardContent>
             </Card>
@@ -336,27 +300,27 @@ export default async function HomePage() {
       {/* Community Covenant */}
       <section className="py-16 px-4 bg-muted/50">
         <div className="container mx-auto max-w-3xl text-center">
-          <h2 className="text-3xl font-bold mb-2">Community Covenant</h2>
+          <h2 className="text-3xl font-bold mb-2"><T k="covenant.title" /></h2>
           <p className="text-muted-foreground mb-8">
-            Every member agrees to these principles
+            <T k="covenant.subtitle" />
           </p>
           <div className="grid sm:grid-cols-2 gap-4 text-left">
             {[
-              "Credit where credit is due",
-              "Hash before you share",
-              "Good faith feedback",
-              "Graduated openness",
-              "No scooping",
-              "Report violations",
-            ].map((principle) => (
+              "covenant.1",
+              "covenant.2",
+              "covenant.3",
+              "covenant.4",
+              "covenant.5",
+              "covenant.6",
+            ].map((key) => (
               <div
-                key={principle}
+                key={key}
                 className="flex items-start gap-2 p-3 rounded-lg bg-background border"
               >
                 <span className="text-primary mt-0.5 font-bold">
                   &#10003;
                 </span>
-                <span className="text-sm">{principle}</span>
+                <span className="text-sm"><T k={key} /></span>
               </div>
             ))}
           </div>
@@ -368,15 +332,13 @@ export default async function HomePage() {
         <section className="py-20 px-4">
           <div className="container mx-auto max-w-3xl text-center">
             <h2 className="text-3xl font-bold mb-4">
-              Your next great question is waiting
+              <T k="cta.title" />
             </h2>
             <p className="text-lg text-muted-foreground mb-8">
-              Join a community where curiosity is currency &mdash; no PhD
-              required. Every observation, question, and insight is protected
-              from the moment you type it.
+              <T k="cta.desc" />
             </p>
             <Link href="/auth/signin">
-              <Button size="lg">Create Your Free Account</Button>
+              <Button size="lg"><T k="cta.button" /></Button>
             </Link>
           </div>
         </section>

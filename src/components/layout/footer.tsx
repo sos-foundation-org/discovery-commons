@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { T } from "@/components/t";
 
 export function Footer() {
   return (
@@ -8,22 +9,20 @@ export function Footer() {
           <div>
             <h3 className="font-semibold mb-3">Discovery Commons</h3>
             <p className="text-sm text-muted-foreground">
-              The Antilibrary of Science — where great questions are as
-              valuable as great answers, and every background brings
-              something new.
+              <T k="footer.desc" />
             </p>
           </div>
           <div>
-            <h3 className="font-semibold mb-3">Platform</h3>
+            <h3 className="font-semibold mb-3"><T k="footer.platform" /></h3>
             <nav className="flex flex-col gap-2 text-sm text-muted-foreground">
               <Link href="/threads" className="hover:text-foreground transition-colors">
-                Browse Threads
+                <T k="home.browseThreads" />
               </Link>
               <Link href="/about" className="hover:text-foreground transition-colors">
-                About
+                <T k="nav.about" />
               </Link>
               <Link href="/sealed" className="hover:text-foreground transition-colors">
-                Seal Your Ideas
+                <T k="footer.sealIdeas" />
               </Link>
               <a
                 href="https://forms.gle/g4suToFzzHDaVuUr6"
@@ -31,21 +30,21 @@ export function Footer() {
                 rel="noopener noreferrer"
                 className="hover:text-foreground transition-colors"
               >
-                Contact
+                <T k="footer.contact" />
               </a>
             </nav>
           </div>
           <div>
-            <h3 className="font-semibold mb-3">Legal</h3>
+            <h3 className="font-semibold mb-3"><T k="footer.legal" /></h3>
             <nav className="flex flex-col gap-2 text-sm text-muted-foreground">
               <Link href="/legal/terms" className="hover:text-foreground transition-colors">
-                Terms of Service
+                <T k="footer.terms" />
               </Link>
               <Link href="/legal/privacy" className="hover:text-foreground transition-colors">
-                Privacy Policy
+                <T k="footer.privacy" />
               </Link>
               <Link href="/legal/cla" className="hover:text-foreground transition-colors">
-                Contributor License
+                <T k="footer.cla" />
               </Link>
             </nav>
           </div>

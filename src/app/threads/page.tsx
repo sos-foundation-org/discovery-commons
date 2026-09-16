@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { VISIBILITY_LABELS, type VisibilityLevel } from "@/lib/types";
 import { ThreadFilters } from "@/components/thread/thread-filters";
 import { ThreadRow } from "@/components/thread/thread-row";
+import { T } from "@/components/t";
 
 export default async function ThreadsPage({
   searchParams,
@@ -96,13 +97,13 @@ export default async function ThreadsPage({
     <div className="container mx-auto max-w-5xl px-4 py-8">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-3xl font-bold">Discovery Threads</h1>
+          <h1 className="text-3xl font-bold"><T k="threads.title" /></h1>
           <p className="text-muted-foreground mt-1">
-            Explore ongoing lines of inquiry
+            <T k="threads.subtitle" />
           </p>
         </div>
         <Link href="/threads/new">
-          <Button>New Thread</Button>
+          <Button><T k="threads.new" /></Button>
         </Link>
       </div>
 
@@ -159,12 +160,12 @@ export default async function ThreadsPage({
             <CardContent className="py-12 text-center">
               <p className="text-muted-foreground mb-4">
                 {hasFilters
-                  ? "No threads match your filters."
-                  : "No threads found. Be the first to start a discussion!"}
+                  ? <T k="threads.noMatch" />
+                  : <T k="threads.noThreads" />}
               </p>
               {hasFilters ? (
                 <Link href="/threads">
-                  <Button variant="outline">Clear Filters</Button>
+                  <Button variant="outline"><T k="threads.clearFilters" /></Button>
                 </Link>
               ) : (
                 <Link href="/threads/new">
