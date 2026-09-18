@@ -113,7 +113,7 @@ export function Navbar() {
         <button
           className="md:hidden ml-auto mr-2 p-2"
           onClick={() => setMobileOpen(!mobileOpen)}
-          aria-label="Toggle menu"
+          aria-label={t("site.nav.toggleMenu")}
           aria-expanded={mobileOpen}
           aria-controls="mobile-menu"
         >
@@ -153,7 +153,7 @@ export function Navbar() {
                 <Link
                   href="/points"
                   className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded-md hover:bg-accent"
-                  title="Discovery Points"
+                  title={t("site.nav.discoveryPoints")}
                 >
                   {dpBalance.toLocaleString()} DP
                 </Link>
@@ -198,7 +198,7 @@ export function Navbar() {
                   size="sm"
                 />
                 <span className="text-sm font-medium hidden lg:inline">
-                  {session.user.displayName || session.user.name || "Profile"}
+                  {session.user.displayName || session.user.name || t("nav.profile")}
                 </span>
               </Link>
               <Button

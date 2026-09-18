@@ -3,6 +3,9 @@
  * Supports: en, zh-TW, zh-CN. Default = browser language or "en".
  */
 
+import { AREA_DICTS } from "./i18n-dicts";
+import type { Dict } from "./i18n-dicts/types";
+
 export const SUPPORTED_LOCALES = ["en", "zh-TW", "zh-CN"] as const;
 export type Locale = (typeof SUPPORTED_LOCALES)[number];
 
@@ -27,9 +30,8 @@ export function detectLocale(): Locale {
 }
 
 // ── Dictionary ──────────────────────────────────────────────
-// Key UI strings only — user content stays in its original language.
-
-type Dict = Record<string, string>;
+// UI strings only — user content stays in its original language. Core keys
+// live here; feature-area keys live in src/lib/i18n-dicts/*.
 
 const en: Dict = {
   // Navbar
@@ -305,6 +307,7 @@ const en: Dict = {
   "form.whyGatedCollabPlaceholder": "e.g. Unpublished methodology — seeking co-author",
   "form.openHint": "Everyone can read the full content. You earn DP from likes, citations, and reviews.",
   "form.irrevocable": "(irrevocable)",
+  "form.irrevocableSuffix": " (irrevocable)",
   "form.readLicense": "Read the full license text →",
   "form.irrevocableTitle": "This license is irrevocable",
   "form.irrevocableBody": "Once you publish under {license}, you cannot later change to a more restrictive license. Others who have accessed this content under this license retain their rights permanently. You still own the work — you just cannot revoke the permissions already granted.",
@@ -614,6 +617,7 @@ const zhTW: Dict = {
   "form.whyGatedCollabPlaceholder": "例如：未發表的方法——尋求共同作者",
   "form.openHint": "所有人都能閱讀完整內容。你會從按讚、引用和審查中獲得 DP。",
   "form.irrevocable": "（不可撤銷）",
+  "form.irrevocableSuffix": "（不可撤銷）",
   "form.readLicense": "閱讀完整授權條款 →",
   "form.irrevocableTitle": "此授權不可撤銷",
   "form.irrevocableBody": "一旦以 {license} 發布，之後就無法改為更嚴格的授權。已依此授權存取內容的人將永久保有其權利。你仍擁有這份作品——只是無法撤回已授予的權限。",
@@ -921,6 +925,7 @@ const zhCN: Dict = {
   "form.whyGatedCollabPlaceholder": "例如：未发表的方法——寻求共同作者",
   "form.openHint": "所有人都能阅读完整内容。你会从点赞、引用和审查中获得 DP。",
   "form.irrevocable": "（不可撤销）",
+  "form.irrevocableSuffix": "（不可撤销）",
   "form.readLicense": "阅读完整授权条款 →",
   "form.irrevocableTitle": "此授权不可撤销",
   "form.irrevocableBody": "一旦以 {license} 发布，之后就无法改为更严格的授权。已依此授权访问内容的人将永久保有其权利。你仍拥有这份作品——只是无法撤回已授予的权限。",
@@ -981,10 +986,51 @@ const zhCN: Dict = {
 };
 
 const DICTIONARIES: Record<Locale, Dict> = {
-  en,
-  "zh-TW": zhTW,
-  "zh-CN": zhCN,
+  en: Object.assign({}, en, ...AREA_DICTS.map((d) => d.en)),
+  "zh-TW": Object.assign({}, zhTW, ...AREA_DICTS.map((d) => d["zh-TW"])),
+  "zh-CN": Object.assign({}, zhCN, ...AREA_DICTS.map((d) => d["zh-CN"])),
 };
+
+// ── Dates & relative time ───────────────────────────────────
+const INTL_LOCALE: Record<Locale, string> = {
+  en: "en-US",
+  "zh-TW": "zh-TW",
+  "zh-CN": "zh-CN",
+};
+
+/** "Jul 24, 2026" / "2026年7月24日" */
+export function formatDateL(date: Date | string, locale: Locale): string {
+  return new Date(date).toLocaleDateString(INTL_LOCALE[locale], {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+}
+
+/** Date + time with time zone, in the viewer's language. */
+export function formatDateTimeL(date: Date | string, locale: Locale): string {
+  return new Date(date).toLocaleString(INTL_LOCALE[locale], {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZoneName: "short",
+  });
+}
+
+/** "5m ago" / "5 分鐘前"; falls back to a date after 30 days. */
+export function timeAgoL(date: Date | string, locale: Locale): string {
+  const seconds = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
+  if (seconds < 60) return t("time.justNow", locale);
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return t("time.minutesAgo", locale, { n: minutes });
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return t("time.hoursAgo", locale, { n: hours });
+  const days = Math.floor(hours / 24);
+  if (days < 30) return t("time.daysAgo", locale, { n: days });
+  return formatDateL(date, locale);
+}
 
 export type TranslateVars = Record<string, string | number>;
 
@@ -1058,6 +1104,40 @@ const ERROR_MESSAGE_KEYS: Record<string, string> = {
   "An account with this email already exists": "err.emailExists",
   "Password must be at least 8 characters": "err.passwordShort",
   "Invalid email": "err.invalidEmail",
+  "A thread cannot replicate itself": "err.selfReplication",
+  "All bounty slots have been awarded": "err.bountySlotsFull",
+  "An active bounty already exists on this contribution": "err.bountyExists",
+  "An unexpected error occurred while running the AI review.": "err.aiReviewFailed",
+  "Bounty not found": "err.bountyNotFound",
+  "Cannot award a bounty to yourself": "err.selfBounty",
+  "Cannot create a rule targeting yourself": "err.selfRule",
+  "Credit not found on this thread": "err.creditNotFound",
+  "Edit summary must be at most 500 characters": "err.editSummaryLong",
+  "Entry ID required": "err.missingId",
+  "Missing rule id": "err.missingId",
+  "userId is required": "err.missingId",
+  "Failed to create rule": "err.ruleFailed",
+  "No research object for this thread yet": "err.noResearchObject",
+  "No public research object for this DOI": "err.noPublicResearchObject",
+  "Only the author can update pricing": "err.pricingAuthorOnly",
+  "Only the bounty creator can award": "err.bountyCreatorOnly",
+  "Only the content author can respond to requests": "err.collabAuthorOnly",
+  "Only the thread creator can adjust credit weights": "err.creditCreatorOnly",
+  "Only the thread creator can edit the research object": "err.researchObjectCreatorOnly",
+  "Original thread not found": "err.originalThreadNotFound",
+  "Public thread not found": "err.publicThreadNotFound",
+  "Replication not found": "err.replicationNotFound",
+  "Replication thread not found": "err.replicationThreadNotFound",
+  "Sealed contributions must be revealed, not published — use Reveal so the hash is re-verified before unlocking.":
+    "err.sealedUseReveal",
+  "The thread creator is already an owner": "err.alreadyOwner",
+  "This content is not available for purchase": "err.notForSale",
+  "This contribution is not sealed": "err.notSealed",
+  "This ORCID iD is already linked to another account": "err.orcidLinked",
+  "This user has already been awarded": "err.alreadyAwarded",
+  "You can only create bounties on your own contributions": "err.ownBountyOnly",
+  "You can only manage access rules for your own contributions": "err.ownRulesOnly",
+  "You cannot purchase this content": "err.cannotPurchase",
   // Client-side fallbacks
   "Something went wrong.": "err.generic",
   "Something went wrong. Please try again.": "err.generic",
@@ -1069,9 +1149,50 @@ const ERROR_MESSAGE_KEYS: Record<string, string> = {
   "Failed to create thread": "err.threadFailed",
 };
 
+/**
+ * Display label for a domain tag. Tags are stored as typed (usually English);
+ * known tags are shown translated, custom tags pass through unchanged.
+ */
+export function tagLabel(tag: string, locale: Locale): string {
+  const key = `tag.${tag.toLowerCase()}`;
+  const label = t(key, locale);
+  return label === key || locale === "en" ? tag : label;
+}
+
+/** Templated API errors: regex → key; capture groups map to `names` vars. */
+const ERROR_PATTERNS: { re: RegExp; key: string; names: string[] }[] = [
+  { re: /^Daily AI Reviewer quota reached \((\d+)\/(\d+)\)\.$/, key: "err.aiQuota", names: ["used", "limit"] },
+  { re: /^Need at least one "(\w+)" contribution to advance$/, key: "err.stageNeedsContribution", names: ["stage"] },
+  { re: /^Cannot change license from (\S+) to (\S+)\. /, key: "err.licenseIrrevocable", names: ["from", "to"] },
+  { re: /^Cannot respond to a (\w+) request$/, key: "err.collabCannotRespond", names: ["status"] },
+  { re: /^Cannot send messages on a (\w+) request$/, key: "err.collabCannotMessage", names: ["status"] },
+  { re: /^Bounty is (\w+)$/, key: "err.bountyStatus", names: ["status"] },
+];
+
 /** Translate an (English) error message for display. English passes through. */
 export function translateError(message: string, locale: Locale): string {
   if (locale === "en") return message;
   const key = ERROR_MESSAGE_KEYS[message];
-  return key ? t(key, locale) : message;
+  if (key) return t(key, locale);
+  for (const { re, key: k, names } of ERROR_PATTERNS) {
+    const m = message.match(re);
+    if (m) {
+      const vars: Record<string, string> = {};
+      names.forEach((name, i) => (vars[name] = m[i + 1]));
+      // Stage / status names are enum ids — show them translated.
+      if (vars.stage) vars.stage = t(`type.${vars.stage}`, locale);
+      if (vars.status) {
+        const label = t(`collabStatus.${vars.status}`, locale);
+        if (label !== `collabStatus.${vars.status}`) vars.status = label;
+      }
+      for (const v of ["from", "to"] as const) {
+        if (vars[v]) {
+          const label = t(`licenseShort.${vars[v]}`, locale);
+          if (label !== `licenseShort.${vars[v]}`) vars[v] = label;
+        }
+      }
+      return t(k, locale, vars);
+    }
+  }
+  return message;
 }

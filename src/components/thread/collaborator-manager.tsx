@@ -25,7 +25,7 @@ export function CollaboratorManager({ threadId }: { threadId: string }) {
   const [role, setRole] = useState<(typeof ROLES)[number]>("contributor");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const { te } = useI18n();
+  const { t, te } = useI18n();
 
   const load = useCallback(async () => {
     const res = await fetch(`/api/threads/${threadId}/collaborators`).catch(
@@ -52,7 +52,7 @@ export function CollaboratorManager({ threadId }: { threadId: string }) {
       await load();
     } else {
       const data = await res?.json().catch(() => null);
-      setError(data?.error || "Failed to add collaborator");
+      setError(data?.error || t("thread.addCollabFailed"));
     }
     setLoading(false);
   };
@@ -70,9 +70,9 @@ export function CollaboratorManager({ threadId }: { threadId: string }) {
   return (
     <div className="mt-3 rounded-lg border p-3">
       <p className="text-sm font-medium mb-2">
-        Collaborators{" "}
+        {t("thread.collaborators")}{" "}
         <span className="text-muted-foreground font-normal">
-          — can see this thread&rsquo;s Shared contributions
+          {t("thread.collaboratorsHint")}
         </span>
       </p>
 
@@ -91,18 +91,18 @@ export function CollaboratorManager({ threadId }: { threadId: string }) {
         >
           {ROLES.map((r) => (
             <option key={r} value={r}>
-              {r}
+              {t(`thread.role.${r}`)}
             </option>
           ))}
         </select>
         <Button size="sm" onClick={add} disabled={loading || !email}>
-          {loading ? "…" : "Add"}
+          {loading ? "…" : t("common.add")}
         </Button>
       </div>
       {error && <p className="text-xs text-red-600 mb-2">{te(error)}</p>}
 
       {collaborators.length === 0 ? (
-        <p className="text-xs text-muted-foreground">No collaborators yet.</p>
+        <p className="text-xs text-muted-foreground">{t("thread.noCollaborators")}</p>
       ) : (
         <ul className="space-y-1">
           {collaborators.map((c) => (
@@ -113,7 +113,9 @@ export function CollaboratorManager({ threadId }: { threadId: string }) {
               <span>
                 {c.user.displayName || c.user.name || c.user.email}{" "}
                 <span className="text-xs text-muted-foreground">
-                  ({c.role})
+                  ({(ROLES as readonly string[]).includes(c.role)
+                    ? t(`thread.role.${c.role}`)
+                    : c.role})
                 </span>
               </span>
               <button
@@ -121,7 +123,7 @@ export function CollaboratorManager({ threadId }: { threadId: string }) {
                 onClick={() => remove(c.user.id)}
                 className="text-xs text-muted-foreground hover:text-red-600 underline"
               >
-                Remove
+                {t("common.remove")}
               </button>
             </li>
           ))}

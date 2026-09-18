@@ -19,7 +19,8 @@ import {
   CONTENT_LICENSE_CONFIG,
   type ContentLicense,
 } from "@/lib/types";
-import { formatDateTime, timeAgo } from "@/lib/utils";
+import { T } from "@/components/t";
+import { TimeAgo, LocalDate, TagLabel } from "@/components/i18n-date";
 import { truncateHash } from "@/lib/hash";
 import { VisibilityUpgrade } from "@/components/thread/visibility-upgrade";
 import { CollaboratorManager } from "@/components/thread/collaborator-manager";
@@ -45,6 +46,14 @@ import { VerificationBadge } from "@/components/thread/VerificationBadge";
 import { CreditDistribution } from "@/components/credit/CreditDistribution";
 import { summarizeCredits } from "@/lib/credits";
 import { evaluateContributionAccess } from "@/lib/access-control";
+import {
+  TitledDiv,
+  TitledSpan,
+  SealedAgo,
+  ProofRecorded,
+  VerifyHashLink,
+  LicenseBadge,
+} from "./thread-i18n";
 
 // Lazy-load heavy below-fold components
 const ContributionForm = dynamic(
@@ -66,6 +75,16 @@ const ReplicationSection = dynamic(
     ),
   { ssr: false }
 );
+
+// Stage name as displayed (lowercase in English) — falls back to the raw id.
+function StageName({ stage }: { stage: string }) {
+  return stage in STAGE_LEVEL ? <T k={`thread.stage.${stage}`} /> : <>{stage}</>;
+}
+
+// Visibility label — falls back to the raw value for unknown levels.
+function VisLabel({ v }: { v: string }) {
+  return v in VISIBILITY_LABELS ? <T k={`vis.${v}`} /> : <>{v}</>;
+}
 
 const STAGE_COLORS: Record<string, string> = {
   question: "border-l-blue-500",
@@ -241,9 +260,11 @@ export default async function ThreadDetailPage({
           <div className="flex gap-2 flex-wrap">
             <DisciplineBadge discipline={thread.discipline} />
             <VerificationBadge badge={thread.verificationBadge} />
-            <Badge variant="secondary">{thread.currentStage}</Badge>
+            <Badge variant="secondary">
+              <StageName stage={thread.currentStage} />
+            </Badge>
             <Badge variant="outline">
-              {VISIBILITY_LABELS[thread.visibility as VisibilityLevel]}
+              <VisLabel v={thread.visibility} />
             </Badge>
           </div>
         </div>
@@ -254,14 +275,20 @@ export default async function ThreadDetailPage({
 
         <div className="flex items-center gap-4 text-sm text-muted-foreground">
           <span>
-            Started by{" "}
-            {thread.creator.displayName || thread.creator.name}
+            <T
+              k="thread.startedBy"
+              vars={{
+                name: thread.creator.displayName || thread.creator.name || "",
+              }}
+            />
           </span>
-          <span>{timeAgo(thread.createdAt)}</span>
+          <span>
+            <TimeAgo date={thread.createdAt} />
+          </span>
           <div className="flex gap-1">
             {(thread.domainTags as string[]).map((tag) => (
               <Badge key={tag} variant="outline" className="text-xs">
-                {tag}
+                <TagLabel tag={tag} />
               </Badge>
             ))}
           </div>
@@ -284,7 +311,7 @@ export default async function ThreadDetailPage({
                         const count = stageCounts[stage] || 0;
                         const filled = count > 0;
                         return (
-                          <div
+                          <TitledDiv
                             key={stage}
                             className={`px-2 py-0.5 rounded text-xs font-medium ${
                               filled
@@ -293,13 +320,14 @@ export default async function ThreadDetailPage({
                                   ? "bg-primary/20 text-primary/70 border border-dashed border-primary/40"
                                   : "bg-muted text-muted-foreground"
                             }`}
-                            title={`${count} contribution${count !== 1 ? "s" : ""}`}
+                            titleKey={count !== 1 ? "row.contributionMany" : "row.contributionOne"}
+                            vars={{ n: count }}
                           >
-                            {stage}
+                            <StageName stage={stage} />
                             {count > 0 && (
                               <span className="ml-1 opacity-75">({count})</span>
                             )}
-                          </div>
+                          </TitledDiv>
                         );
                       })}
                     </div>
@@ -312,43 +340,46 @@ export default async function ThreadDetailPage({
                       );
                       if (both)
                         return (
-                          <span
+                          <TitledSpan
                             className="text-green-600 dark:text-green-400 text-xs font-bold"
-                            title="Full empirical support: both data and simulation"
+                            titleKey="thread.stageFull"
                           >
                             ✓✓
-                          </span>
+                          </TitledSpan>
                         );
                       if (some)
                         return (
-                          <span
+                          <TitledSpan
                             className="text-yellow-600 dark:text-yellow-400 text-xs"
-                            title="Partial — add both data and simulation for full strength"
+                            titleKey="thread.stagePartial"
                           >
                             ✓
-                          </span>
+                          </TitledSpan>
                         );
                       return null;
                     })()}
                   </div>
                 ) : (
-                  <div
+                  <TitledDiv
                     className={`px-2 py-1 rounded text-xs font-medium ${
                       levelReached
                         ? "bg-primary text-primary-foreground"
                         : "bg-muted text-muted-foreground"
                     }`}
-                    title={`${stageCounts[stages[0]] || 0} contribution${
-                      (stageCounts[stages[0]] || 0) !== 1 ? "s" : ""
-                    }`}
+                    titleKey={
+                      (stageCounts[stages[0]] || 0) !== 1
+                        ? "row.contributionMany"
+                        : "row.contributionOne"
+                    }
+                    vars={{ n: stageCounts[stages[0]] || 0 }}
                   >
-                    {stages[0]}
+                    <StageName stage={stages[0]} />
                     {(stageCounts[stages[0]] || 0) > 0 && (
                       <span className="ml-1 opacity-75">
                         ({stageCounts[stages[0]]})
                       </span>
                     )}
-                  </div>
+                  </TitledDiv>
                 )}
                 {li < STAGE_LEVELS.length - 1 && (
                   <div
@@ -387,9 +418,12 @@ export default async function ThreadDetailPage({
         <Card>
           <CardHeader className="pb-2">
             <h2 className="text-base font-semibold">
-              Credit Distribution{" "}
+              <T k="thread.creditDistribution" />{" "}
               <span className="text-sm font-normal text-muted-foreground">
-                ({creditSummary.total.toFixed(2)} total)
+                <T
+                  k="thread.creditTotal"
+                  vars={{ n: creditSummary.total.toFixed(2) }}
+                />
               </span>
             </h2>
           </CardHeader>
@@ -411,21 +445,26 @@ export default async function ThreadDetailPage({
       {/* Contributions */}
       <div className="space-y-4 mb-8">
         <h2 className="text-xl font-semibold">
-          Contributions ({visibleContributions.length})
+          <T
+            k="thread.contributionsHeading"
+            vars={{ n: visibleContributions.length }}
+          />
         </h2>
 
         {visibleContributions.length === 0 ? (
           <Card>
             <CardContent className="py-8 text-center text-muted-foreground">
-              No contributions yet. Be the first to contribute!
+              <T k="thread.noContributions" />
             </CardContent>
           </Card>
         ) : (
           visibleContributions.map(({ c: contribution, access }) => {
-            const typeConfig =
-              CONTRIBUTION_TYPE_CONFIG[
-                contribution.type as ContributionType
-              ] || CONTRIBUTION_TYPE_CONFIG.data;
+            const typeKey: ContributionType = CONTRIBUTION_TYPE_CONFIG[
+              contribution.type as ContributionType
+            ]
+              ? (contribution.type as ContributionType)
+              : "data";
+            const typeConfig = CONTRIBUTION_TYPE_CONFIG[typeKey];
 
             const isSealed =
               contribution.visibility === "sealed" ||
@@ -457,19 +496,19 @@ export default async function ThreadDetailPage({
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                           {isSealed && (
-                            <span
+                            <TitledSpan
                               className="text-amber-500"
-                              title="Sealed contribution"
+                              titleKey="thread.sealedContribution"
                             >
                               &#x1F512;
-                            </span>
+                            </TitledSpan>
                           )}
                           <Badge
                             variant="outline"
                             className={`gap-1 ${typeConfig.color}`}
                           >
                             <TypeIcon type={contribution.type} className="h-3.5 w-3.5" />
-                            {typeConfig.label}
+                            <T k={`type.${typeKey}`} />
                           </Badge>
                           {contribution.type === "methodology" &&
                             (
@@ -485,7 +524,7 @@ export default async function ThreadDetailPage({
                                   variant="secondary"
                                   className={`text-[10px] ${cfg.color}`}
                                 >
-                                  → {cfg.label}
+                                  → <T k={`method.${a}`} />
                                 </Badge>
                               ) : null;
                             })}
@@ -493,19 +532,18 @@ export default async function ThreadDetailPage({
                         <div className="flex shrink-0 items-center gap-2">
                           {isSealed ? (
                             <Badge variant="secondary" className="text-xs">
-                              Sealed
-                              {contribution.sealedAt
-                                ? ` ${timeAgo(contribution.sealedAt)}`
-                                : contribution.sealedReg
-                                  ? ` ${timeAgo(contribution.sealedReg.registeredAt)}`
-                                  : ""}
+                              <SealedAgo
+                                date={
+                                  contribution.sealedAt ??
+                                  contribution.sealedReg?.registeredAt ??
+                                  null
+                                }
+                              />
                             </Badge>
                           ) : (
                             contribution.visibility !== "public" && (
                               <Badge variant="outline" className="text-xs">
-                                {VISIBILITY_LABELS[
-                                  contribution.visibility as keyof typeof VISIBILITY_LABELS
-                                ] ?? contribution.visibility}
+                                <VisLabel v={contribution.visibility} />
                               </Badge>
                             )
                           )}
@@ -520,13 +558,21 @@ export default async function ThreadDetailPage({
                             contribution.author.name}
                         </Link>
                         <span aria-hidden> · </span>
-                        <span>{timeAgo(contribution.createdAt)}</span>
+                        <span>
+                          <TimeAgo date={contribution.createdAt} />
+                        </span>
                         {contribution._count.comments > 0 && (
                           <>
                             <span aria-hidden> · </span>
                             <span>
-                              {contribution._count.comments} comment
-                              {contribution._count.comments !== 1 ? "s" : ""}
+                              <T
+                                k={
+                                  contribution._count.comments !== 1
+                                    ? "thread.commentMany"
+                                    : "thread.commentOne"
+                                }
+                                vars={{ n: contribution._count.comments }}
+                              />
                             </span>
                           </>
                         )}
@@ -538,8 +584,7 @@ export default async function ThreadDetailPage({
                   {isSealed && !access.canViewContent ? (
                     <div className="p-4 rounded-md bg-muted/50 border border-dashed border-muted-foreground/30 text-center">
                       <p className="text-sm text-muted-foreground mb-1">
-                        This contribution is sealed. Only the hash is visible
-                        until the author reveals it.
+                        <T k="thread.sealedNotice" />
                       </p>
                       <p className="text-xs font-mono text-muted-foreground">
                         SHA-256: {contribution.contentHash}
@@ -577,7 +622,11 @@ export default async function ThreadDetailPage({
                             hasAccess={canSeeAll}
                             hasPurchased={access.hasPurchased ?? false}
                             isAuthor={isContribAuthor}
-                            detailStats={canSeeAll ? undefined : `${detailParagraphs} paragraph${detailParagraphs !== 1 ? "s" : ""} · ${detailLength} chars`}
+                            detailCounts={
+                              canSeeAll
+                                ? undefined
+                                : { paragraphs: detailParagraphs, chars: detailLength }
+                            }
                           />
                         ) : (
                           <ContributionContent
@@ -606,7 +655,7 @@ export default async function ThreadDetailPage({
                             className="mb-3 inline-flex items-center gap-1.5 rounded-md border border-green-300 bg-green-50 px-2.5 py-1 text-xs font-medium text-green-800 hover:bg-green-100 dark:border-green-800 dark:bg-green-950 dark:text-green-300"
                           >
                             <Database className="h-3.5 w-3.5" />
-                            Raw dataset
+                            <T k="thread.rawDataset" />
                           </a>
                         )}
                       {isSealed && isContribAuthor && (
@@ -614,20 +663,20 @@ export default async function ThreadDetailPage({
                           <div className="flex flex-col gap-0.5 text-xs">
                             {/* Existence proof — positive framing. */}
                             <span className="text-green-700 dark:text-green-400">
-                              ✓ Proof of existence recorded
-                              {contribution.sealedAt
-                                ? `: ${formatDateTime(contribution.sealedAt)}`
-                                : contribution.sealedReg
-                                  ? `: ${formatDateTime(contribution.sealedReg.registeredAt)}`
-                                  : ""}
+                              <ProofRecorded
+                                date={
+                                  contribution.sealedAt ??
+                                  contribution.sealedReg?.registeredAt ??
+                                  null
+                                }
+                              />
                             </span>
                             {/* Credit timestamp — neutral framing. */}
                             <span className="text-muted-foreground">
-                              Credit timestamp: not yet established (requires
-                              publishing)
+                              <T k="thread.creditNotYet" />
                             </span>
                             <span className="mt-0.5 font-medium text-amber-700 dark:text-amber-300">
-                              Ready? Publish and claim credit →
+                              <T k="thread.readyPublish" />
                             </span>
                           </div>
                           <RevealButton contributionId={contribution.id} />
@@ -638,15 +687,14 @@ export default async function ThreadDetailPage({
                         contribution.visibility !== "public" && (
                           <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded bg-muted/50 p-2">
                             <span className="text-xs text-muted-foreground">
-                              Publish to make it public and record your credit
-                              timestamp — or seal to lock the content while proving
-                              priority with its hash.
+                              <T k="thread.publishOrSeal" />
                             </span>
                             <div className="flex items-center gap-2">
                               <PublishButton
                                 contributionId={contribution.id}
                                 content={contribution.content}
                                 typeLabel={typeConfig.label}
+                                type={contribution.type}
                                 threadTitle={thread.title}
                               />
                               <SealButton contributionId={contribution.id} />
@@ -662,15 +710,16 @@ export default async function ThreadDetailPage({
                     </>
                   )}
                   <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground font-mono">
-                    <Link
-                      href={`/verify/${contribution.contentHash}`}
-                      title={`Verify ${contribution.contentHash}`}
+                    <VerifyHashLink
+                      hash={contribution.contentHash}
                       className="hover:text-foreground hover:underline"
                     >
                       SHA-256: {truncateHash(contribution.contentHash)}
-                    </Link>
+                    </VerifyHashLink>
                     <span>|</span>
-                    <span>{formatDateTime(contribution.createdAt)}</span>
+                    <span>
+                      <LocalDate date={contribution.createdAt} withTime />
+                    </span>
                     <span>|</span>
                     {/* Layer-2 credit-timestamp status (Web Prototype §3B.7). */}
                     <CreditTimestampStatus
@@ -685,19 +734,7 @@ export default async function ThreadDetailPage({
                       return (
                         <>
                           <span>|</span>
-                          {lcfg.url ? (
-                            <a
-                              href={lcfg.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="hover:text-foreground hover:underline"
-                              title={lcfg.label}
-                            >
-                              {lcfg.shortLabel}
-                            </a>
-                          ) : (
-                            <span title={lcfg.label}>{lcfg.shortLabel}</span>
-                          )}
+                          <LicenseBadge licenseKey={licenseKey} url={lcfg.url} />
                         </>
                       );
                     })()}

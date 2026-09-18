@@ -7,9 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { timeAgo } from "@/lib/utils";
+import { timeAgoL } from "@/lib/i18n";
 import { AvatarPicker } from "@/components/profile/avatar-picker";
 import { useI18n } from "@/components/language-provider";
+import { IdLabel } from "@/components/profile/account-i18n";
 
 interface CircleMember {
   id: string;
@@ -32,7 +33,7 @@ export default function SettingsPage() {
   const [note, setNote] = useState("");
   const [isAdding, setIsAdding] = useState(false);
   const [error, setError] = useState("");
-  const { te } = useI18n();
+  const { t, te, locale } = useI18n();
   const [success, setSuccess] = useState("");
 
   const fetchCircle = useCallback(async () => {
@@ -61,11 +62,11 @@ export default function SettingsPage() {
     if (res?.ok) {
       setEmail("");
       setNote("");
-      setSuccess("User added to your trusted circle!");
+      setSuccess("account.settings.added");
       fetchCircle();
     } else {
       const data = await res?.json().catch(() => ({}));
-      setError(data?.error || "Failed to add user");
+      setError(data?.error || t("account.settings.addFailed"));
     }
     setIsAdding(false);
   };
@@ -91,9 +92,9 @@ export default function SettingsPage() {
 
   return (
     <div className="container mx-auto max-w-3xl px-4 py-8">
-      <h1 className="text-3xl font-bold mb-2">Settings</h1>
+      <h1 className="text-3xl font-bold mb-2">{t("nav.settings")}</h1>
       <p className="text-muted-foreground mb-8">
-        Manage your avatar and your trusted circle for Shared visibility.
+        {t("account.settings.intro")}
       </p>
 
       <AvatarPicker />
@@ -101,7 +102,7 @@ export default function SettingsPage() {
       {/* Add member */}
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle className="text-lg">Add to Trusted Circle</CardTitle>
+          <CardTitle className="text-lg">{t("account.settings.addTitle")}</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleAdd} className="space-y-3">
@@ -112,12 +113,12 @@ export default function SettingsPage() {
             )}
             {success && (
               <p className="text-sm text-green-700 dark:text-green-400 p-2 rounded bg-green-50 dark:bg-green-950">
-                {success}
+                {t(success)}
               </p>
             )}
             <div>
               <label className="block text-sm font-medium mb-1">
-                Email address
+                {t("account.settings.emailLabel")}
               </label>
               <Input
                 type="email"
@@ -127,21 +128,21 @@ export default function SettingsPage() {
                 required
               />
               <p className="text-xs text-muted-foreground mt-1">
-                The user must already have an account on Discovery Commons.
+                {t("account.settings.emailHint")}
               </p>
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">
-                Note (optional)
+                {t("account.settings.noteLabel")}
               </label>
               <Input
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
-                placeholder="e.g., collaborator on bird acoustics project"
+                placeholder={t("account.settings.notePh")}
               />
             </div>
             <Button type="submit" disabled={isAdding || !email.trim()}>
-              {isAdding ? "Adding..." : "Add to Circle"}
+              {isAdding ? t("account.settings.adding") : t("account.settings.addBtn")}
             </Button>
           </form>
         </CardContent>
@@ -151,14 +152,13 @@ export default function SettingsPage() {
       <Card>
         <CardHeader>
           <CardTitle className="text-lg">
-            Your Trusted Circle ({members.length})
+            {t("account.settings.circleTitle", { n: members.length })}
           </CardTitle>
         </CardHeader>
         <CardContent>
           {members.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              Your trusted circle is empty. Add collaborators above to share
-              Shared-visibility content with them.
+              {t("account.settings.empty")}
             </p>
           ) : (
             <div className="space-y-3">
@@ -180,12 +180,15 @@ export default function SettingsPage() {
                       </p>
                     )}
                     <p className="text-xs text-muted-foreground">
-                      Added {timeAgo(m.addedAt)}
+                      {t("account.settings.addedAgo", { time: timeAgoL(m.addedAt, locale) })}
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
                     <Badge variant="outline" className="text-xs">
-                      {m.trustedUser.trustLevel}
+                      <IdLabel
+                        id={m.trustedUser.trustLevel}
+                        k={`trust.${m.trustedUser.trustLevel}`}
+                      />
                     </Badge>
                     <Button
                       variant="ghost"
@@ -193,7 +196,7 @@ export default function SettingsPage() {
                       className="text-xs text-destructive hover:text-destructive"
                       onClick={() => handleRemove(m.id)}
                     >
-                      Remove
+                      {t("common.remove")}
                     </Button>
                   </div>
                 </div>

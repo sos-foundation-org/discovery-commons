@@ -23,7 +23,7 @@ export function ShareManager({ contributionId }: { contributionId: string }) {
   const [email, setEmail] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const { te } = useI18n();
+  const { t, te } = useI18n();
 
   const load = useCallback(async () => {
     const res = await fetch(
@@ -50,7 +50,7 @@ export function ShareManager({ contributionId }: { contributionId: string }) {
       await load();
     } else {
       const d = await res?.json().catch(() => null);
-      setError(d?.error || "Failed to share");
+      setError(d?.error || t("contribution.shareFailed"));
     }
     setBusy(false);
   };
@@ -70,7 +70,7 @@ export function ShareManager({ contributionId }: { contributionId: string }) {
         onClick={() => setOpen(true)}
         className="text-xs text-muted-foreground underline hover:text-foreground"
       >
-        Share with specific people
+        {t("contribution.shareWithPeople")}
       </button>
     );
   }
@@ -78,13 +78,13 @@ export function ShareManager({ contributionId }: { contributionId: string }) {
   return (
     <div className="rounded-lg border p-3">
       <div className="mb-2 flex items-center justify-between">
-        <span className="text-xs font-medium">Shared with</span>
+        <span className="text-xs font-medium">{t("contribution.sharedWith")}</span>
         <button
           type="button"
           onClick={() => setOpen(false)}
           className="text-xs text-muted-foreground hover:text-foreground"
         >
-          Close
+          {t("common.close")}
         </button>
       </div>
       <div className="mb-2 flex flex-wrap items-center gap-2">
@@ -96,18 +96,17 @@ export function ShareManager({ contributionId }: { contributionId: string }) {
           className="h-8 max-w-xs text-sm"
         />
         <Button size="sm" onClick={add} disabled={busy || !email}>
-          {busy ? "…" : "Share"}
+          {busy ? "…" : t("contribution.share")}
         </Button>
       </div>
       {/* Web Prototype §3B.7: sharing does not establish credit priority. */}
       <p className="mb-2 text-[11px] text-muted-foreground">
-        Sharing with collaborators does not create a credit timestamp. To protect
-        priority, seal first, then share.
+        {t("contribution.shareNoCredit")}
       </p>
       {error && <p className="mb-2 text-xs text-red-600">{te(error)}</p>}
       {shares.length === 0 ? (
         <p className="text-xs text-muted-foreground">
-          Only thread collaborators can see this so far.
+          {t("contribution.onlyCollaborators")}
         </p>
       ) : (
         <ul className="space-y-1">
@@ -122,7 +121,7 @@ export function ShareManager({ contributionId }: { contributionId: string }) {
                 onClick={() => remove(s.user.id)}
                 className="text-xs text-muted-foreground underline hover:text-red-600"
               >
-                Remove
+                {t("common.remove")}
               </button>
             </li>
           ))}

@@ -1,7 +1,10 @@
+"use client";
+
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { ReplicationStatus } from "./ReplicationStatus";
-import { formatDate } from "@/lib/utils";
+import { useI18n } from "@/components/language-provider";
+import { formatDateL } from "@/lib/i18n";
 
 interface ReplicationCardData {
   id: string;
@@ -13,6 +16,7 @@ interface ReplicationCardData {
 
 // Single replication summary card shown on an original thread.
 export function ReplicationCard({ replication }: { replication: ReplicationCardData }) {
+  const { t, locale } = useI18n();
   return (
     <Card>
       <CardContent className="pt-4">
@@ -29,7 +33,9 @@ export function ReplicationCard({ replication }: { replication: ReplicationCardD
           <p className="mt-2 text-sm text-muted-foreground">{replication.notes}</p>
         )}
         <p className="mt-2 text-xs text-muted-foreground">
-          Registered {formatDate(new Date(replication.createdAt))}
+          {t("thread.rep.registeredOn", {
+            date: formatDateL(new Date(replication.createdAt), locale),
+          })}
         </p>
       </CardContent>
     </Card>

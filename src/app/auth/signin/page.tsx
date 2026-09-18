@@ -23,7 +23,7 @@ export default function SignInPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const { te } = useI18n();
+  const { t, te } = useI18n();
 
   useEffect(() => {
     getProviders()
@@ -49,7 +49,7 @@ export default function SignInPage() {
       }).catch(() => null);
       if (!res?.ok) {
         const d = await res?.json().catch(() => null);
-        setError(d?.error || "Could not create account");
+        setError(d?.error || t("account.signin.createFailed"));
         setLoading(false);
         return;
       }
@@ -67,8 +67,8 @@ export default function SignInPage() {
     } else {
       setError(
         mode === "signup"
-          ? "Account created but sign-in failed — try signing in."
-          : "Incorrect email or password."
+          ? t("account.signin.createdButFailed")
+          : t("account.signin.incorrect")
       );
     }
   };
@@ -77,11 +77,11 @@ export default function SignInPage() {
     <div className="flex min-h-[80vh] items-center justify-center px-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl">Welcome to Discovery Commons</CardTitle>
+          <CardTitle className="text-2xl">{t("auth.welcome")}</CardTitle>
           <CardDescription>
             {mode === "signin"
-              ? "Sign in to start sharing your discoveries"
-              : "Create an account with your email"}
+              ? t("auth.signInDesc")
+              : t("auth.signUpDesc")}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -100,7 +100,7 @@ export default function SignInPage() {
               size="lg"
               onClick={() => signIn(p.id, { callbackUrl: "/threads" })}
             >
-              Continue with {p.name}
+              {t("account.signin.continueWith", { provider: p.name })}
             </Button>
           ))}
 
@@ -110,7 +110,7 @@ export default function SignInPage() {
                 <span className="w-full border-t" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-2 text-muted-foreground">or</span>
+                <span className="bg-background px-2 text-muted-foreground">{t("auth.or")}</span>
               </div>
             </div>
           )}
@@ -121,21 +121,21 @@ export default function SignInPage() {
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Display name"
+                placeholder={t("account.signin.displayName")}
               />
             )}
             <Input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="Email"
+              placeholder={t("account.signin.email")}
               required
             />
             <Input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder={mode === "signup" ? "Password (min 8 chars)" : "Password"}
+              placeholder={mode === "signup" ? t("account.signin.passwordMin") : t("account.signin.password")}
               required
             />
             {error && <p className="text-sm text-red-600">{te(error)}</p>}
@@ -143,15 +143,15 @@ export default function SignInPage() {
               {loading
                 ? "…"
                 : mode === "signin"
-                  ? "Sign in"
-                  : "Create account"}
+                  ? t("auth.signIn")
+                  : t("auth.createAccount")}
             </Button>
           </form>
 
           <p className="text-center text-sm text-muted-foreground">
             {mode === "signin" ? (
               <>
-                No account?{" "}
+                {t("auth.noAccount")}{" "}
                 <button
                   type="button"
                   className="text-primary hover:underline"
@@ -160,12 +160,12 @@ export default function SignInPage() {
                     setError("");
                   }}
                 >
-                  Create one
+                  {t("auth.createOne")}
                 </button>
               </>
             ) : (
               <>
-                Already have an account?{" "}
+                {t("auth.hasAccount")}{" "}
                 <button
                   type="button"
                   className="text-primary hover:underline"
@@ -174,7 +174,7 @@ export default function SignInPage() {
                     setError("");
                   }}
                 >
-                  Sign in
+                  {t("auth.signIn")}
                 </button>
               </>
             )}
@@ -192,7 +192,7 @@ export default function SignInPage() {
               }
               className="w-full text-center text-xs text-muted-foreground underline"
             >
-              Dev quick login (local only)
+              {t("account.signin.devLogin")}
             </button>
           )}
         </CardContent>

@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { useI18n } from "@/components/language-provider";
 
 interface ChatMessage {
   senderId: string;
@@ -26,6 +27,7 @@ export function CollabChatPanel({
   isAuthor: boolean;
 }) {
   const { data: session } = useSession();
+  const { t, locale } = useI18n();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [initialMessage, setInitialMessage] = useState("");
   const [status, setStatus] = useState("pending");
@@ -106,7 +108,7 @@ export function CollabChatPanel({
   return (
     <div className="rounded-lg border bg-muted/20 p-3 space-y-3">
       <div className="flex items-center justify-between">
-        <p className="text-sm font-medium">Collaboration Chat</p>
+        <p className="text-sm font-medium">{t("contribution.chatTitle")}</p>
         <Badge
           variant={
             status === "accepted"
@@ -116,7 +118,7 @@ export function CollabChatPanel({
                 : "secondary"
           }
         >
-          {status}
+          {locale === "en" ? status : t(`collabStatus.${status}`)}
         </Badge>
       </div>
 
@@ -125,7 +127,7 @@ export function CollabChatPanel({
         {/* Initial proposal message */}
         {initialMessage && (
           <div className="text-sm bg-background rounded p-2 border">
-            <span className="text-xs text-muted-foreground">Proposal:</span>
+            <span className="text-xs text-muted-foreground">{t("contribution.proposal")}</span>
             <p className="mt-0.5">{initialMessage}</p>
           </div>
         )}
@@ -143,7 +145,7 @@ export function CollabChatPanel({
             >
               <p>{msg.text}</p>
               <p className="text-xs text-muted-foreground mt-1">
-                {isMe ? "You" : "Them"} ·{" "}
+                {isMe ? t("common.you") : t("contribution.them")} ·{" "}
                 {new Date(msg.createdAt).toLocaleTimeString()}
               </p>
             </div>
@@ -157,12 +159,12 @@ export function CollabChatPanel({
           <Input
             value={newText}
             onChange={(e) => setNewText(e.target.value)}
-            placeholder="Type a message..."
+            placeholder={t("contribution.messagePlaceholder")}
             className="text-sm"
             maxLength={2000}
           />
           <Button type="submit" size="sm" disabled={sending || !newText.trim()}>
-            {sending ? "..." : "Send"}
+            {sending ? "..." : t("contribution.send")}
           </Button>
         </form>
       )}
@@ -171,14 +173,14 @@ export function CollabChatPanel({
       {isAuthor && canChat && (
         <div className="flex gap-2 pt-2 border-t">
           <Button size="sm" onClick={() => handleAction("accept")}>
-            Accept — unlock details
+            {t("contribution.acceptUnlock")}
           </Button>
           <Button
             size="sm"
             variant="outline"
             onClick={() => handleAction("decline")}
           >
-            Decline
+            {t("contribution.decline")}
           </Button>
         </div>
       )}
@@ -186,12 +188,12 @@ export function CollabChatPanel({
       {/* Terminal state messages */}
       {status === "accepted" && (
         <p className="text-xs text-green-600">
-          Collaboration accepted. Full content is now unlocked.
+          {t("contribution.collabAcceptedNote")}
         </p>
       )}
       {status === "declined" && (
         <p className="text-xs text-muted-foreground">
-          This request was declined. Any deposit has been refunded.
+          {t("contribution.collabDeclinedNote")}
         </p>
       )}
     </div>

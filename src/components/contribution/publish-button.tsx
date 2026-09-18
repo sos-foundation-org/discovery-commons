@@ -13,6 +13,8 @@ interface PublishButtonProps {
   content: string;
   /** Human-readable contribution type, e.g. "Hypothesis". */
   typeLabel: string;
+  /** Contribution type id — when given, the label is shown translated. */
+  type?: string;
   /** Title of the thread this contribution belongs to. */
   threadTitle: string;
 }
@@ -29,6 +31,7 @@ export function PublishButton({
   contributionId,
   content,
   typeLabel,
+  type,
   threadTitle,
 }: PublishButtonProps) {
   const router = useRouter();
@@ -104,7 +107,9 @@ export function PublishButton({
             {/* Content preview — guards against publishing the wrong item. */}
             <div className="mb-4 rounded-md border bg-muted/40 p-3">
               <p className="mb-1 text-xs text-muted-foreground">
-                <span className="font-medium text-foreground">{typeLabel}</span>
+                <span className="font-medium text-foreground">
+                  {type ? t(`type.${type}`) : typeLabel}
+                </span>
                 {`  ·  ${t("publish.in")} `}
                 {threadTitle}
               </p>

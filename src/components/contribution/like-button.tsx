@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Heart } from "lucide-react";
 import { useSession } from "next-auth/react";
+import { useI18n } from "@/components/language-provider";
 
 export function LikeButton({
   contributionId,
@@ -14,6 +15,7 @@ export function LikeButton({
   initialLiked: boolean;
 }) {
   const { data: session } = useSession();
+  const { t } = useI18n();
   const [count, setCount] = useState(initialCount);
   const [liked, setLiked] = useState(initialLiked);
   const [busy, setBusy] = useState(false);
@@ -44,7 +46,13 @@ export function LikeButton({
       type="button"
       onClick={toggle}
       disabled={!session}
-      title={session ? (liked ? "Unlike" : "Like") : "Sign in to like"}
+      title={
+        session
+          ? liked
+            ? t("contribution.unlike")
+            : t("contribution.like")
+          : t("contribution.signInToLike")
+      }
       className={`inline-flex items-center gap-1 text-xs transition-colors ${
         liked ? "text-rose-600" : "text-muted-foreground hover:text-foreground"
       } ${!session ? "cursor-default" : ""}`}

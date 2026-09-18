@@ -32,6 +32,8 @@ interface GatedContentProps {
   isAuthor: boolean;
   // Content stats for the locked section
   detailStats?: string; // e.g. "4 paragraphs · 2 figures · 1 dataset link"
+  /** Server-computed counts for the locked section; formatted per locale. */
+  detailCounts?: { paragraphs: number; chars: number };
 }
 
 /**
@@ -51,6 +53,7 @@ export function GatedContent({
   hasPurchased,
   isAuthor,
   detailStats,
+  detailCounts,
 }: GatedContentProps) {
   const { data: session } = useSession();
   const router = useRouter();
@@ -58,7 +61,7 @@ export function GatedContent({
   const [purchaseSuccess, setPurchaseSuccess] = useState(false);
   const [showCollabForm, setShowCollabForm] = useState(false);
   const [error, setError] = useState("");
-  const { te } = useI18n();
+  const { t, te, locale } = useI18n();
 
   // If open or user has access, show everything
   if (accessMode === "open" || hasAccess) {
@@ -71,8 +74,14 @@ export function GatedContent({
   const hasDetails = content.length > breakPoint;
 
   // Count details stats if not provided
-  const stats =
-    detailStats ?? estimateDetailStats(content.slice(breakPoint));
+  const stats = detailCounts
+    ? `${t(
+        detailCounts.paragraphs !== 1
+          ? "contribution.paragraphMany"
+          : "contribution.paragraphOne",
+        { n: detailCounts.paragraphs }
+      )} · ${t("contribution.charCount", { n: detailCounts.chars })}`
+    : detailStats ?? estimateDetailStats(content.slice(breakPoint), t);
 
   const handlePurchase = async () => {
     if (!session) {
@@ -90,10 +99,10 @@ export function GatedContent({
         setTimeout(() => router.refresh(), 1500);
       } else {
         const data = await res.json();
-        setError(data.error || "Purchase failed");
+        setError(data.error || t("contribution.purchaseFailed"));
       }
     } catch {
-      setError("Something went wrong");
+      setError(t("contribution.somethingWrong"));
     } finally {
       setPurchasing(false);
     }
@@ -125,7 +134,7 @@ export function GatedContent({
           <div className="flex items-start gap-2 mb-3">
             <span className="text-lg">&#x1F512;</span>
             <div>
-              <p className="text-sm font-medium">Details locked</p>
+              <p className="text-sm font-medium">{t("gated.locked")}</p>
               {stats && (
                 <p className="text-xs text-muted-foreground">{stats}</p>
               )}
@@ -142,7 +151,7 @@ export function GatedContent({
 
           {purchaseSuccess && (
             <div className="mb-3 rounded-md bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 p-3 text-sm text-green-800 dark:text-green-200">
-              &#x2705; Content unlocked! Refreshing...
+              &#x2705; {t("gated.unlocked")}
             </div>
           )}
 
@@ -159,13 +168,13 @@ export function GatedContent({
                 disabled={purchasing || !session}
                 title={
                   session
-                    ? `Unlock full content for ${price} DP`
-                    : "Sign in to purchase"
+                    ? t("contribution.unlockFullTitle", { n: price })
+                    : t("contribution.signInToPurchase")
                 }
               >
                 {purchasing
-                  ? "Unlocking..."
-                  : `🔓 Unlock for ${price} DP`}
+                  ? t("contribution.unlocking")
+                  : `🔓 ${t("contribution.unlockFor", { n: price })}`}
               </Button>
             )}
 
@@ -181,7 +190,7 @@ export function GatedContent({
                   setShowCollabForm(true);
                 }}
               >
-                &#x1F4DD; Propose Collaboration
+                &#x1F4DD; {t("gated.propose")}
               </Button>
             )}
           </div>
@@ -205,16 +214,22 @@ export function GatedContent({
             >
               {seekingLabel && (
                 <p className="text-xs">
-                  {seekingLabel.icon} Seeking{" "}
-                  <span className="font-medium">
-                    {seekingLabel.label.toLowerCase()}
-                  </span>{" "}
-                  collaboration
+                  {seekingLabel.icon}{" "}
+                  {t("contribution.seekingCollab").split(/(\{type\})/).map((part, i) =>
+                    part === "{type}" ? (
+                      <span key={i} className="font-medium">
+                        {t(`collab.${gate.seekingType}`).toLowerCase()}
+                      </span>
+                    ) : (
+                      part
+                    )
+                  )}
                 </p>
               )}
               {minLevelInfo && (
                 <p className="text-xs text-muted-foreground">
-                  Min level: {minLevelInfo.icon} {minLevelInfo.name} (Lv.
+                  {t("form.minLevel")} {minLevelInfo.icon}{" "}
+                  {t(`level.${minLevelInfo.level}`)} (Lv.
                   {minLevelInfo.level})
                 </p>
               )}
@@ -227,7 +242,9 @@ export function GatedContent({
                         variant="outline"
                         className="text-xs"
                       >
-                        {d}
+                        {locale !== "en" && t(`disc.${d}`) !== `disc.${d}`
+                          ? t(`disc.${d}`)
+                          : d}
                       </Badge>
                     ))}
                   </div>
@@ -256,17 +273,30 @@ function findNaturalBreak(content: string): number {
 }
 
 /** Rough estimate of what's behind the lock. */
-function estimateDetailStats(details: string): string {
+function estimateDetailStats(
+  details: string,
+  t: (key: string, vars?: Record<string, string | number>) => string
+): string {
   if (!details.trim()) return "";
   const paragraphs = details.split(/\n\n+/).filter((p) => p.trim()).length;
   const images = (details.match(/!\[/g) || []).length;
   const codeBlocks = (details.match(/```/g) || []).length / 2;
   const parts: string[] = [];
   if (paragraphs > 0)
-    parts.push(`${paragraphs} paragraph${paragraphs !== 1 ? "s" : ""}`);
+    parts.push(
+      t(paragraphs !== 1 ? "contribution.paragraphMany" : "contribution.paragraphOne", {
+        n: paragraphs,
+      })
+    );
   if (images > 0)
-    parts.push(`${images} image${images !== 1 ? "s" : ""}`);
+    parts.push(
+      t(images !== 1 ? "contribution.imageMany" : "contribution.imageOne", { n: images })
+    );
   if (codeBlocks > 0)
-    parts.push(`${Math.floor(codeBlocks)} code block${codeBlocks !== 1 ? "s" : ""}`);
+    parts.push(
+      t(codeBlocks !== 1 ? "contribution.codeBlockMany" : "contribution.codeBlockOne", {
+        n: Math.floor(codeBlocks),
+      })
+    );
   return parts.join(" · ");
 }

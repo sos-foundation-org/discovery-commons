@@ -5,6 +5,8 @@ import { useSession } from "next-auth/react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { LEVELS } from "@/lib/types";
+import { useI18n } from "@/components/language-provider";
+import { timeAgoL } from "@/lib/i18n";
 
 interface LevelInfo {
   level: number;
@@ -34,21 +36,12 @@ interface PointsData {
   transactions: Transaction[];
 }
 
-const REASON_LABELS: Record<string, string> = {
-  contribution_publish: "Published contribution",
-  like_received: "Received a like",
-  endorsement_received: "Received endorsement",
-  review_received: "Received review",
-  comment_posted: "Posted a comment",
-  thread_created: "Created a thread",
-  daily_login: "Daily login",
-  welcome_bonus: "Welcome bonus",
-  content_purchase: "Purchased content",
-  collab_deposit: "Collaboration deposit",
-  collab_deposit_refund: "Deposit refunded",
-  platform_fee: "Platform fee",
-  citation_received: "Your work was cited",
-};
+// Transaction reason ids → `account.points.reason.<id>` (unknown ids shown raw).
+function reasonLabel(reason: string, t: (key: string) => string): string {
+  const key = `account.points.reason.${reason}`;
+  const label = t(key);
+  return label === key ? reason : label;
+}
 
 function timeAgo(date: string): string {
   const seconds = Math.floor(
@@ -68,6 +61,9 @@ export default function PointsPage() {
   const { data: session } = useSession();
   const [data, setData] = useState<PointsData | null>(null);
   const [loading, setLoading] = useState(true);
+  const { t, locale } = useI18n();
+  // English keeps the original date fallback; other locales use the i18n helper.
+  const ago = (d: string) => (locale === "en" ? timeAgo(d) : timeAgoL(d, locale));
 
   const fetchPoints = useCallback(async () => {
     const res = await fetch("/api/points").catch(() => null);
@@ -85,8 +81,8 @@ export default function PointsPage() {
   if (!session) {
     return (
       <div className="container mx-auto max-w-3xl px-4 py-12 text-center">
-        <h1 className="text-3xl font-bold mb-4">Discovery Points</h1>
-        <p className="text-muted-foreground">Sign in to view your points.</p>
+        <h1 className="text-3xl font-bold mb-4">{t("account.points.title")}</h1>
+        <p className="text-muted-foreground">{t("account.points.signIn")}</p>
       </div>
     );
   }
@@ -104,7 +100,7 @@ export default function PointsPage() {
   if (!data) {
     return (
       <div className="container mx-auto max-w-3xl px-4 py-12 text-center">
-        <p className="text-muted-foreground">Could not load points data.</p>
+        <p className="text-muted-foreground">{t("account.points.loadFailed")}</p>
       </div>
     );
   }
@@ -113,7 +109,7 @@ export default function PointsPage() {
 
   return (
     <div className="container mx-auto max-w-3xl px-4 py-8">
-      <h1 className="text-3xl font-bold mb-6">Discovery Points</h1>
+      <h1 className="text-3xl font-bold mb-6">{t("account.points.title")}</h1>
 
       {/* Level card */}
       <Card className="mb-6">
@@ -122,13 +118,13 @@ export default function PointsPage() {
             <span className="text-4xl">{data.level.icon}</span>
             <div>
               <h2 className="text-xl font-bold">
-                {data.level.name}{" "}
+                {t(`level.${data.level.level}`)}{" "}
                 <span className="text-muted-foreground font-normal text-base">
                   (Lv.{data.level.level})
                 </span>
               </h2>
               <p className="text-sm text-muted-foreground">
-                Reputation: {data.reputation.toLocaleString()}
+                {t("account.points.reputation", { n: data.reputation.toLocaleString() })}
               </p>
             </div>
           </div>
@@ -138,10 +134,10 @@ export default function PointsPage() {
             <div className="mb-2">
               <div className="flex justify-between text-xs text-muted-foreground mb-1">
                 <span>
-                  {data.level.icon} {data.level.name}
+                  {data.level.icon} {t(`level.${data.level.level}`)}
                 </span>
                 <span>
-                  {data.nextLevel.icon} {data.nextLevel.name}
+                  {data.nextLevel.icon} {t(`level.${data.nextLevel.level}`)}
                 </span>
               </div>
               <div className="w-full h-2.5 rounded-full bg-muted overflow-hidden">
@@ -151,7 +147,10 @@ export default function PointsPage() {
                 />
               </div>
               <p className="text-xs text-muted-foreground mt-1">
-                {progressPct}% &mdash; {(data.nextLevel.minRep - data.reputation).toLocaleString()} reputation to next level
+                {t("account.points.toNext", {
+                  pct: progressPct,
+                  n: (data.nextLevel.minRep - data.reputation).toLocaleString(),
+                })}
               </p>
             </div>
           )}
@@ -160,21 +159,21 @@ export default function PointsPage() {
           <div className="flex gap-6 mt-4 pt-4 border-t">
             <div>
               <div className="text-2xl font-bold">{data.balance.toLocaleString()}</div>
-              <div className="text-xs text-muted-foreground">Balance (DP)</div>
+              <div className="text-xs text-muted-foreground">{t("account.points.balance")}</div>
             </div>
             {data.frozenBalance > 0 && (
               <div>
                 <div className="text-2xl font-bold text-amber-600">
                   {data.frozenBalance.toLocaleString()}
                 </div>
-                <div className="text-xs text-muted-foreground">Frozen</div>
+                <div className="text-xs text-muted-foreground">{t("account.points.frozen")}</div>
               </div>
             )}
             <div>
               <div className="text-2xl font-bold text-muted-foreground">
                 {data.lifetimeEarned.toLocaleString()}
               </div>
-              <div className="text-xs text-muted-foreground">Lifetime earned</div>
+              <div className="text-xs text-muted-foreground">{t("account.points.lifetime")}</div>
             </div>
           </div>
         </CardContent>
@@ -183,7 +182,7 @@ export default function PointsPage() {
       {/* Level guide */}
       <Card className="mb-6">
         <CardHeader className="pb-2">
-          <CardTitle className="text-base">Terra Incognita — Level Guide</CardTitle>
+          <CardTitle className="text-base">{t("account.points.levelGuide")}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -199,10 +198,10 @@ export default function PointsPage() {
                 <span className="text-lg">{l.icon}</span>
                 <div>
                   <div className="text-xs font-medium">
-                    Lv.{l.level} {l.name}
+                    Lv.{l.level} {t(`level.${l.level}`)}
                   </div>
                   <div className="text-[10px] text-muted-foreground">
-                    {l.minRep.toLocaleString()} rep
+                    {t("account.points.rep", { n: l.minRep.toLocaleString() })}
                   </div>
                 </div>
               </div>
@@ -214,12 +213,12 @@ export default function PointsPage() {
       {/* Recent transactions */}
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-base">Recent Activity</CardTitle>
+          <CardTitle className="text-base">{t("account.points.recent")}</CardTitle>
         </CardHeader>
         <CardContent>
           {data.transactions.length === 0 ? (
             <p className="text-sm text-muted-foreground py-4 text-center">
-              No transactions yet. Start contributing to earn DP!
+              {t("account.points.noTx")}
             </p>
           ) : (
             <div className="space-y-2">
@@ -230,10 +229,10 @@ export default function PointsPage() {
                 >
                   <div>
                     <p className="text-sm">
-                      {REASON_LABELS[tx.reason] || tx.reason}
+                      {reasonLabel(tx.reason, t)}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {timeAgo(tx.createdAt)}
+                      {ago(tx.createdAt)}
                     </p>
                   </div>
                   <Badge

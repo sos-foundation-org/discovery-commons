@@ -2,15 +2,39 @@
 
 // Last-resort boundary for errors in the root layout itself. It replaces the
 // whole document, so it can't rely on providers or globals.css — keep it
-// self-contained with inline styles.
+// self-contained with inline styles. No LanguageProvider here either, so the
+// saved locale is read straight from localStorage.
+
+import { useEffect, useState } from "react";
+import { t, SUPPORTED_LOCALES, type Locale } from "@/lib/i18n";
+
+function readSavedLocale(): Locale {
+  try {
+    const stored = localStorage.getItem("dc-locale");
+    if (stored && (SUPPORTED_LOCALES as readonly string[]).includes(stored)) {
+      return stored as Locale;
+    }
+  } catch {
+    // storage unavailable — fall through
+  }
+  return "en";
+}
+
 export default function GlobalError({
   reset,
 }: {
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const [locale, setLocale] = useState<Locale>("en");
+  useEffect(() => {
+    setLocale(readSavedLocale());
+  }, []);
+
   return (
-    <html lang="en">
+    <html
+      lang={locale === "zh-TW" ? "zh-Hant" : locale === "zh-CN" ? "zh-Hans" : "en"}
+    >
       <body
         style={{
           margin: 0,
@@ -25,10 +49,10 @@ export default function GlobalError({
         }}
       >
         <h1 style={{ fontSize: "2.25rem", fontWeight: 700, margin: 0 }}>
-          Something went wrong
+          {t("error.title", locale)}
         </h1>
         <p style={{ marginTop: 16, color: "#6b7280", maxWidth: 420 }}>
-          Discovery Commons hit an unexpected error. Please try again.
+          {t("site.globalError.desc", locale)}
         </p>
         <div style={{ marginTop: 32, display: "flex", gap: 16 }}>
           <button
@@ -43,7 +67,7 @@ export default function GlobalError({
               cursor: "pointer",
             }}
           >
-            Try again
+            {t("error.retry", locale)}
           </button>
           {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
           <a
@@ -56,7 +80,7 @@ export default function GlobalError({
               textDecoration: "none",
             }}
           >
-            Back to Home
+            {t("notFound.home", locale)}
           </a>
         </div>
       </body>

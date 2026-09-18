@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AvatarBadge } from "@/components/ui/avatar-badge";
 import { CollabChatPanel } from "./collab-chat-panel";
+import { useI18n } from "@/components/language-provider";
 
 interface CollabRequest {
   id: string;
@@ -39,6 +40,7 @@ export function CollabManagePanel({
   contributionId: string;
 }) {
   const { data: session } = useSession();
+  const { t, locale } = useI18n();
   const [data, setData] = useState<CollabData | null>(null);
   const [loading, setLoading] = useState(true);
   const [openChatId, setOpenChatId] = useState<string | null>(null);
@@ -74,12 +76,12 @@ export function CollabManagePanel({
       {/* Public counts (social proof) */}
       {showCounts && (
         <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
-          <span>&#x1F91D; {counts.total} interested</span>
+          <span>&#x1F91D; {t("contribution.interestedCount", { n: counts.total })}</span>
           {counts.chatting > 0 && (
-            <span>&#x1F4AC; {counts.chatting} chatting</span>
+            <span>&#x1F4AC; {t("contribution.chattingCount", { n: counts.chatting })}</span>
           )}
           {counts.accepted > 0 && (
-            <span>&#x2705; {counts.accepted} collaborating</span>
+            <span>&#x2705; {t("contribution.collaboratingCount", { n: counts.accepted })}</span>
           )}
         </div>
       )}
@@ -88,7 +90,7 @@ export function CollabManagePanel({
       {data.myRequest && !isAuthor && (
         <div className="rounded-lg border p-2">
           <div className="flex items-center gap-2 text-xs">
-            <span>Your request:</span>
+            <span>{t("contribution.yourRequest")}</span>
             <Badge
               variant={
                 data.myRequest.status === "accepted"
@@ -99,7 +101,7 @@ export function CollabManagePanel({
               }
               className="text-xs"
             >
-              {data.myRequest.status}
+              {locale === "en" ? data.myRequest.status : t(`collabStatus.${data.myRequest.status}`)}
             </Badge>
           </div>
           {["chatting", "accepted"].includes(data.myRequest.status) && (
@@ -118,7 +120,7 @@ export function CollabManagePanel({
       {isAuthor && data.requests && data.requests.length > 0 && (
         <div className="rounded-lg border p-3 space-y-2">
           <p className="text-sm font-medium">
-            Collaboration Requests ({counts.total})
+            {t("contribution.collabRequests", { n: counts.total })}
           </p>
           <div className="space-y-2">
             {data.requests.map((req) => (
@@ -134,13 +136,13 @@ export function CollabManagePanel({
                   )}
                   <div className="flex-1 min-w-0">
                     <span className="text-sm font-medium">
-                      {req.applicant?.displayName || req.applicant?.name || "User"}
+                      {req.applicant?.displayName || req.applicant?.name || t("contribution.user")}
                     </span>
                     <Badge
                       variant="secondary"
                       className="ml-2 text-xs"
                     >
-                      {req.seekingType}
+                      {locale === "en" ? req.seekingType : t(`collab.${req.seekingType}`)}
                     </Badge>
                     <Badge
                       variant={
@@ -152,7 +154,7 @@ export function CollabManagePanel({
                       }
                       className="ml-1 text-xs"
                     >
-                      {req.status}
+                      {locale === "en" ? req.status : t(`collabStatus.${req.status}`)}
                     </Badge>
                   </div>
                 </div>
@@ -182,7 +184,7 @@ export function CollabManagePanel({
                         className="text-sm min-h-[44px]"
                         onClick={() => setOpenChatId(req.id)}
                       >
-                        &#x1F4AC; Chat
+                        &#x1F4AC; {t("contribution.chat")}
                       </Button>
                     )}
                   </div>

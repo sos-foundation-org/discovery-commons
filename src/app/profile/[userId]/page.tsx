@@ -8,7 +8,9 @@ import { OrcidBadge } from "@/components/profile/OrcidBadge";
 import { AvatarBadge } from "@/components/ui/avatar-badge";
 import { summarizeCredits } from "@/lib/credits";
 import { TRUST_LEVEL_CONFIG, type TrustLevel } from "@/lib/types";
-import { formatDate } from "@/lib/utils";
+import { T } from "@/components/t";
+import { LocalDate } from "@/components/i18n-date";
+import { IdLabel, TRich } from "@/components/profile/account-i18n";
 
 // Public profile (Web Prototype §9 /profile/[userId]). No auth required. Shows
 // only public information: bio, trust level, 4-dimension credit summary, and
@@ -64,9 +66,12 @@ export default async function PublicProfilePage({
   ]);
 
   const summary = summarizeCredits(credits);
-  const trustConfig =
-    TRUST_LEVEL_CONFIG[(user.trustLevel as TrustLevel) || "new_member"];
+  const trustKey = TRUST_LEVEL_CONFIG[user.trustLevel as TrustLevel]
+    ? (user.trustLevel as TrustLevel)
+    : "new_member";
+  // Avatar initial keeps the English fallback; the heading is translated.
   const displayName = user.displayName || user.name || "Anonymous researcher";
+  const hasName = Boolean(user.displayName || user.name);
 
   return (
     <div className="container mx-auto max-w-3xl px-4 py-8">
@@ -78,14 +83,19 @@ export default async function PublicProfilePage({
           size="lg"
         />
         <div>
-          <h1 className="text-2xl font-bold">{displayName}</h1>
+          <h1 className="text-2xl font-bold">
+            {hasName ? displayName : <T k="account.profile.anonResearcher" />}
+          </h1>
           <div className="mt-1 flex flex-wrap items-center gap-2">
-            <Badge>{trustConfig.label}</Badge>
+            <Badge><T k={`trust.${trustKey}`} /></Badge>
             {user.orcidId && (
               <OrcidBadge orcidId={user.orcidId} verified={user.orcidVerified} />
             )}
             <span className="text-xs text-muted-foreground">
-              Joined {formatDate(user.createdAt)}
+              <TRich
+                k="account.profile.joinedOn"
+                nodes={{ date: <LocalDate date={user.createdAt} /> }}
+              />
             </span>
           </div>
         </div>
@@ -103,9 +113,9 @@ export default async function PublicProfilePage({
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-base">
-              Credit Portfolio{" "}
+              <T k="account.credits.title" />{" "}
               <span className="text-sm font-normal text-muted-foreground">
-                ({summary.total.toFixed(2)} total)
+                <T k="account.profile.total" vars={{ n: summary.total.toFixed(2) }} />
               </span>
             </CardTitle>
           </CardHeader>
@@ -116,11 +126,11 @@ export default async function PublicProfilePage({
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-base">Public Threads</CardTitle>
+            <CardTitle className="text-base"><T k="account.profile.publicThreads" /></CardTitle>
           </CardHeader>
           <CardContent>
             {publicThreads.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No public threads.</p>
+              <p className="text-sm text-muted-foreground"><T k="account.profile.noPublicThreads" /></p>
             ) : (
               <ul className="space-y-2">
                 {publicThreads.map((t) => (
@@ -141,12 +151,12 @@ export default async function PublicProfilePage({
 
       <Card className="mt-6">
         <CardHeader className="pb-2">
-          <CardTitle className="text-base">Recent Public Contributions</CardTitle>
+          <CardTitle className="text-base"><T k="account.profile.recentPublic" /></CardTitle>
         </CardHeader>
         <CardContent>
           {publicContributions.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              No public contributions yet.
+              <T k="account.profile.noPublicContribs" />
             </p>
           ) : (
             <ul className="space-y-2">
@@ -160,12 +170,12 @@ export default async function PublicProfilePage({
                     className="text-primary hover:underline truncate"
                   >
                     <Badge variant="outline" className="mr-2">
-                      {c.type}
+                      <IdLabel id={c.type} k={`type.${c.type}`} />
                     </Badge>
                     {c.thread.title}
                   </Link>
                   <span className="shrink-0 text-xs text-muted-foreground">
-                    {formatDate(c.createdAt)}
+                    <LocalDate date={c.createdAt} />
                   </span>
                 </li>
               ))}

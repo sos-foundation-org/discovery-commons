@@ -27,7 +27,7 @@ export function CollabRequestForm({
   const [seekingType, setSeekingType] = useState<CollabSeekingType>("either");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
-  const { te } = useI18n();
+  const { t, te } = useI18n();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,10 +49,10 @@ export function CollabRequestForm({
         router.refresh();
       } else {
         const data = await res.json();
-        setError(data.error || "Failed to send request");
+        setError(data.error || t("contribution.sendRequestFailed"));
       }
     } catch {
-      setError("Something went wrong");
+      setError(t("contribution.somethingWrong"));
     } finally {
       setSubmitting(false);
     }
@@ -60,24 +60,24 @@ export function CollabRequestForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3 rounded-lg border bg-muted/30 p-3">
-      <p className="text-sm font-medium">Propose Collaboration</p>
+      <p className="text-sm font-medium">{t("gated.propose")}</p>
 
       {/* Seeking type quick-select */}
       <div className="flex gap-2">
-        {COLLAB_SEEKING_TYPES.map((t) => {
-          const cfg = COLLAB_SEEKING_LABELS[t];
+        {COLLAB_SEEKING_TYPES.map((st) => {
+          const cfg = COLLAB_SEEKING_LABELS[st];
           return (
             <button
-              key={t}
+              key={st}
               type="button"
-              onClick={() => setSeekingType(t)}
+              onClick={() => setSeekingType(st)}
               className={`px-3 py-2 min-h-[44px] rounded text-sm border transition-colors ${
-                seekingType === t
+                seekingType === st
                   ? "bg-primary text-primary-foreground border-primary"
                   : "bg-background border-border hover:bg-accent"
               }`}
             >
-              {cfg.icon} {cfg.label}
+              {cfg.icon} {t(`collab.${st}`)}
             </button>
           );
         })}
@@ -87,23 +87,23 @@ export function CollabRequestForm({
       <Input
         value={message}
         onChange={(e) => setMessage(e.target.value)}
-        placeholder="Brief intro + what you can contribute (optional)"
+        placeholder={t("contribution.collabIntroPlaceholder")}
         maxLength={500}
         className="text-sm"
       />
       <p className="text-xs text-muted-foreground">
-        Your profile (level, disciplines, contributions) is automatically attached.
+        {t("contribution.profileAttached")}
       </p>
 
       {error && <p className="text-xs text-destructive">{te(error)}</p>}
 
       <div className="flex gap-2">
         <Button type="submit" size="sm" disabled={submitting}>
-          {submitting ? "Sending..." : "Send Request"}
+          {submitting ? t("contribution.sending") : t("contribution.sendRequest")}
         </Button>
         {onCancel && (
           <Button type="button" size="sm" variant="ghost" onClick={onCancel}>
-            Cancel
+            {t("common.cancel")}
           </Button>
         )}
       </div>

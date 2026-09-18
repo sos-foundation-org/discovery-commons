@@ -18,7 +18,7 @@ export function StageAdvance({
   const router = useRouter();
   const [isAdvancing, setIsAdvancing] = useState(false);
   const [error, setError] = useState("");
-  const { te } = useI18n();
+  const { t, te } = useI18n();
 
   const currentLevel = STAGE_LEVEL[currentStage] ?? -1;
   const maxLevel = Math.max(...Object.values(STAGE_LEVEL));
@@ -33,6 +33,7 @@ export function StageAdvance({
   );
   const nextStage = readyStages[0] || nextLevelStages[0];
   const hasContribForNext = readyStages.length > 0;
+  const stageLabel = t(`thread.stage.${nextStage}`);
 
   const handleAdvance = async () => {
     setIsAdvancing(true);
@@ -48,7 +49,7 @@ export function StageAdvance({
       router.refresh();
     } else {
       const data = await res?.json().catch(() => ({}));
-      setError(data?.error || "Failed to advance stage");
+      setError(data?.error || t("thread.advanceFailed"));
     }
     setIsAdvancing(false);
   };
@@ -57,11 +58,16 @@ export function StageAdvance({
     <div className="mt-3 p-3 rounded-lg border bg-muted/30">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-sm font-medium">Advance Thread Stage</p>
+          <p className="text-sm font-medium">{t("thread.advanceTitle")}</p>
           <p className="text-xs text-muted-foreground">
             {hasContribForNext
-              ? `Ready to advance to "${nextStage}" (${stageCounts[nextStage]} contribution${stageCounts[nextStage] !== 1 ? "s" : ""} of this type)`
-              : `Need at least one "${nextStage}" contribution to advance`}
+              ? t(
+                  stageCounts[nextStage] !== 1
+                    ? "thread.readyAdvanceMany"
+                    : "thread.readyAdvanceOne",
+                  { stage: stageLabel, n: stageCounts[nextStage] }
+                )
+              : t("thread.needContribution", { stage: stageLabel })}
           </p>
         </div>
         <Button
@@ -69,7 +75,7 @@ export function StageAdvance({
           onClick={handleAdvance}
           disabled={isAdvancing || !hasContribForNext}
         >
-          {isAdvancing ? "Advancing..." : `Advance to ${nextStage}`}
+          {isAdvancing ? t("thread.advancing") : t("thread.advanceTo", { stage: stageLabel })}
         </Button>
       </div>
       {error && (

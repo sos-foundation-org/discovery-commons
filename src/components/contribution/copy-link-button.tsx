@@ -2,15 +2,18 @@
 
 import { useState } from "react";
 import { Link2, Check } from "lucide-react";
+import { useI18n } from "@/components/language-provider";
 
 // Copies a link to the clipboard. `path` is resolved against the current origin.
 export function CopyLinkButton({
   path,
-  label = "Copy link",
+  label: labelProp,
 }: {
   path: string;
   label?: string;
 }) {
+  const { t } = useI18n();
+  const label = labelProp ?? t("contribution.copyLink");
   const [copied, setCopied] = useState(false);
 
   const copy = async () => {
@@ -34,7 +37,7 @@ export function CopyLinkButton({
     >
       {copied ? (
         <>
-          <Check className="h-3.5 w-3.5 text-green-600" /> Copied
+          <Check className="h-3.5 w-3.5 text-green-600" /> {t("contribution.copied")}
         </>
       ) : (
         <>

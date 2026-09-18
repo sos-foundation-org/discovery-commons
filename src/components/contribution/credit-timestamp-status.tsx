@@ -3,7 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { CheckCircle2, Clock } from "lucide-react";
-import { formatDateTime } from "@/lib/utils";
+import { formatDateTimeL } from "@/lib/i18n";
+import { useI18n } from "@/components/language-provider";
 
 // Layer-2 credit-timestamp status, embedded in a contribution card's metadata
 // row (Web Prototype §3B.7). Published → green timestamp; not-yet-published →
@@ -15,15 +16,18 @@ export function CreditTimestampStatus({
   publishedAt: string | Date | null;
 }) {
   const [expanded, setExpanded] = useState(false);
+  const { t, locale } = useI18n();
 
   if (publishedAt) {
     return (
       <span
         className="inline-flex items-center gap-1 text-green-700 dark:text-green-400"
-        title="Credit priority was established when this was published"
+        title={t("contribution.creditEstablishedTitle")}
       >
         <CheckCircle2 className="h-3.5 w-3.5" />
-        Credit timestamp: {formatDateTime(publishedAt)}
+        {t("contribution.creditTimestampAt", {
+          date: formatDateTimeL(publishedAt, locale),
+        })}
       </span>
     );
   }
@@ -37,13 +41,13 @@ export function CreditTimestampStatus({
         aria-expanded={expanded}
       >
         <Clock className="h-3.5 w-3.5" />
-        No credit timestamp yet
+        {t("contribution.noCreditTimestamp")}
       </button>
       {expanded && (
         <span className="text-[11px]">
-          — a credit timestamp is only recorded when you publish.{" "}
+          {t("contribution.creditOnlyOnPublish")}{" "}
           <Link href="/about#credit-timestamps" className="underline">
-            Learn more
+            {t("contribution.learnMore")}
           </Link>
         </span>
       )}

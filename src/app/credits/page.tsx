@@ -7,6 +7,7 @@ import { CreditDistribution } from "@/components/credit/CreditDistribution";
 import { CreditTimeline } from "@/components/credit/CreditTimeline";
 import { CreditExport } from "@/components/credit/CreditExport";
 import { OrcidBadge } from "@/components/profile/OrcidBadge";
+import { T } from "@/components/t";
 
 export const metadata = {
   title: "Credit Portfolio — Discovery Commons",
@@ -34,9 +35,9 @@ export default async function CreditsPage() {
     <div className="container mx-auto max-w-4xl px-4 py-8">
       <div className="mb-8 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold">Credit Portfolio</h1>
+          <h1 className="text-3xl font-bold"><T k="account.credits.title" /></h1>
           <p className="text-sm text-muted-foreground">
-            Your contributions across the nine credit dimensions.
+            <T k="account.credits.subtitle" />
           </p>
         </div>
         {user?.orcidId && (
@@ -47,21 +48,21 @@ export default async function CreditsPage() {
       <div className="grid gap-6 md:grid-cols-3">
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Total Weight</CardTitle>
+            <CardTitle className="text-base"><T k="account.credits.totalWeight" /></CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-primary">
               {summary.total.toFixed(2)}
             </div>
             <p className="text-xs text-muted-foreground">
-              across {summary.count} credit records
+              <T k="account.credits.acrossRecords" vars={{ n: summary.count }} />
             </p>
           </CardContent>
         </Card>
 
         <Card className="md:col-span-2">
           <CardHeader>
-            <CardTitle className="text-base">Nine-Dimension Distribution</CardTitle>
+            <CardTitle className="text-base"><T k="account.credits.distribution" /></CardTitle>
           </CardHeader>
           <CardContent>
             <CreditDistribution byDimension={summary.byDimension} />
@@ -71,20 +72,19 @@ export default async function CreditsPage() {
 
       <Card className="mt-6">
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-base">Export</CardTitle>
+          <CardTitle className="text-base"><T k="account.credits.export" /></CardTitle>
           <CreditExport />
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
-            Export your credit portfolio in a CRediT-compatible format for your CV
-            or academic profile, or as JSON/CSV for your own analysis.
+            <T k="account.credits.exportDesc" />
           </p>
         </CardContent>
       </Card>
 
       <Card className="mt-6">
         <CardHeader>
-          <CardTitle className="text-base">Credit History</CardTitle>
+          <CardTitle className="text-base"><T k="account.credits.history" /></CardTitle>
         </CardHeader>
         <CardContent>
           <CreditTimeline

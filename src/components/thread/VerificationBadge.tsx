@@ -1,8 +1,11 @@
+"use client";
+
 import {
   VERIFICATION_BADGE_CONFIG,
   type VerificationBadge as VerificationBadgeType,
 } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/components/language-provider";
 
 // Displays a thread's verification level. Badges are auto-calculated from the
 // thread's evidence state (AI checks, community reviews, replications, DOI).
@@ -13,9 +16,13 @@ export function VerificationBadge({
   badge: string;
   className?: string;
 }) {
-  const config =
-    VERIFICATION_BADGE_CONFIG[badge as VerificationBadgeType] ??
-    VERIFICATION_BADGE_CONFIG.unverified;
+  const { t } = useI18n();
+  const key: VerificationBadgeType = VERIFICATION_BADGE_CONFIG[
+    badge as VerificationBadgeType
+  ]
+    ? (badge as VerificationBadgeType)
+    : "unverified";
+  const config = VERIFICATION_BADGE_CONFIG[key];
 
   return (
     <span
@@ -24,9 +31,9 @@ export function VerificationBadge({
         config.color,
         className
       )}
-      title={config.description}
+      title={t(`badgeDesc.${key}`)}
     >
-      {config.label}
+      {t(`badge.${key}`)}
     </span>
   );
 }

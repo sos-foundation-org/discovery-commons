@@ -100,15 +100,15 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
  * Language selector dropdown — compact, for navbar use.
  */
 export function LanguageSelector() {
-  const { locale, setLocale } = useI18n();
+  const { locale, setLocale, t } = useI18n();
 
   return (
     <select
       value={locale}
       onChange={(e) => setLocale(e.target.value as Locale)}
       className="px-1.5 py-1 rounded-md border bg-background text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer min-h-[36px]"
-      aria-label="Language"
-      title="Language"
+      aria-label={t("site.lang.label")}
+      title={t("site.lang.label")}
     >
       {SUPPORTED_LOCALES.map((l) => (
         <option key={l} value={l}>

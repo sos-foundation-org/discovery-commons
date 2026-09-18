@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Link2, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useI18n } from "@/components/language-provider";
 
 // Author control: create/copy/revoke an "unlisted" link that lets anyone with
 // it view a not-public contribution (like a YouTube unlisted link).
@@ -16,6 +17,7 @@ export function ShareLinkButton({
   const [path, setPath] = useState<string | null>(initialPath);
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState(false);
+  const { t } = useI18n();
 
   const fullUrl =
     path && typeof window !== "undefined" ? window.location.origin + path : path;
@@ -63,7 +65,7 @@ export function ShareLinkButton({
         disabled={busy}
       >
         <Link2 className="h-3.5 w-3.5" />
-        {busy ? "…" : "Create private link"}
+        {busy ? "…" : t("contribution.createPrivateLink")}
       </Button>
     );
   }
@@ -79,7 +81,7 @@ export function ShareLinkButton({
         className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
       >
         {copied ? <Check className="h-3.5 w-3.5 text-green-600" /> : <Link2 className="h-3.5 w-3.5" />}
-        {copied ? "Copied" : "Copy"}
+        {copied ? t("contribution.copied") : t("contribution.copy")}
       </button>
       <button
         type="button"
@@ -87,7 +89,7 @@ export function ShareLinkButton({
         disabled={busy}
         className="text-xs text-muted-foreground underline hover:text-red-600"
       >
-        Revoke
+        {t("contribution.revoke")}
       </button>
     </div>
   );

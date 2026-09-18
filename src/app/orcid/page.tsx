@@ -17,7 +17,7 @@ export default function OrcidPage() {
   const [status, setStatus] = useState<OrcidStatus | null>(null);
   const [orcidInput, setOrcidInput] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const { te } = useI18n();
+  const { t, te } = useI18n();
   const [busy, setBusy] = useState(false);
 
   async function load() {
@@ -42,7 +42,7 @@ export default function OrcidPage() {
       await load();
     } else {
       const data = await res.json().catch(() => ({}));
-      setError(data.error || "Failed to link ORCID iD");
+      setError(data.error || t("account.orcid.linkFailed"));
     }
     setBusy(false);
   }
@@ -59,13 +59,12 @@ export default function OrcidPage() {
     <div className="container mx-auto max-w-2xl px-4 py-8">
       <h1 className="mb-2 text-3xl font-bold">ORCID</h1>
       <p className="mb-8 text-sm text-muted-foreground">
-        Link your ORCID iD so your Discovery Commons contributions can be listed
-        on your academic profile in a verifiable way.
+        {t("account.orcid.intro")}
       </p>
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Your ORCID linkage</CardTitle>
+          <CardTitle className="text-base">{t("account.orcid.linkage")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {status?.linked && status.orcidId ? (
@@ -74,12 +73,12 @@ export default function OrcidPage() {
                 <OrcidBadge orcidId={status.orcidId} verified={status.verified} />
                 {!status.verified && (
                   <span className="text-xs text-muted-foreground">
-                    Self-asserted — sign in with ORCID to verify.
+                    {t("account.orcid.selfAsserted")}
                   </span>
                 )}
               </div>
               <Button variant="outline" size="sm" onClick={unlink} disabled={busy}>
-                Unlink ORCID
+                {t("account.orcid.unlink")}
               </Button>
             </>
           ) : (
@@ -92,13 +91,12 @@ export default function OrcidPage() {
                   className="max-w-xs font-mono"
                 />
                 <Button onClick={link} disabled={busy || !orcidInput.trim()}>
-                  Link
+                  {t("account.orcid.link")}
                 </Button>
               </div>
               {error && <p className="text-sm text-red-600">{te(error)}</p>}
               <p className="text-xs text-muted-foreground">
-                Enter your 16-digit ORCID iD. Manual links are self-asserted; the
-                ORCID sign-in flow (when configured) marks the link verified.
+                {t("account.orcid.hint")}
               </p>
             </>
           )}

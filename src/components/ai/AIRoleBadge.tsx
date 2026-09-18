@@ -1,5 +1,8 @@
+"use client";
+
 import { AI_ROLE_CONFIG, type AIRole } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/components/language-provider";
 
 // Labels AI-generated output with its role, e.g. [AI Reviewer].
 export function AIRoleBadge({
@@ -9,6 +12,7 @@ export function AIRoleBadge({
   role: AIRole;
   className?: string;
 }) {
+  const { t } = useI18n();
   const config = AI_ROLE_CONFIG[role];
   if (!config) return null;
   return (
@@ -18,9 +22,9 @@ export function AIRoleBadge({
         config.color,
         className
       )}
-      title={config.description}
+      title={t(`aiRoleDesc.${role}`)}
     >
-      {config.label}
+      {t(`aiRole.${role}`)}
     </span>
   );
 }

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { ReplicationCard } from "./ReplicationCard";
-import { REPLICATION_OUTCOMES, REPLICATION_OUTCOME_CONFIG } from "@/lib/types";
+import { REPLICATION_OUTCOMES } from "@/lib/types";
 import { useI18n } from "@/components/language-provider";
 
 interface Replication {
@@ -32,7 +32,7 @@ export function ReplicationSection({
   const [outcome, setOutcome] = useState<string>("replicated");
   const [notes, setNotes] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const { te } = useI18n();
+  const { t, te } = useI18n();
   const [busy, setBusy] = useState(false);
 
   const load = useCallback(async () => {
@@ -66,7 +66,7 @@ export function ReplicationSection({
       await load();
     } else {
       const data = await res.json().catch(() => ({}));
-      setError(data.error || "Failed to register replication");
+      setError(data.error || t("thread.rep.failed"));
     }
     setBusy(false);
   }
@@ -75,11 +75,11 @@ export function ReplicationSection({
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold">
-          Replications ({replications.length})
+          {t("thread.rep.heading", { n: replications.length })}
         </h2>
         {canRegister && (
           <Button variant="outline" size="sm" onClick={() => setShowForm((s) => !s)}>
-            {showForm ? "Cancel" : "Register replication"}
+            {showForm ? t("common.cancel") : t("thread.rep.register")}
           </Button>
         )}
       </div>
@@ -89,18 +89,18 @@ export function ReplicationSection({
           <CardContent className="space-y-3 py-4">
             <div>
               <label className="mb-1 block text-xs font-medium text-muted-foreground">
-                Replication thread ID (the independent attempt)
+                {t("thread.rep.threadIdLabel")}
               </label>
               <Input
                 value={replicationThreadId}
                 onChange={(e) => setReplicationThreadId(e.target.value)}
-                placeholder="thread id of the replication study"
+                placeholder={t("thread.rep.threadIdPlaceholder")}
                 className="font-mono"
               />
             </div>
             <div>
               <label className="mb-1 block text-xs font-medium text-muted-foreground">
-                Outcome
+                {t("thread.rep.outcome")}
               </label>
               <select
                 value={outcome}
@@ -109,7 +109,7 @@ export function ReplicationSection({
               >
                 {REPLICATION_OUTCOMES.map((o) => (
                   <option key={o} value={o}>
-                    {REPLICATION_OUTCOME_CONFIG[o].label}
+                    {t(`outcome.${o}`)}
                   </option>
                 ))}
               </select>
@@ -117,7 +117,7 @@ export function ReplicationSection({
             <Textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Notes (optional). Failed replications are equally valued — report honestly."
+              placeholder={t("thread.rep.notesPlaceholder")}
               rows={3}
             />
             {error && <p className="text-sm text-red-600">{te(error)}</p>}
@@ -126,7 +126,7 @@ export function ReplicationSection({
               onClick={register}
               disabled={busy || !replicationThreadId.trim()}
             >
-              {busy ? "Registering…" : "Register"}
+              {busy ? t("thread.rep.registering") : t("thread.rep.submit")}
             </Button>
           </CardContent>
         </Card>
@@ -134,8 +134,7 @@ export function ReplicationSection({
 
       {replications.length === 0 ? (
         <p className="text-sm text-muted-foreground">
-          No replication attempts registered yet. Two or more successful
-          independent replications earn this thread a verified badge.
+          {t("thread.rep.empty")}
         </p>
       ) : (
         <div className="space-y-2">

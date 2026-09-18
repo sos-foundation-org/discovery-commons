@@ -2,8 +2,8 @@ import Link from "next/link";
 import { AvatarBadge } from "@/components/ui/avatar-badge";
 import { DisciplineBadge } from "@/components/thread/discipline-badge";
 import { DISCIPLINE_CONFIG, type Discipline } from "@/lib/types";
-import { timeAgo } from "@/lib/utils";
 import { T } from "@/components/t";
+import { TimeAgo, TagLabel } from "@/components/i18n-date";
 
 export interface ThreadRowData {
   id: string;
@@ -27,7 +27,8 @@ export function ThreadRow({ thread }: { thread: ThreadRowData }) {
   const disc = thread.discipline
     ? DISCIPLINE_CONFIG[thread.discipline as Discipline]
     : null;
-  const author = thread.creator.displayName || thread.creator.name || "Anonymous";
+  const authorName = thread.creator.displayName || thread.creator.name;
+  const author = authorName || "Anonymous";
   const tags = Array.isArray(thread.domainTags)
     ? (thread.domainTags as string[])
     : [];
@@ -61,7 +62,9 @@ export function ThreadRow({ thread }: { thread: ThreadRowData }) {
               {thread.description}
             </p>
             <div className="mt-2.5 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-muted-foreground">
-              <span className="font-medium text-foreground/80">{author}</span>
+              <span className="font-medium text-foreground/80">
+                {authorName || <T k="common.anonymous" />}
+              </span>
               <span aria-hidden>·</span>
               <span className="capitalize"><T k={`type.${thread.currentStage}`} /></span>
               <span aria-hidden>·</span>
@@ -76,10 +79,12 @@ export function ThreadRow({ thread }: { thread: ThreadRowData }) {
                 />
               </span>
               <span aria-hidden>·</span>
-              <span>{timeAgo(thread.updatedAt)}</span>
+              <span>
+                <TimeAgo date={thread.updatedAt} />
+              </span>
               {tags.slice(0, 3).map((tag) => (
                 <span key={tag} className="rounded bg-muted px-1.5 py-0.5">
-                  {tag}
+                  <TagLabel tag={tag} />
                 </span>
               ))}
             </div>

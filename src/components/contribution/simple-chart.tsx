@@ -1,3 +1,5 @@
+"use client";
+
 // Zero-dependency, server-rendered chart from a JSON spec embedded in a
 // ```chart fenced code block. The spec is plain text stored in the contribution,
 // so it is hashed, versioned, and reproduces identically — a natural fit for
@@ -6,6 +8,8 @@
 // Spec shape:
 //   { "type": "bar" | "line", "title"?: string, "unit"?: string,
 //     "data": [{ "label": string, "value": number }] }
+
+import { useI18n } from "@/components/language-provider";
 
 interface ChartSpec {
   type?: "bar" | "line";
@@ -26,6 +30,7 @@ const BAR_COLORS = [
 ];
 
 export function SimpleChart({ spec }: { spec: string }) {
+  const { t } = useI18n();
   let parsed: ChartSpec | null = null;
   try {
     parsed = JSON.parse(spec);
@@ -58,7 +63,7 @@ export function SimpleChart({ spec }: { spec: string }) {
         viewBox={`0 0 ${W} ${H}`}
         className="w-full"
         role="img"
-        aria-label={parsed.title || "chart"}
+        aria-label={parsed.title || t("contribution.chartAria")}
       >
         {parsed.title && (
           <text x={padL} y={18} className="fill-foreground" fontSize="14" fontWeight="600">

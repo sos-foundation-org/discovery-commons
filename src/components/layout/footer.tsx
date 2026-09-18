@@ -1,7 +1,16 @@
+"use client";
+
 import Link from "next/link";
 import { T } from "@/components/t";
+import { useT } from "@/components/language-provider";
+
+const ORG_URL = "https://sos-commons.vercel.app/";
 
 export function Footer() {
+  const t = useT();
+  // "Operated by {org} — …": split so each language can place the link.
+  const [operatedBefore, operatedAfter = ""] = t("site.footer.operatedBy").split("{org}");
+
   return (
     <footer className="border-t bg-muted/30">
       <div className="container mx-auto max-w-6xl px-4 py-8">
@@ -60,26 +69,25 @@ export function Footer() {
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/images/SOS-LOGO_v2.svg"
-                alt="SOS Foundation logo"
+                alt={t("site.footer.logoAlt")}
                 className="h-7 w-auto"
               />
             </a>
             <p>
-              Operated by{" "}
+              {operatedBefore}
               <a
-                href="https://sos-commons.vercel.app/"
+                href={ORG_URL}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="font-semibold underline hover:text-foreground"
               >
                 Sustainability of Sustainability Foundation
-              </a>{" "}
-              — a 501(c)(3) public charity (EIN 41-3097632, Massachusetts)
+              </a>
+              {operatedAfter}
             </p>
           </div>
           <p className="mt-1">
-            All contributions are timestamped and SHA-256 hashed for priority
-            protection. Code licensed under AGPL-3.0.
+            <T k="site.footer.hashNote" />
           </p>
         </div>
       </div>

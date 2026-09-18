@@ -13,7 +13,7 @@ export function AIReviewSection({ threadId }: { threadId: string }) {
   const [review, setReview] = useState<AIReviewResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { te } = useI18n();
+  const { t, te } = useI18n();
 
   async function runReview() {
     setLoading(true);
@@ -26,10 +26,10 @@ export function AIReviewSection({ threadId }: { threadId: string }) {
       if (res.ok) {
         setReview(data.review);
       } else {
-        setError(data.error || "Failed to run AI review");
+        setError(data.error || t("thread.ai.failed"));
       }
     } catch {
-      setError("Failed to run AI review");
+      setError(t("thread.ai.failed"));
     } finally {
       setLoading(false);
     }
@@ -40,7 +40,7 @@ export function AIReviewSection({ threadId }: { threadId: string }) {
       <div className="space-y-3">
         <AIReviewPanel review={review} />
         <Button variant="outline" size="sm" onClick={runReview} disabled={loading}>
-          {loading ? "Re-running…" : "Re-run AI Review"}
+          {loading ? t("thread.ai.rerunning") : t("thread.ai.rerun")}
         </Button>
       </div>
     );
@@ -50,15 +50,14 @@ export function AIReviewSection({ threadId }: { threadId: string }) {
     <Card>
       <CardContent className="flex flex-col items-start gap-3 py-5">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-medium">AI Review</span>
+          <span className="text-sm font-medium">{t("thread.ai.review")}</span>
           <AIRoleBadge role="reviewer" />
         </div>
         <p className="text-sm text-muted-foreground">
-          Run automated statistical, consistency, and bias checks over this
-          thread. Advisory only — supplements, does not replace, human review.
+          {t("thread.ai.intro")}
         </p>
         <Button size="sm" onClick={runReview} disabled={loading}>
-          {loading ? "Running…" : "Run AI Review"}
+          {loading ? t("thread.ai.running") : t("thread.ai.run")}
         </Button>
         {error && <p className="text-sm text-red-600">{te(error)}</p>}
       </CardContent>

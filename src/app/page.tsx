@@ -118,9 +118,9 @@ export default async function HomePage() {
               <div className="text-center">
                 <div className="text-5xl mb-3">?</div>
                 <p className="text-sm text-muted-foreground">
-                  Illustration: A vast library where the most
+                  <T k="site.home.illus1" />
                   <br />
-                  valuable shelf is the one labeled &ldquo;Unknown&rdquo;
+                  <T k="site.home.illus2" />
                 </p>
               </div>
             </div>
@@ -195,7 +195,7 @@ export default async function HomePage() {
             <Card>
               <CardHeader>
                 <div className="text-2xl font-mono text-primary mb-2">
-                  Private &rarr; Public
+                  <T k="site.home.privateToPublic" />
                 </div>
                 <CardTitle className="text-lg"><T k="feat.visibility.title" /></CardTitle>
               </CardHeader>
@@ -255,19 +255,19 @@ export default async function HomePage() {
               <div className="text-center">
                 <div className="text-3xl font-bold">{stats[0]}</div>
                 <div className="text-xs text-muted-foreground">
-                  Active Threads
+                  <T k="general.activeThreads" />
                 </div>
               </div>
               <div className="text-center">
                 <div className="text-3xl font-bold">{stats[1]}</div>
                 <div className="text-xs text-muted-foreground">
-                  Contributions
+                  <T k="home.contributions" />
                 </div>
               </div>
               <div className="text-center">
                 <div className="text-3xl font-bold">{stats[2]}</div>
                 <div className="text-xs text-muted-foreground">
-                  Contributors
+                  <T k="home.contributors" />
                 </div>
               </div>
             </div>
@@ -283,7 +283,7 @@ export default async function HomePage() {
               <T k="general.activeThreads" />
             </h2>
             <p className="text-center text-muted-foreground mb-8">
-              See what the community is exploring
+              <T k="general.seeThread" />
             </p>
             <div className="space-y-3">
               {publicThreads.map((thread) => (

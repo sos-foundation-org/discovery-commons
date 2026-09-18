@@ -1,7 +1,10 @@
+"use client";
+
 import {
   PROTOTYPE_CREDIT_DIMENSIONS,
   CREDIT_DIMENSION_CONFIG,
 } from "@/lib/types";
+import { useI18n } from "@/components/language-provider";
 
 // Horizontal bar visualization across the prototype's four credit dimensions
 // (idea / data / analysis / validation).
@@ -12,6 +15,7 @@ export function CreditDistribution({
   byDimension: Record<string, number>;
   showEmpty?: boolean;
 }) {
+  const { t } = useI18n();
   const max = Math.max(1, ...Object.values(byDimension));
   const dimensions = showEmpty
     ? PROTOTYPE_CREDIT_DIMENSIONS
@@ -20,7 +24,7 @@ export function CreditDistribution({
   if (dimensions.length === 0) {
     return (
       <p className="text-sm text-muted-foreground">
-        No credits recorded yet.
+        {t("thread.credit.none")}
       </p>
     );
   }
@@ -34,12 +38,12 @@ export function CreditDistribution({
         return (
           <div key={dimension}>
             <div className="mb-0.5 flex items-center justify-between text-xs">
-              <span className="flex items-center gap-1.5" title={config.description}>
+              <span className="flex items-center gap-1.5" title={t(`creditDesc.${dimension}`)}>
                 <span
                   className="h-2 w-2 rounded-full"
                   style={{ backgroundColor: config.color }}
                 />
-                {config.label}
+                {t(`credit.${dimension}`)}
               </span>
               <span className="text-muted-foreground">{value.toFixed(2)}</span>
             </div>

@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { VISIBILITY_LABELS, VISIBILITY_LEVELS, type VisibilityLevel } from "@/lib/types";
+import { VISIBILITY_LEVELS, type VisibilityLevel } from "@/lib/types";
+import { useI18n } from "@/components/language-provider";
 
 export function VisibilityUpgrade({
   threadId,
@@ -13,6 +14,7 @@ export function VisibilityUpgrade({
   currentLevel: VisibilityLevel;
 }) {
   const router = useRouter();
+  const { t } = useI18n();
   const [isUpgrading, setIsUpgrading] = useState(false);
   const currentIndex = VISIBILITY_LEVELS.indexOf(currentLevel);
   const nextLevel = VISIBILITY_LEVELS[currentIndex + 1];
@@ -22,7 +24,7 @@ export function VisibilityUpgrade({
   const handleUpgrade = async () => {
     if (
       !confirm(
-        `Upgrade visibility to ${VISIBILITY_LABELS[nextLevel]}? This cannot be undone.`
+        t("thread.upgradeConfirm", { level: t(`vis.${nextLevel}`) })
       )
     )
       return;
@@ -49,11 +51,11 @@ export function VisibilityUpgrade({
         disabled={isUpgrading}
       >
         {isUpgrading
-          ? "Upgrading..."
-          : `Upgrade to ${VISIBILITY_LABELS[nextLevel]}`}
+          ? t("thread.upgrading")
+          : t("thread.upgradeTo", { level: t(`vis.${nextLevel}`) })}
       </Button>
       <span className="text-xs text-muted-foreground">
-        Cannot be reversed
+        {t("thread.cannotReverse")}
       </span>
     </div>
   );

@@ -13,11 +13,14 @@ import {
   type TrustLevel,
   type ContributionType,
 } from "@/lib/types";
-import { formatDate } from "@/lib/utils";
 import Link from "next/link";
 import { AvatarBadge } from "@/components/ui/avatar-badge";
 import { CreditDistribution } from "@/components/credit/CreditDistribution";
 import { summarizeCredits } from "@/lib/credits";
+import { T } from "@/components/t";
+import { LocalDate } from "@/components/i18n-date";
+import { CreditTypeLabel, LevelChip } from "@/components/profile/account-i18n";
+import type { ReactNode } from "react";
 
 export default async function ProfilePage() {
   const session = await getSession();
@@ -47,8 +50,9 @@ export default async function ProfilePage() {
   const levelInfo = pointsAccount ? getLevel(pointsAccount.reputation) : getLevel(0);
   const levelProgress = pointsAccount ? getLevelProgress(pointsAccount.reputation) : 0;
 
-  const trustConfig =
-    TRUST_LEVEL_CONFIG[(user.trustLevel as TrustLevel) || "new_member"];
+  const trustKey = TRUST_LEVEL_CONFIG[user.trustLevel as TrustLevel]
+    ? (user.trustLevel as TrustLevel)
+    : "new_member";
 
   const allCredits = await prisma.credit.findMany({
     where: { userId: user.id },
@@ -102,26 +106,30 @@ export default async function ProfilePage() {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <h1 className="text-3xl font-bold">
-              {user.displayName || user.name || "Your Profile"}
+              {user.displayName || user.name || <T k="account.profile.yourProfile" />}
             </h1>
-            <span
-              className="text-sm font-medium text-muted-foreground bg-muted rounded-full px-2.5 py-0.5"
-              title={`${levelInfo.name} — Reputation ${pointsAccount?.reputation ?? 0}`}
-            >
-              {levelInfo.icon} {levelInfo.name} (Lv.{levelInfo.level})
-            </span>
+            <LevelChip
+              level={levelInfo.level}
+              icon={levelInfo.icon}
+              reputation={pointsAccount?.reputation ?? 0}
+            />
           </div>
           {pointsAccount && (
             <p className="text-sm text-muted-foreground mb-1">
-              {pointsAccount.balance.toLocaleString()} DP &middot; Rep{" "}
-              {pointsAccount.reputation.toLocaleString()}
+              <T
+                k="account.profile.dpRep"
+                vars={{
+                  dp: pointsAccount.balance.toLocaleString(),
+                  rep: pointsAccount.reputation.toLocaleString(),
+                }}
+              />
             </p>
           )}
           <Link
             href={`/profile/${user.id}`}
             className="text-sm text-primary hover:underline"
           >
-            View public profile →
+            <T k="account.profile.viewPublic" />
           </Link>
         </div>
       </div>
@@ -130,36 +138,36 @@ export default async function ProfilePage() {
         {/* User Info */}
         <Card>
           <CardHeader>
-            <CardTitle>Account</CardTitle>
+            <CardTitle><T k="account.profile.account" /></CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div>
-              <span className="text-sm text-muted-foreground">Name: </span>
+              <span className="text-sm text-muted-foreground"><T k="account.profile.name" /></span>
               <span>{user.displayName || user.name || "—"}</span>
             </div>
             <div>
-              <span className="text-sm text-muted-foreground">Email: </span>
+              <span className="text-sm text-muted-foreground"><T k="account.profile.email" /></span>
               <span>{user.email}</span>
             </div>
             <div>
               <span className="text-sm text-muted-foreground">
-                Trust Level:{" "}
+                <T k="account.profile.trustLevel" />
               </span>
-              <Badge>{trustConfig.label}</Badge>
+              <Badge><T k={`trust.${trustKey}`} /></Badge>
               <p className="text-xs text-muted-foreground mt-1">
-                {trustConfig.description}
+                <T k={`trustDesc.${trustKey}`} />
               </p>
             </div>
             <div>
-              <span className="text-sm text-muted-foreground">Joined: </span>
-              <span>{formatDate(user.createdAt)}</span>
+              <span className="text-sm text-muted-foreground"><T k="account.profile.joined" /></span>
+              <span><LocalDate date={user.createdAt} /></span>
             </div>
             {user.covenantAcceptedAt && (
               <div>
                 <span className="text-sm text-muted-foreground">
-                  Covenant accepted:{" "}
+                  <T k="account.profile.covenant" />
                 </span>
-                <span>{formatDate(user.covenantAcceptedAt)}</span>
+                <span><LocalDate date={user.covenantAcceptedAt} /></span>
               </div>
             )}
           </CardContent>
@@ -168,24 +176,24 @@ export default async function ProfilePage() {
         {/* Stats + Credit Score */}
         <Card>
           <CardHeader>
-            <CardTitle>Activity</CardTitle>
+            <CardTitle><T k="account.profile.activity" /></CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 gap-4 mb-4">
-              <Stat label="Threads" value={user._count.threads} />
-              <Stat label="Contributions" value={user._count.contributions} />
-              <Stat label="Comments" value={user._count.comments} />
-              <Stat label="Sealed Ideas" value={user._count.sealedRegistrations} />
+              <Stat label={<T k="home.threads" />} value={user._count.threads} />
+              <Stat label={<T k="home.contributions" />} value={user._count.contributions} />
+              <Stat label={<T k="account.profile.comments" />} value={user._count.comments} />
+              <Stat label={<T k="nav.sealed" />} value={user._count.sealedRegistrations} />
             </div>
             <div className="p-4 rounded-lg bg-primary/10 text-center">
               <div className="text-3xl font-bold text-primary">
                 {creditScore}
               </div>
               <div className="text-xs text-muted-foreground">
-                Discovery Credit Score
+                <T k="account.profile.creditScore" />
               </div>
               <p className="text-xs text-muted-foreground mt-1">
-                Weighted: Question(1) Hypothesis(2) Data(3) Simulation(3) Statistics(3) Interpretation(4) Insight(5)
+                <T k="account.profile.weighted" />
               </p>
             </div>
           </CardContent>
@@ -196,9 +204,12 @@ export default async function ProfilePage() {
       <Card className="mt-6">
         <CardHeader>
           <CardTitle>
-            Credit Portfolio{" "}
+            <T k="account.credits.title" />{" "}
             <span className="text-sm font-normal text-muted-foreground">
-              ({creditSummary.total.toFixed(2)} total across 5 dimensions)
+              <T
+                k="account.profile.totalAcross5"
+                vars={{ n: creditSummary.total.toFixed(2) }}
+              />
             </span>
           </CardTitle>
         </CardHeader>
@@ -210,12 +221,12 @@ export default async function ProfilePage() {
       {/* Contribution Breakdown Chart */}
       <Card className="mt-6">
         <CardHeader>
-          <CardTitle>Contribution Breakdown</CardTitle>
+          <CardTitle><T k="account.profile.breakdown" /></CardTitle>
         </CardHeader>
         <CardContent>
           {Object.keys(typeCounts).length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              No contributions yet. Start contributing!
+              <T k="account.profile.noContribs" />
             </p>
           ) : (
             <div className="space-y-3">
@@ -229,10 +240,13 @@ export default async function ProfilePage() {
                     <div key={type}>
                       <div className="flex items-center justify-between text-sm mb-1">
                         <span className={config?.color || ""}>
-                          {config?.label || type}
+                          {config ? <T k={`type.${type}`} /> : <CreditTypeLabel id={type} />}
                         </span>
                         <span className="text-muted-foreground">
-                          {count} ({CREDIT_WEIGHTS[type] || 1} pts each)
+                          <T
+                            k="account.profile.ptsEach"
+                            vars={{ count, n: CREDIT_WEIGHTS[type] || 1 }}
+                          />
                         </span>
                       </div>
                       <div className="h-3 w-full bg-muted rounded-full overflow-hidden">
@@ -253,7 +267,7 @@ export default async function ProfilePage() {
       {uniqueThreads.length > 0 && (
         <Card className="mt-6">
           <CardHeader>
-            <CardTitle>Threads You&apos;ve Contributed To</CardTitle>
+            <CardTitle><T k="account.profile.threadsContributed" /></CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
@@ -274,16 +288,16 @@ export default async function ProfilePage() {
       {/* Credit History */}
       <Card className="mt-6">
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Credit History</CardTitle>
+          <CardTitle><T k="account.credits.history" /></CardTitle>
           <div className="flex gap-2">
             <Link href="/api/credits?format=csv">
               <Button variant="outline" size="sm">
-                Export CSV
+                <T k="account.profile.exportCsv" />
               </Button>
             </Link>
             <Link href="/api/credits">
               <Button variant="outline" size="sm">
-                Export JSON
+                <T k="account.profile.exportJson" />
               </Button>
             </Link>
           </div>
@@ -291,7 +305,7 @@ export default async function ProfilePage() {
         <CardContent>
           {allCredits.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              No credits yet. Start contributing!
+              <T k="account.profile.noCredits" />
             </p>
           ) : (
             <div className="space-y-2">
@@ -302,7 +316,7 @@ export default async function ProfilePage() {
                 >
                   <div>
                     <Badge variant="outline" className="mr-2">
-                      {credit.creditType}
+                      <CreditTypeLabel id={credit.creditType} />
                     </Badge>
                     <Link
                       href={`/threads/${credit.threadId}`}
@@ -312,13 +326,13 @@ export default async function ProfilePage() {
                     </Link>
                   </div>
                   <span className="text-xs text-muted-foreground font-mono">
-                    {formatDate(credit.timestamp)}
+                    <LocalDate date={credit.timestamp} />
                   </span>
                 </div>
               ))}
               {allCredits.length > 20 && (
                 <p className="text-xs text-muted-foreground pt-2">
-                  Showing 20 of {allCredits.length} credits. Export for full list.
+                  <T k="account.profile.showing" vars={{ n: allCredits.length }} />
                 </p>
               )}
             </div>
@@ -329,7 +343,7 @@ export default async function ProfilePage() {
   );
 }
 
-function Stat({ label, value }: { label: string; value: number }) {
+function Stat({ label, value }: { label: ReactNode; value: number }) {
   return (
     <div className="text-center p-3 rounded-lg bg-muted">
       <div className="text-2xl font-bold">{value}</div>

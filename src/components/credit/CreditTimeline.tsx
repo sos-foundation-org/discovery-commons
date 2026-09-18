@@ -1,5 +1,6 @@
 import { CreditBadge } from "./CreditBadge";
-import { formatDate } from "@/lib/utils";
+import { T } from "@/components/t";
+import { LocalDate } from "@/components/i18n-date";
 import type { CreditDimension } from "@/lib/types";
 
 interface TimelineEntry {
@@ -15,7 +16,7 @@ export function CreditTimeline({ entries }: { entries: TimelineEntry[] }) {
   if (entries.length === 0) {
     return (
       <p className="text-sm text-muted-foreground">
-        No credits yet. Start contributing!
+        <T k="thread.credit.noneYet" />
       </p>
     );
   }
@@ -35,7 +36,7 @@ export function CreditTimeline({ entries }: { entries: TimelineEntry[] }) {
             <span className="text-muted-foreground">{entry.thread.title}</span>
           </div>
           <span className="font-mono text-xs text-muted-foreground">
-            {formatDate(new Date(entry.timestamp))}
+            <LocalDate date={new Date(entry.timestamp)} />
           </span>
         </div>
       ))}

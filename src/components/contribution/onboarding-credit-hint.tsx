@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Info, X } from "lucide-react";
+import { useI18n } from "@/components/language-provider";
 
 const STORAGE_KEY = "dc_onboard_credit_ts";
 
@@ -12,6 +13,7 @@ const STORAGE_KEY = "dc_onboard_credit_ts";
 // deliberately lightweight (no user-metadata round-trip) for the prototype.
 export function OnboardingCreditHint() {
   const [show, setShow] = useState(false);
+  const { t } = useI18n();
 
   useEffect(() => {
     try {
@@ -36,17 +38,25 @@ export function OnboardingCreditHint() {
     <div className="mb-3 flex items-start gap-2 rounded-md border border-blue-200 bg-blue-50 p-3 text-sm dark:border-blue-900 dark:bg-blue-950/50">
       <Info className="mt-0.5 h-4 w-4 shrink-0 text-blue-600 dark:text-blue-400" />
       <p className="flex-1 text-blue-900 dark:text-blue-200">
-        On Discovery Commons, your{" "}
-        <span className="font-medium">credit timestamp</span> only takes effect
-        when you publish a contribution — not when you create or seal it.{" "}
+        {t("contribution.onboardHint")
+          .split(/(\{term\})/)
+          .map((part, i) =>
+            part === "{term}" ? (
+              <span key={i} className="font-medium">
+                {t("publish.point2b")}
+              </span>
+            ) : (
+              part
+            )
+          )}{" "}
         <Link href="/about#credit-timestamps" className="underline">
-          Learn more
+          {t("contribution.learnMore")}
         </Link>
       </p>
       <button
         type="button"
         onClick={dismiss}
-        aria-label="Dismiss"
+        aria-label={t("contribution.dismiss")}
         className="text-blue-600 hover:text-blue-800 dark:text-blue-400"
       >
         <X className="h-4 w-4" />

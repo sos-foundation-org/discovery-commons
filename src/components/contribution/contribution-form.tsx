@@ -318,7 +318,7 @@ export function ContributionForm({
                 type="url"
                 value={dataUrl}
                 onChange={(e) => setDataUrl(e.target.value)}
-                placeholder="https://zenodo.org/… · OSF · GitHub · a CSV URL"
+                placeholder={t("contribution.dataUrlPlaceholder")}
               />
               <p className="text-xs text-muted-foreground mt-1">
                 {t("form.dataLinkHint")}
@@ -475,7 +475,7 @@ export function ContributionForm({
                     max={1000}
                     value={price || ""}
                     onChange={(e) => setPrice(Number(e.target.value))}
-                    placeholder="e.g. 50"
+                    placeholder={t("contribution.pricePlaceholder")}
                     className="w-24 h-8 text-sm"
                   />
                   <span className="text-xs text-muted-foreground">DP</span>
@@ -532,7 +532,7 @@ export function ContributionForm({
                   >
                     {LEVELS.map((l) => (
                       <option key={l.level} value={l.level}>
-                        {l.icon} Lv.{l.level} {l.name}
+                        {l.icon} Lv.{l.level} {t(`level.${l.level}`)}
                       </option>
                     ))}
                   </select>
@@ -597,13 +597,13 @@ export function ContributionForm({
                 const cfg = CONTENT_LICENSE_CONFIG[l];
                 return (
                   <option key={l} value={l}>
-                    {cfg.shortLabel}{cfg.irrevocable ? ` ${t("form.irrevocable")}` : ""}
+                    {t(`licenseShort.${l}`)}{cfg.irrevocable ? t("form.irrevocableSuffix") : ""}
                   </option>
                 );
               })}
             </select>
             <p className="text-xs text-muted-foreground">
-              {CONTENT_LICENSE_CONFIG[license].description}
+              {t(`licenseDesc.${license}`)}
             </p>
             {CONTENT_LICENSE_CONFIG[license].url && (
               <a
@@ -624,7 +624,7 @@ export function ContributionForm({
                 <p className="text-xs text-amber-700 dark:text-amber-300">
                   {withCode(
                     t("form.irrevocableBody"),
-                    { license: CONTENT_LICENSE_CONFIG[license].shortLabel },
+                    { license: t(`licenseShort.${license}`) },
                     "strong"
                   )}
                 </p>
@@ -634,7 +634,7 @@ export function ContributionForm({
                   className="px-3 py-1.5 min-h-[44px] rounded-md text-sm font-medium bg-amber-600 text-white hover:bg-amber-700 transition-colors"
                 >
                   {t("form.irrevocableConfirm", {
-                    license: CONTENT_LICENSE_CONFIG[license].shortLabel,
+                    license: t(`licenseShort.${license}`),
                   })}
                 </button>
               </div>

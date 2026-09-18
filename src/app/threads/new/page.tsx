@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useI18n } from "@/components/language-provider";
+import { tagLabel } from "@/lib/i18n";
 import {
   THREAD_VISIBILITY,
   getVisibleDisciplines,
@@ -39,7 +40,7 @@ const DOMAIN_SUGGESTIONS = [
 
 export default function NewThreadPage() {
   const router = useRouter();
-  const { t, te } = useI18n();
+  const { t, te, locale } = useI18n();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [visibility, setVisibility] = useState<VisibilityLevel>("private");
@@ -196,7 +197,7 @@ export default function NewThreadPage() {
                       }
                     }}
                   >
-                    {tag}
+                    {tagLabel(tag, locale)}
                   </Badge>
                 ))}
               </div>

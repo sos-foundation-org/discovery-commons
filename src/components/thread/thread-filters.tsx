@@ -5,6 +5,7 @@ import { useState, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { STAGE_ORDER, VISIBILITY_LEVELS } from "@/lib/types";
 import { useI18n } from "@/components/language-provider";
+import { tagLabel } from "@/lib/i18n";
 
 export function ThreadFilters({
   currentQ,
@@ -19,7 +20,7 @@ export function ThreadFilters({
   currentDomain?: string;
   allDomains: string[];
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [q, setQ] = useState(currentQ || "");
@@ -136,7 +137,7 @@ export function ThreadFilters({
                 <option value="">{t("filters.allDomains")}</option>
                 {allDomains.map((d) => (
                   <option key={d} value={d}>
-                    {d}
+                    {tagLabel(d, locale)}
                   </option>
                 ))}
               </select>

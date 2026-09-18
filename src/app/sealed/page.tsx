@@ -8,8 +8,9 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
-import { formatDateTime } from "@/lib/utils";
 import { useI18n } from "@/components/language-provider";
+import { formatDateTimeL } from "@/lib/i18n";
+import { TRich, IdLabel } from "@/components/profile/account-i18n";
 
 export default function SealedPage() {
   const { data: session, status } = useSession();
@@ -19,7 +20,7 @@ export default function SealedPage() {
   const [title, setTitle] = useState("");
   const [isSealing, setIsSealing] = useState(false);
   const [error, setError] = useState("");
-  const { te } = useI18n();
+  const { t, te, locale } = useI18n();
   const [generatedHash, setGeneratedHash] = useState("");
 
   useEffect(() => {
@@ -95,16 +96,15 @@ export default function SealedPage() {
 
   return (
     <div className="container mx-auto max-w-3xl px-4 py-8">
-      <h1 className="text-3xl font-bold mb-2">Seal Your Ideas</h1>
+      <h1 className="text-3xl font-bold mb-2">{t("account.sealed.title")}</h1>
       <p className="text-muted-foreground mb-8">
-        Prove you had an idea at a specific time &mdash; without revealing it.
-        The content never leaves your browser; only the hash is stored.
+        {t("account.sealed.intro")}
       </p>
 
       {/* Seal Form */}
       <Card className="mb-8">
         <CardHeader>
-          <CardTitle className="text-lg">Create a New Seal</CardTitle>
+          <CardTitle className="text-lg">{t("account.sealed.create")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {error && (
@@ -116,30 +116,30 @@ export default function SealedPage() {
           <Input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="Optional title (only you can see this)"
+            placeholder={t("account.sealed.titlePh")}
           />
 
           <Textarea
             value={content}
             onChange={(e) => handleContentChange(e.target.value)}
-            placeholder="Type your idea here. The content stays in your browser — only the hash is sent to the server."
+            placeholder={t("account.sealed.contentPh")}
             rows={5}
           />
 
           {generatedHash && (
             <div className="p-3 rounded-md bg-muted">
               <p className="text-xs font-medium mb-1">
-                SHA-256 Hash (computed locally):
+                {t("account.sealed.hashLabel")}
               </p>
               <p className="text-xs font-mono break-all">{generatedHash}</p>
             </div>
           )}
 
           <div className="bg-yellow-50 dark:bg-yellow-950 p-3 rounded-md text-sm">
-            <strong>Important:</strong> This is digital evidence, not legal
-            notarization.{" "}
-            Save your original text somewhere safe &mdash; you&apos;ll need the exact
-            text to reveal later.
+            <TRich
+              k="account.sealed.importantNote"
+              nodes={{ strong: <strong>{t("account.sealed.important")}</strong> }}
+            />
           </div>
 
           <Button
@@ -147,19 +147,19 @@ export default function SealedPage() {
             disabled={isSealing || !generatedHash}
             className="w-full"
           >
-            {isSealing ? "Sealing..." : "Seal Now — Share Later"}
+            {isSealing ? t("account.sealed.sealing") : t("account.sealed.sealNow")}
           </Button>
         </CardContent>
       </Card>
 
       {/* Existing Seals */}
       <h2 className="text-xl font-semibold mb-4">
-        Your Sealed Ideas ({seals.length})
+        {t("account.sealed.yours", { n: seals.length })}
       </h2>
       <div className="space-y-3">
         {seals.length === 0 ? (
           <p className="text-muted-foreground text-sm">
-            No sealed ideas yet. Create one above!
+            {t("account.sealed.none")}
           </p>
         ) : (
           seals.map((seal) => (
@@ -174,11 +174,15 @@ export default function SealedPage() {
                       {seal.contentHash}
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      Sealed: {formatDateTime(seal.registeredAt)}
+                      {t("account.sealed.sealedAt", {
+                        date: formatDateTimeL(seal.registeredAt, locale),
+                      })}
                     </p>
                     {seal.revealedAt && (
                       <p className="text-xs text-muted-foreground">
-                        Revealed: {formatDateTime(seal.revealedAt)}
+                        {t("account.sealed.revealedAt", {
+                          date: formatDateTimeL(seal.revealedAt, locale),
+                        })}
                       </p>
                     )}
                   </div>
@@ -187,7 +191,7 @@ export default function SealedPage() {
                       seal.status === "sealed" ? "secondary" : "default"
                     }
                   >
-                    {seal.status}
+                    <IdLabel id={seal.status} k={`account.sealStatus.${seal.status}`} />
                   </Badge>
                 </div>
               </CardContent>

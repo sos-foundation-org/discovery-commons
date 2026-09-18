@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { AvatarBadge } from "@/components/ui/avatar-badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useI18n } from "@/components/language-provider";
+import { TRich } from "@/components/profile/account-i18n";
 
 // 36 selectable icons expected at /public/avatars/01.png … 36.png.
 const ICON_COUNT = 36;
@@ -19,6 +21,7 @@ export function AvatarPicker() {
     name: string | null;
   } | null>(null);
   const [saving, setSaving] = useState(false);
+  const { t } = useI18n();
 
   useEffect(() => {
     fetch("/api/users/me")
@@ -43,30 +46,30 @@ export function AvatarPicker() {
   return (
     <Card className="mb-6">
       <CardHeader>
-        <CardTitle>Avatar</CardTitle>
+        <CardTitle>{t("account.avatar.title")}</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="flex items-center gap-4 mb-4">
           <AvatarBadge name={name} seed={me?.id} image={me?.image} size="lg" />
           <p className="text-sm text-muted-foreground">
-            Your current avatar. Pick a colored initial or one of the icons
-            below. {saving && <span>Saving…</span>}
+            {t("account.avatar.current")}{" "}
+            {saving && <span>{t("account.avatar.saving")}</span>}
           </p>
         </div>
 
-        <p className="text-xs font-medium mb-2">Colored initial</p>
+        <p className="text-xs font-medium mb-2">{t("account.avatar.coloredInitial")}</p>
         <button
           type="button"
           onClick={() => choose(null)}
           className={`rounded-full p-0.5 mb-4 ${
             !me?.image ? "ring-2 ring-ring" : "opacity-80 hover:opacity-100"
           }`}
-          title="Use a colored initial"
+          title={t("account.avatar.useInitial")}
         >
           <AvatarBadge name={name} seed={me?.id} size="md" />
         </button>
 
-        <p className="text-xs font-medium mb-2">Pick an icon</p>
+        <p className="text-xs font-medium mb-2">{t("account.avatar.pickIcon")}</p>
         <div className="grid grid-cols-6 sm:grid-cols-9 gap-2">
           {ICONS.map((src) => (
             <button
@@ -82,7 +85,7 @@ export function AvatarPicker() {
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={src}
-                alt="avatar option"
+                alt={t("account.avatar.optionAlt")}
                 className="h-10 w-10 rounded-full object-cover bg-muted"
                 loading="lazy"
               />
@@ -90,8 +93,10 @@ export function AvatarPicker() {
           ))}
         </div>
         <p className="text-xs text-muted-foreground mt-3">
-          Icons load from <code>/avatars/01–36.png</code>. Until those files are
-          added they&rsquo;ll appear blank — the colored initial always works.
+          <TRich
+            k="account.avatar.iconsNote"
+            nodes={{ code: <code>/avatars/01–36.png</code> }}
+          />
         </p>
       </CardContent>
     </Card>

@@ -119,20 +119,20 @@ export default async function ThreadsPage({
       {/* Active filter chips */}
       {hasFilters && (
         <div className="flex items-center gap-2 mb-4 flex-wrap">
-          <span className="text-xs text-muted-foreground"><T k="threads.filters" />:</span>
+          <span className="text-xs text-muted-foreground"><T k="threads.filters" /><T k="common.colon" /></span>
           {searchParams.q && (
             <Badge variant="secondary" className="text-xs">
-              <T k="common.search" />: &quot;{searchParams.q}&quot;
+              <T k="common.search" /><T k="common.colon" /> &quot;{searchParams.q}&quot;
             </Badge>
           )}
           {searchParams.stage && (
             <Badge variant="secondary" className="text-xs">
-              <T k="filters.stage" />: <T k={`type.${searchParams.stage}`} />
+              <T k="filters.stage" /><T k="common.colon" /> <T k={`type.${searchParams.stage}`} />
             </Badge>
           )}
           {searchParams.visibility && (
             <Badge variant="secondary" className="text-xs">
-              <T k="filters.visibility" />:{" "}
+              <T k="filters.visibility" /><T k="common.colon" />{" "}
               {VISIBILITY_LABELS[searchParams.visibility as VisibilityLevel] ? (
                 <T k={`vis.${searchParams.visibility}`} />
               ) : (
@@ -142,7 +142,7 @@ export default async function ThreadsPage({
           )}
           {searchParams.domain && (
             <Badge variant="secondary" className="text-xs">
-              <T k="filters.domain" />: {searchParams.domain}
+              <T k="filters.domain" /><T k="common.colon" /> {searchParams.domain}
             </Badge>
           )}
           <Link href="/threads" className="text-xs text-primary hover:underline">

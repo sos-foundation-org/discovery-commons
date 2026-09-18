@@ -1,8 +1,11 @@
+"use client";
+
 import {
   REPLICATION_OUTCOME_CONFIG,
   type ReplicationOutcome,
 } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/components/language-provider";
 
 // Color-coded badge for a replication outcome. Failed replications are styled
 // as a first-class, equally-valued result — not a negative.
@@ -13,9 +16,13 @@ export function ReplicationStatus({
   outcome: string;
   className?: string;
 }) {
-  const config =
-    REPLICATION_OUTCOME_CONFIG[outcome as ReplicationOutcome] ??
-    REPLICATION_OUTCOME_CONFIG.inconclusive;
+  const { t } = useI18n();
+  const key: ReplicationOutcome = REPLICATION_OUTCOME_CONFIG[
+    outcome as ReplicationOutcome
+  ]
+    ? (outcome as ReplicationOutcome)
+    : "inconclusive";
+  const config = REPLICATION_OUTCOME_CONFIG[key];
 
   return (
     <span
@@ -24,9 +31,9 @@ export function ReplicationStatus({
         config.color,
         className
       )}
-      title={config.description}
+      title={t(`outcomeDesc.${key}`)}
     >
-      {config.label}
+      {t(`outcome.${key}`)}
     </span>
   );
 }

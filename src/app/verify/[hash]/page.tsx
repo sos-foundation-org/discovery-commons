@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { verifyHash } from "@/lib/hash";
-import { formatDateTime } from "@/lib/utils";
+import { T } from "@/components/t";
+import { LocalDate } from "@/components/i18n-date";
+import { IdLabel } from "@/components/profile/account-i18n";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
@@ -50,9 +52,9 @@ export default async function VerifyHashPage({
 
   return (
     <div className="container mx-auto max-w-2xl px-4 py-10">
-      <h1 className="text-2xl font-bold mb-1">Hash Verification</h1>
+      <h1 className="text-2xl font-bold mb-1"><T k="account.verify.resultTitle" /></h1>
       <p className="text-sm text-muted-foreground mb-6">
-        SHA-256 priority record lookup
+        <T k="account.verify.resultSubtitle" />
       </p>
 
       <Card>
@@ -62,29 +64,34 @@ export default async function VerifyHashPage({
         <CardContent className="space-y-4">
           {!validFormat ? (
             <p className="text-sm text-red-600">
-              Not a valid SHA-256 hash (expected 64 hex characters).
+              <T k="account.verify.badFormat" />
             </p>
           ) : contribution ? (
             <>
               <div className="flex flex-wrap items-center gap-2">
-                <Badge className="bg-green-600">Record found</Badge>
+                <Badge className="bg-green-600"><T k="account.verify.recordFound" /></Badge>
                 {integrityOk ? (
-                  <Badge variant="secondary">✓ Integrity verified</Badge>
+                  <Badge variant="secondary"><T k="account.verify.integrityOk" /></Badge>
                 ) : (
-                  <Badge variant="destructive">✗ Integrity check failed</Badge>
+                  <Badge variant="destructive"><T k="account.verify.integrityFail" /></Badge>
                 )}
-                <Badge variant="outline">{contribution.visibility}</Badge>
+                <Badge variant="outline">
+                  <IdLabel
+                    id={contribution.visibility}
+                    k={`vis.${contribution.visibility}`}
+                  />
+                </Badge>
               </div>
 
               <dl className="text-sm space-y-1">
                 <div className="flex gap-2">
-                  <dt className="text-muted-foreground w-28">Recorded at</dt>
+                  <dt className="text-muted-foreground w-28"><T k="account.verify.recordedAt" /></dt>
                   <dd className="font-medium">
-                    {formatDateTime(contribution.createdAt)}
+                    <LocalDate date={contribution.createdAt} withTime />
                   </dd>
                 </div>
                 <div className="flex gap-2">
-                  <dt className="text-muted-foreground w-28">Author</dt>
+                  <dt className="text-muted-foreground w-28"><T k="account.verify.author" /></dt>
                   <dd className="font-medium">
                     {contribution.author.displayName ||
                       contribution.author.name ||
@@ -92,15 +99,15 @@ export default async function VerifyHashPage({
                   </dd>
                 </div>
                 <div className="flex gap-2">
-                  <dt className="text-muted-foreground w-28">Type</dt>
-                  <dd className="font-medium">{contribution.type}</dd>
+                  <dt className="text-muted-foreground w-28"><T k="account.verify.type" /></dt>
+                  <dd className="font-medium">
+                    <IdLabel id={contribution.type} k={`type.${contribution.type}`} />
+                  </dd>
                 </div>
               </dl>
 
               <p className="text-xs text-muted-foreground">
-                {integrityOk
-                  ? "The content stored for this record still hashes to the value above — it has not been altered since it was recorded."
-                  : "Warning: the stored content does not match this hash."}
+                <T k={integrityOk ? "account.verify.okNote" : "account.verify.failNote"} />
               </p>
 
               {publiclyViewable && threadPublic ? (
@@ -108,56 +115,61 @@ export default async function VerifyHashPage({
                   href={`/threads/${contribution.thread.id}`}
                   className="text-sm text-primary underline"
                 >
-                  View the public contribution →
+                  <T k="account.verify.viewPublic" />
                 </Link>
               ) : (
                 <p className="text-xs text-muted-foreground">
-                  The content is not public
-                  {contribution.visibility === "sealed" ? " (sealed)" : ""}, but
-                  its existence and timestamp are provable from this hash.
+                  <T
+                    k={
+                      contribution.visibility === "sealed"
+                        ? "account.verify.notPublicSealed"
+                        : "account.verify.notPublic"
+                    }
+                  />
                 </p>
               )}
             </>
           ) : sealedReg ? (
             <>
               <div className="flex flex-wrap items-center gap-2">
-                <Badge className="bg-green-600">Sealed record found</Badge>
-                <Badge variant="outline">{sealedReg.status}</Badge>
+                <Badge className="bg-green-600"><T k="account.verify.sealedFound" /></Badge>
+                <Badge variant="outline">
+                  <IdLabel id={sealedReg.status} k={`account.sealStatus.${sealedReg.status}`} />
+                </Badge>
               </div>
               <dl className="text-sm space-y-1">
                 <div className="flex gap-2">
-                  <dt className="text-muted-foreground w-28">Registered at</dt>
+                  <dt className="text-muted-foreground w-28"><T k="account.verify.registeredAt" /></dt>
                   <dd className="font-medium">
-                    {formatDateTime(sealedReg.registeredAt)}
+                    <LocalDate date={sealedReg.registeredAt} withTime />
                   </dd>
                 </div>
                 <div className="flex gap-2">
-                  <dt className="text-muted-foreground w-28">By</dt>
+                  <dt className="text-muted-foreground w-28"><T k="account.verify.by" /></dt>
                   <dd className="font-medium">
                     {sealedReg.user.displayName || sealedReg.user.name || "—"}
                   </dd>
                 </div>
               </dl>
               <p className="text-xs text-muted-foreground">
-                This hash was registered as a sealed record at the time above.
+                <T k="account.verify.sealedNote" />
               </p>
             </>
           ) : (
             <p className="text-sm text-muted-foreground">
-              No record found for this hash on Discovery Commons.
+              <T k="account.verify.noRecord" />
             </p>
           )}
         </CardContent>
       </Card>
 
       <p className="mt-6 text-xs text-muted-foreground">
-        A SHA-256 hash + server timestamp is evidence of when a contribution
-        existed. It is not a legal claim of patent priority.
+        <T k="account.verify.disclaimer" />
       </p>
 
       <div className="mt-4">
         <Link href="/verify" className="text-sm text-primary underline">
-          Verify another hash
+          <T k="account.verify.another" />
         </Link>
       </div>
     </div>

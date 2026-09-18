@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useT } from "@/components/language-provider";
 
 /**
  * Minimal dark-mode toggle. Reads/writes `localStorage("dc-theme")` and
@@ -8,6 +9,7 @@ import { useState, useEffect, useCallback } from "react";
  * visit. No third-party dependency (avoids adding next-themes for one button).
  */
 export function ThemeToggle() {
+  const t = useT();
   const [dark, setDark] = useState(false);
   const [mounted, setMounted] = useState(false);
 
@@ -38,8 +40,8 @@ export function ThemeToggle() {
       type="button"
       onClick={toggle}
       className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-      aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
-      title={dark ? "Light mode" : "Dark mode"}
+      aria-label={dark ? t("site.theme.toLight") : t("site.theme.toDark")}
+      title={dark ? t("site.theme.light") : t("site.theme.dark")}
     >
       {dark ? (
         // Sun icon

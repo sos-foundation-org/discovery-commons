@@ -7,7 +7,8 @@ import { AvatarBadge } from "@/components/ui/avatar-badge";
 import { ContributionContent } from "@/components/contribution/contribution-content";
 import { TypeIcon } from "@/components/contribution/type-icon";
 import { CONTRIBUTION_TYPE_CONFIG, type ContributionType, type ContributionPricingMeta } from "@/lib/types";
-import { formatDateTime } from "@/lib/utils";
+import { T } from "@/components/t";
+import { LocalDate } from "@/components/i18n-date";
 import { truncateHash } from "@/lib/hash";
 
 // Public "unlisted" view of a single contribution reached via its secret
@@ -28,18 +29,18 @@ export default async function SharedContributionPage({
 
   if (!contribution) notFound();
 
-  const typeConfig =
-    CONTRIBUTION_TYPE_CONFIG[contribution.type as ContributionType] ||
-    CONTRIBUTION_TYPE_CONFIG.data;
+  const typeKey =
+    contribution.type in CONTRIBUTION_TYPE_CONFIG ? contribution.type : "data";
+  const typeConfig = CONTRIBUTION_TYPE_CONFIG[typeKey as ContributionType];
   const isSealed = contribution.visibility === "sealed";
-  const author =
-    contribution.author.displayName || contribution.author.name || "Anonymous";
+  const authorName =
+    contribution.author.displayName || contribution.author.name;
+  const author = authorName || "Anonymous";
 
   return (
     <div className="container mx-auto max-w-2xl px-4 py-10">
       <div className="mb-4 rounded-lg border border-dashed bg-muted/40 p-3 text-sm text-muted-foreground">
-        🔗 You&rsquo;re viewing a contribution shared via a private (unlisted)
-        link. It may not be publicly listed.
+        🔗 <T k="contribution.shareBanner" />
       </div>
 
       <Card>
@@ -55,17 +56,19 @@ export default async function SharedContributionPage({
             <div className="min-w-0 flex-1">
               <Badge variant="outline" className={`gap-1 ${typeConfig.color}`}>
                 <TypeIcon type={contribution.type} className="h-3.5 w-3.5" />
-                {typeConfig.label}
+                <T k={`type.${typeKey}`} />
               </Badge>
               <div className="mt-1 text-sm text-muted-foreground">
                 <Link
                   href={`/profile/${contribution.authorId}`}
                   className="font-medium text-foreground/80 hover:underline"
                 >
-                  {author}
+                  {authorName || <T k="common.anonymous" />}
                 </Link>
                 <span aria-hidden> · </span>
-                <span>{formatDateTime(contribution.createdAt)}</span>
+                <span>
+                  <LocalDate date={contribution.createdAt} withTime />
+                </span>
               </div>
             </div>
           </div>
@@ -74,8 +77,7 @@ export default async function SharedContributionPage({
           {isSealed ? (
             <div className="rounded-md border border-dashed border-muted-foreground/30 bg-muted/50 p-4 text-center">
               <p className="mb-1 text-sm text-muted-foreground">
-                This contribution is sealed — only its hash is public until the
-                author reveals it.
+                <T k="contribution.sealedOnlyHash" />
               </p>
               <p className="font-mono text-xs text-muted-foreground">
                 SHA-256: {contribution.contentHash}
@@ -93,7 +95,7 @@ export default async function SharedContributionPage({
                   <ContributionContent content={outline} />
                   <div className="mt-3 rounded-lg border border-dashed border-muted-foreground/30 bg-muted/30 p-3 text-center">
                     <p className="text-sm text-muted-foreground">
-                      🔒 Full details are gated. Visit the thread to purchase or propose collaboration.
+                      🔒 <T k="contribution.shareGated" />
                     </p>
                   </div>
                 </div>
@@ -118,7 +120,11 @@ export default async function SharedContributionPage({
             href={`/threads/${contribution.thread.id}`}
             className="text-primary hover:underline"
           >
-            ← See the full thread: {contribution.thread.title}
+            ←{" "}
+            <T
+              k="contribution.seeFullThread"
+              vars={{ title: contribution.thread.title }}
+            />
           </Link>
         </div>
       )}

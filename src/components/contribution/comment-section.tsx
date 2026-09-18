@@ -10,7 +10,7 @@ import {
   COMMENT_TYPE_CONFIG,
   type CommentType,
 } from "@/lib/types";
-import { timeAgo } from "@/lib/utils";
+import { timeAgoL } from "@/lib/i18n";
 import { useI18n } from "@/components/language-provider";
 
 interface Comment {
@@ -81,7 +81,7 @@ export function CommentSection({
 }
 
 function CommentItem({ comment, depth }: { comment: Comment; depth: number }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const config =
     COMMENT_TYPE_CONFIG[comment.commentType as CommentType] ??
     COMMENT_TYPE_CONFIG.endorsement;
@@ -103,7 +103,7 @@ function CommentItem({ comment, depth }: { comment: Comment; depth: number }) {
             {comment.author.displayName || comment.author.name}
           </span>
           <span className="text-xs text-muted-foreground">
-            {timeAgo(comment.createdAt)}
+            {timeAgoL(comment.createdAt, locale)}
           </span>
         </div>
         <p className="text-sm">{comment.content}</p>
