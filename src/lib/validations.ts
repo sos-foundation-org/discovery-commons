@@ -26,6 +26,16 @@ export const createThreadSchema = z.object({
   domainTags: z.array(z.string()).min(1, "Select at least one domain tag").max(5),
 });
 
+// Thread edits (creator only). Visibility/stage have their own endpoints.
+export const updateThreadSchema = z
+  .object({
+    title: z.string().min(10).max(200).optional(),
+    description: z.string().min(20).max(10000).optional(),
+    domainTags: z.array(z.string().min(1).max(100)).min(1).max(5).optional(),
+    isArchived: z.boolean().optional(),
+  })
+  .strict();
+
 export const createContributionSchema = z.object({
   threadId: z.string().min(1),
   type: z.enum(CONTRIBUTION_TYPES),

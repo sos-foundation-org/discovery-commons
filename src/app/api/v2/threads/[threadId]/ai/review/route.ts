@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { runReview } from "@/lib/ai/reviewer";
+import {
+  canViewThread,
+  evaluateContributionAccess,
+  loadViewerAccessSets,
+} from "@/lib/access-control";
 import { isAIConfigured, logAIInteraction, checkDailyQuota, AI_MODEL } from "@/lib/ai/router";
 
 // POST /api/v2/threads/[threadId]/ai/review — run the AI Reviewer over a thread.
@@ -37,15 +42,59 @@ export async function POST(
     const thread = await prisma.thread.findUnique({
       where: { id: threadId },
       include: {
+        collaborators: { select: { userId: true } },
         contributions: {
           orderBy: { createdAt: "asc" },
-          select: { type: true, content: true },
+          select: {
+            id: true,
+            type: true,
+            content: true,
+            authorId: true,
+            visibility: true,
+            metadata: true,
+            sharedWith: { select: { userId: true } },
+          },
         },
       },
     });
-    if (!thread) {
+    const collaboratorIds = thread?.collaborators.map((c) => c.userId) ?? [];
+    if (
+      !thread ||
+      !canViewThread(
+        { creatorId: thread.creatorId, visibility: thread.visibility, collaboratorIds },
+        session.user.id
+      )
+    ) {
       return NextResponse.json({ error: "Thread not found" }, { status: 404 });
     }
+
+    // Only content the requester may read goes into the prompt — sealed,
+    // gated-unpurchased, private and blocked contributions are excluded so the
+    // AI response can never echo protected content.
+    const accessSets = await loadViewerAccessSets(
+      thread.contributions,
+      session.user.id,
+      prisma
+    );
+    const readable = thread.contributions.filter(
+      (c) =>
+        evaluateContributionAccess(
+          {
+            id: c.id,
+            authorId: c.authorId,
+            visibility: c.visibility,
+            sharedWith: c.sharedWith.map((s) => s.userId),
+            thread: {
+              creatorId: thread.creatorId,
+              visibility: thread.visibility,
+              collaboratorIds,
+            },
+            metadata: c.metadata as { accessMode?: string; price?: number } | null,
+          },
+          session.user.id,
+          accessSets
+        ).canViewContent
+    );
 
     // Assemble thread content for review.
     const threadContent = [
@@ -53,7 +102,7 @@ export async function POST(
       `Description: ${thread.description}`,
       "",
       "Contributions:",
-      ...thread.contributions.map(
+      ...readable.map(
         (c, i) => `${i + 1}. [${c.type}] ${c.content}`
       ),
     ].join("\n");
@@ -73,7 +122,12 @@ export async function POST(
         model: AI_MODEL,
       });
 
-      if (result.overallAssessment === "pass" && thread.verificationBadge === "unverified") {
+      // Only a review that saw the whole thread may promote its badge.
+      if (
+        result.overallAssessment === "pass" &&
+        thread.verificationBadge === "unverified" &&
+        readable.length === thread.contributions.length
+      ) {
         await tx.thread.update({
           where: { id: threadId },
           data: { verificationBadge: "ai_checked" },

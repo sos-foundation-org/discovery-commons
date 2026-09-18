@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { getSession } from "@/lib/auth";
+import { canViewThread } from "@/lib/access-control";
 import { summarizeCredits } from "@/lib/credits";
 
 // GET /api/v2/threads/[threadId]/credits — credit distribution for a thread,
@@ -11,11 +13,30 @@ export async function GET(
   const { threadId } = params;
 
   try {
-    const thread = await prisma.thread.findUnique({
-      where: { id: threadId },
-      select: { id: true, title: true, creatorId: true },
-    });
-    if (!thread) {
+    const [session, thread] = await Promise.all([
+      getSession(),
+      prisma.thread.findUnique({
+        where: { id: threadId },
+        select: {
+          id: true,
+          title: true,
+          creatorId: true,
+          visibility: true,
+          collaborators: { select: { userId: true } },
+        },
+      }),
+    ]);
+    if (
+      !thread ||
+      !canViewThread(
+        {
+          creatorId: thread.creatorId,
+          visibility: thread.visibility,
+          collaboratorIds: thread.collaborators.map((c) => c.userId),
+        },
+        session?.user?.id ?? null
+      )
+    ) {
       return NextResponse.json({ error: "Thread not found" }, { status: 404 });
     }
 

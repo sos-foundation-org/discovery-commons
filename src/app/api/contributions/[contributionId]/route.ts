@@ -2,8 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { generatePriorityHash } from "@/lib/hash";
-import { checkContributionAccess } from "@/lib/access-control";
+import { checkContributionAccess, stripTranslations } from "@/lib/access-control";
 import type { ContributionPricingMeta } from "@/lib/types";
+
+class SealedDuringEditError extends Error {}
 
 export async function GET(
   request: NextRequest,
@@ -56,8 +58,8 @@ export async function GET(
     // Mask content if sealed or gated without access
     let responseContent = contribution.content;
     if (!access.canViewContent) {
-      if (contribution.visibility === "sealed") {
-        responseContent = ""; // Sealed: hash only
+      if (contribution.visibility === "sealed" || access.isBlocked) {
+        responseContent = ""; // Sealed: hash only. Blocked: nothing.
       } else {
         // Gated: return outline only
         const meta = contribution.metadata as ContributionPricingMeta | null;
@@ -66,8 +68,14 @@ export async function GET(
       }
     }
 
+    // Version history and cached translations are full-content copies.
+    const protectedFields = access.canViewContent
+      ? {}
+      : { versions: [], metadata: stripTranslations(contribution.metadata) };
+
     return NextResponse.json({
       ...contribution,
+      ...protectedFields,
       content: responseContent,
       _access: {
         canViewContent: access.canViewContent,
@@ -118,9 +126,16 @@ export async function PATCH(
     }
 
     const { content, editSummary } = body;
-    if (!content || content.length < 10) {
+    if (typeof content !== "string" || content.length < 10 || content.length > 10000) {
       return NextResponse.json(
-        { error: "Content must be at least 10 characters" },
+        { error: "Content must be 10–10,000 characters" },
+        { status: 400 }
+      );
+    }
+    if (editSummary !== undefined && editSummary !== null &&
+        (typeof editSummary !== "string" || editSummary.length > 500)) {
+      return NextResponse.json(
+        { error: "Edit summary must be at most 500 characters" },
         { status: 400 }
       );
     }
@@ -141,15 +156,24 @@ export async function PATCH(
         },
       });
 
-      // Update contribution content (original contentHash stays immutable)
-      return tx.contribution.update({
-        where: { id: contribution.id },
+      // Update contribution content (original contentHash stays immutable).
+      // Conditional on "not sealed" so a concurrent seal can't be overwritten.
+      const { count } = await tx.contribution.updateMany({
+        where: { id: contribution.id, visibility: { not: "sealed" } },
         data: { content },
       });
+      if (count === 0) throw new SealedDuringEditError();
+      return tx.contribution.findUniqueOrThrow({ where: { id: contribution.id } });
     });
 
     return NextResponse.json(updated);
   } catch (error) {
+    if (error instanceof SealedDuringEditError) {
+      return NextResponse.json(
+        { error: "Sealed contributions cannot be edited" },
+        { status: 409 }
+      );
+    }
     console.error("Failed to update contribution:", error);
     return NextResponse.json(
       { error: "An unexpected error occurred" },

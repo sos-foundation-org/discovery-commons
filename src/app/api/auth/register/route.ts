@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db";
+import { clientIp, rateLimit } from "@/lib/rate-limit";
 
 const schema = z.object({
   email: z.string().email(),
@@ -12,6 +13,14 @@ const schema = z.object({
 // Create a self-service email+password account. Passwords are bcrypt-hashed.
 // Prototype: no email verification / 2FA (deferred).
 export async function POST(request: NextRequest) {
+  // Throttle bulk sign-ups: 5 accounts per IP per hour (best-effort, per instance).
+  if (!rateLimit(`register:${clientIp(request)}`, 5, 60 * 60 * 1000)) {
+    return NextResponse.json(
+      { error: "Too many sign-up attempts. Please try again later." },
+      { status: 429 }
+    );
+  }
+
   const body = await request.json().catch(() => null);
   const parsed = schema.safeParse(body);
   if (!parsed.success) {

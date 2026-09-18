@@ -38,10 +38,18 @@ export async function POST(
     }
 
     const now = new Date();
-    await prisma.contribution.update({
-      where: { id: contribution.id },
+    // Conditional update: a concurrent seal/publish between the read above and
+    // this write must not be overwritten.
+    const { count } = await prisma.contribution.updateMany({
+      where: { id: contribution.id, visibility: { in: ["private", "shared"] } },
       data: { visibility: "sealed", sealedAt: now },
     });
+    if (count === 0) {
+      return NextResponse.json(
+        { error: "This contribution can no longer be sealed" },
+        { status: 409 }
+      );
+    }
 
     return NextResponse.json({ success: true, sealedAt: now });
   } catch (error) {

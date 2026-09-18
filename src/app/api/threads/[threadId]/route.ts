@@ -2,6 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { STAGE_ORDER } from "@/lib/types";
+import { updateThreadSchema } from "@/lib/validations";
+import {
+  canViewThread,
+  evaluateContributionAccess,
+  loadViewerAccessSets,
+  outlineOf,
+  stripTranslations,
+} from "@/lib/access-control";
 
 export async function GET(
   request: NextRequest,
@@ -35,9 +43,11 @@ export async function GET(
                 trustLevel: true,
               },
             },
+            sharedWith: { select: { userId: true } },
             _count: { select: { comments: true } },
           },
         },
+        collaborators: { select: { userId: true } },
         _count: { select: { contributions: true } },
       },
     });
@@ -46,48 +56,54 @@ export async function GET(
       return NextResponse.json({ error: "Thread not found" }, { status: 404 });
     }
 
-    // Visibility check
-    if (thread.visibility === "private" && thread.creatorId !== session?.user?.id) {
+    // Visibility check — same gate as the thread page.
+    const userId = session?.user?.id ?? null;
+    const collaboratorIds = thread.collaborators.map((c) => c.userId);
+    const threadGate = {
+      creatorId: thread.creatorId,
+      visibility: thread.visibility,
+      collaboratorIds,
+    };
+    if (!canViewThread(threadGate, userId)) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
-    if (thread.visibility === "shared") {
-      if (!session?.user?.id) {
-        return NextResponse.json({ error: "Not found" }, { status: 404 });
-      }
-      if (thread.creatorId !== session.user.id) {
-        const [collaborator, inCircle] = await Promise.all([
-          prisma.threadCollaborator.findUnique({
-            where: {
-              threadId_userId: {
-                threadId: thread.id,
-                userId: session.user.id,
-              },
-            },
-          }),
-          prisma.trustedCircle.findFirst({
-            where: {
-              ownerId: thread.creatorId,
-              trustedUserId: session.user.id,
-            },
-          }),
-        ]);
-        if (!collaborator && !inCircle) {
-          return NextResponse.json({ error: "Not found" }, { status: 404 });
-        }
-      }
-    }
 
-    // Filter contributions by visibility for non-owner
-    const filteredContributions = thread.contributions.filter((c) => {
-      if (c.authorId === session?.user?.id) return true;
-      if (c.visibility === "public") return true;
-      if (c.visibility === "sealed") return true; // hash + timestamp visible; content masked client-side
-      if (c.visibility === "shared" && session?.user?.id) return true;
-      return false; // private
-    });
+    // Per-contribution access: hide what the viewer can't see, and strip
+    // content (server-side) for sealed / gated-unpurchased / blocked items.
+    const accessSets = await loadViewerAccessSets(thread.contributions, userId);
+    const filteredContributions = thread.contributions.flatMap(
+      ({ sharedWith, ...c }) => {
+        const access = evaluateContributionAccess(
+          {
+            id: c.id,
+            authorId: c.authorId,
+            visibility: c.visibility,
+            sharedWith: sharedWith.map((s) => s.userId),
+            thread: threadGate,
+            metadata: c.metadata as { accessMode?: string; price?: number } | null,
+          },
+          userId,
+          accessSets
+        );
+        if (!access.canView) return [];
+        if (access.canViewContent) return [c];
+        return [
+          {
+            ...c,
+            content:
+              c.visibility === "sealed" || access.isBlocked
+                ? ""
+                : outlineOf(c.content, c.metadata),
+            metadata: stripTranslations(c.metadata),
+            _access: { canViewContent: false, isGated: access.isGated ?? false },
+          },
+        ];
+      }
+    );
 
     return NextResponse.json({
       ...thread,
+      collaborators: undefined,
       contributions: filteredContributions,
     });
   } catch (error) {
@@ -125,15 +141,17 @@ export async function PATCH(
       return NextResponse.json({ error: "Invalid JSON in request body" }, { status: 400 });
     }
 
-    const updates: any = {};
-    if (body.title) updates.title = body.title;
-    if (body.description) updates.description = body.description;
-    if (body.domainTags) updates.domainTags = body.domainTags;
-    if (body.isArchived !== undefined) updates.isArchived = body.isArchived;
+    const parsed = updateThreadSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: "Validation failed", details: parsed.error.flatten() },
+        { status: 400 }
+      );
+    }
 
     const updated = await prisma.thread.update({
       where: { id: threadId },
-      data: updates,
+      data: parsed.data,
     });
 
     return NextResponse.json(updated);

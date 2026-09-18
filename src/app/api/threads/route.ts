@@ -9,8 +9,11 @@ export async function GET(request: NextRequest) {
     const session = await getSession();
     const { searchParams } = new URL(request.url);
 
-    const page = parseInt(searchParams.get("page") || "1");
-    const perPage = parseInt(searchParams.get("per_page") || "20");
+    const page = Math.max(1, parseInt(searchParams.get("page") || "1") || 1);
+    const perPage = Math.min(
+      100,
+      Math.max(1, parseInt(searchParams.get("per_page") || "20") || 20)
+    );
     const q = searchParams.get("q") || "";
     const visibility = searchParams.get("visibility");
     const stage = searchParams.get("stage");
@@ -47,7 +50,10 @@ export async function GET(request: NextRequest) {
       ];
     }
 
-    if (visibility) where.visibility = visibility;
+    // User filters are ANDed on top of the access rule above — they may only
+    // narrow the result set, never replace the visibility gate.
+    const andConditions: any[] = [];
+    if (visibility) andConditions.push({ visibility });
     if (stage) where.currentStage = stage;
     // domainTags is a JSON array. Postgres supports proper array containment;
     // SQLite has no JSON-array query, so fall back to a substring match on the
@@ -60,11 +66,19 @@ export async function GET(request: NextRequest) {
           : { string_contains: domain };
     }
     if (q) {
-      where.OR = [
-        { title: { contains: q } },
-        { description: { contains: q } },
-      ];
+      andConditions.push({
+        OR: [
+          { title: { contains: q } },
+          { description: { contains: q } },
+        ],
+      });
     }
+    if (andConditions.length > 0) where.AND = andConditions;
+
+    // Whitelist sort columns — arbitrary field names would reach Prisma.
+    const SORTABLE = ["updatedAt", "createdAt", "title"];
+    const safeSort = SORTABLE.includes(sort) ? sort : "updatedAt";
+    const safeOrder = order === "asc" ? "asc" : "desc";
 
     const [threads, total] = await Promise.all([
       prisma.thread.findMany({
@@ -75,7 +89,7 @@ export async function GET(request: NextRequest) {
           },
           _count: { select: { contributions: true } },
         },
-        orderBy: { [sort]: order },
+        orderBy: { [safeSort]: safeOrder },
         skip: (page - 1) * perPage,
         take: perPage,
       }),

@@ -245,6 +245,104 @@ export function evaluateContributionAccess(
 }
 
 /**
+ * Thread-level gate (mirrors the thread page): private and shared threads are
+ * visible only to the creator and thread collaborators.
+ */
+export function canViewThread(
+  thread: { creatorId: string; visibility: string; collaboratorIds: string[] },
+  userId: string | null
+): boolean {
+  if (thread.visibility === "public") return true;
+  if (!userId) return false;
+  return userId === thread.creatorId || thread.collaboratorIds.includes(userId);
+}
+
+/**
+ * Batch-load the viewer-specific sets `evaluateContributionAccess` needs
+ * (purchases, accepted collabs, block rules) for many contributions at once.
+ */
+export async function loadViewerAccessSets(
+  contributions: { id: string; authorId: string }[],
+  userId: string | null,
+  prisma: PrismaClient = defaultPrisma
+) {
+  const empty = {
+    purchasedContributionIds: new Set<string>(),
+    collabAcceptedContributionIds: new Set<string>(),
+    blockedByAuthorIds: new Set<string>(),
+    blockedContributionIds: new Set<string>(),
+  };
+  if (!userId || contributions.length === 0) return empty;
+
+  const contributionIds = contributions.map((c) => c.id);
+  const authorIds = Array.from(new Set(contributions.map((c) => c.authorId)));
+  const [purchases, collabs, blockRules] = await Promise.all([
+    prisma.contentPurchase
+      .findMany({
+        where: { buyerId: userId, contributionId: { in: contributionIds } },
+        select: { contributionId: true },
+      })
+      .catch(() => []),
+    prisma.collaborationRequest
+      .findMany({
+        where: {
+          applicantId: userId,
+          contributionId: { in: contributionIds },
+          status: "accepted",
+        },
+        select: { contributionId: true },
+      })
+      .catch(() => []),
+    prisma.contentAccessRule
+      .findMany({
+        where: { ownerId: { in: authorIds }, targetUserId: userId, action: "block" },
+        select: { ownerId: true, targetContributionId: true },
+      })
+      .catch(() => []),
+  ]);
+
+  return {
+    purchasedContributionIds: new Set(
+      purchases.map((p: { contributionId: string }) => p.contributionId)
+    ),
+    collabAcceptedContributionIds: new Set(
+      collabs.map((c: { contributionId: string }) => c.contributionId)
+    ),
+    blockedByAuthorIds: new Set(
+      blockRules
+        .filter((r: { targetContributionId: string | null }) => !r.targetContributionId)
+        .map((r: { ownerId: string }) => r.ownerId)
+    ),
+    blockedContributionIds: new Set(
+      blockRules
+        .filter((r: { targetContributionId: string | null }) => !!r.targetContributionId)
+        .map((r: { targetContributionId: string | null }) => r.targetContributionId as string)
+    ),
+  };
+}
+
+/** Public outline of gated content (same break rule as the contribution API). */
+export function outlineOf(content: string, metadata: unknown): string {
+  const breakPoint =
+    (metadata as { outlineBreak?: number } | null)?.outlineBreak ??
+    Math.min(280, content.length);
+  return content.slice(0, breakPoint);
+}
+
+/**
+ * Cached AI translations (metadata.translations) are full-content copies —
+ * drop them whenever the viewer may not read the content.
+ */
+export function stripTranslations<M>(metadata: M): M {
+  if (metadata && typeof metadata === "object" && !Array.isArray(metadata)) {
+    const { translations: _omit, ...rest } = metadata as Record<string, unknown>;
+    void _omit;
+    return rest as M;
+  }
+  return metadata;
+}
+
+/**
  * Field-level filtering for an API response: strips content when the viewer may
  * see the contribution but not its content (i.e. sealed for a non-author).
  */
