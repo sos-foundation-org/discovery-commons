@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { logBackgroundError } from "@/lib/log";
 
 const COLLAB_ROLES = ["viewer", "contributor", "admin"] as const;
 
@@ -124,7 +125,7 @@ export async function POST(
           linkUrl: `/threads/${params.threadId}`,
         },
       })
-      .catch(() => {});
+      .catch(logBackgroundError("api/threads/[threadId]/collaborators"));
 
     return NextResponse.json(collaborator, { status: 201 });
   } catch {
@@ -157,7 +158,7 @@ export async function DELETE(
 
   await prisma.threadCollaborator
     .delete({ where: { threadId_userId: { threadId: params.threadId, userId } } })
-    .catch(() => {});
+    .catch(logBackgroundError("api/threads/[threadId]/collaborators"));
 
   return NextResponse.json({ success: true });
 }

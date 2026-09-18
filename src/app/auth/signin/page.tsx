@@ -12,6 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { useI18n } from "@/components/language-provider";
 
 export default function SignInPage() {
   const router = useRouter();
@@ -22,6 +23,7 @@ export default function SignInPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const { te } = useI18n();
 
   useEffect(() => {
     getProviders()
@@ -136,7 +138,7 @@ export default function SignInPage() {
               placeholder={mode === "signup" ? "Password (min 8 chars)" : "Password"}
               required
             />
-            {error && <p className="text-sm text-red-600">{error}</p>}
+            {error && <p className="text-sm text-red-600">{te(error)}</p>}
             <Button type="submit" className="w-full" size="lg" disabled={loading}>
               {loading
                 ? "…"

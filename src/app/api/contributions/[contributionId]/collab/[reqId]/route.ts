@@ -4,6 +4,7 @@ import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { unfreezeDP, earnDP } from "@/lib/points";
 import { DP_EVENT_REWARDS } from "@/lib/types";
+import { logBackgroundError } from "@/lib/log";
 
 const respondSchema = z.object({
   action: z.enum(["accept", "decline", "chat_first"]),
@@ -141,7 +142,7 @@ export async function PATCH(
           linkUrl: `/threads/${params.contributionId}`,
         },
       })
-      .catch(() => {});
+      .catch(logBackgroundError("api/contributions/[contributionId]/collab/[reqId]"));
 
     return NextResponse.json({ status: "accepted" });
   }
@@ -174,7 +175,7 @@ export async function PATCH(
           linkUrl: `/threads/${params.contributionId}`,
         },
       })
-      .catch(() => {});
+      .catch(logBackgroundError("api/contributions/[contributionId]/collab/[reqId]"));
 
     return NextResponse.json({ status: "declined" });
   }
@@ -196,7 +197,7 @@ export async function PATCH(
         linkUrl: `/threads/${params.contributionId}`,
       },
     })
-    .catch(() => {});
+    .catch(logBackgroundError("api/contributions/[contributionId]/collab/[reqId]"));
 
   return NextResponse.json({ status: "chatting" });
 }

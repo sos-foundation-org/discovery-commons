@@ -11,6 +11,7 @@ import {
   type CommentType,
 } from "@/lib/types";
 import { timeAgo } from "@/lib/utils";
+import { useI18n } from "@/components/language-provider";
 
 interface Comment {
   id: string;
@@ -28,6 +29,7 @@ export function CommentSection({
   contributionId: string;
 }) {
   const { data: session } = useSession();
+  const { t } = useI18n();
   const [comments, setComments] = useState<Comment[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -51,15 +53,15 @@ export function CommentSection({
         onClick={() => setIsOpen(!isOpen)}
         className="text-xs text-muted-foreground hover:text-foreground transition-colors"
       >
-        {isOpen ? "Hide comments" : "Show comments"}
+        {isOpen ? t("comments.hide") : t("comments.show")}
       </button>
 
       {isOpen && (
         <div className="mt-3 space-y-3">
           {isLoading ? (
-            <p className="text-xs text-muted-foreground">Loading...</p>
+            <p className="text-xs text-muted-foreground">{t("common.loading")}</p>
           ) : comments.length === 0 ? (
-            <p className="text-xs text-muted-foreground">No comments yet.</p>
+            <p className="text-xs text-muted-foreground">{t("comments.none")}</p>
           ) : (
             comments.map((c) => (
               <CommentItem key={c.id} comment={c} depth={0} />
@@ -79,6 +81,7 @@ export function CommentSection({
 }
 
 function CommentItem({ comment, depth }: { comment: Comment; depth: number }) {
+  const { t } = useI18n();
   const config =
     COMMENT_TYPE_CONFIG[comment.commentType as CommentType] ??
     COMMENT_TYPE_CONFIG.endorsement;
@@ -88,7 +91,13 @@ function CommentItem({ comment, depth }: { comment: Comment; depth: number }) {
       <div className="text-sm">
         <div className="flex items-center gap-2 mb-1">
           <Badge variant="outline" className={`text-xs ${config.color}`}>
-            {config.label}
+            {t(
+              `commentType.${
+                comment.commentType in COMMENT_TYPE_CONFIG
+                  ? comment.commentType
+                  : "endorsement"
+              }`
+            )}
           </Badge>
           <span className="text-xs text-muted-foreground">
             {comment.author.displayName || comment.author.name}
@@ -120,6 +129,7 @@ function CommentForm({
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const { t, te } = useI18n();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -156,24 +166,24 @@ function CommentForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-2 bg-muted/50 rounded-lg p-3">
       {error && (
-        <p className="text-xs text-destructive">{error}</p>
+        <p className="text-xs text-destructive" role="alert">{te(error)}</p>
       )}
 
-      <div className="flex flex-wrap gap-1">
-        {COMMENT_TYPES.map((t) => {
-          const cfg = COMMENT_TYPE_CONFIG[t];
+      <div className="flex flex-wrap gap-1" role="group" aria-label={t("comments.typeLabel")}>
+        {COMMENT_TYPES.map((ct) => {
           return (
             <button
-              key={t}
+              key={ct}
               type="button"
-              onClick={() => setCommentType(t)}
+              aria-pressed={commentType === ct}
+              onClick={() => setCommentType(ct)}
               className={`px-2 py-0.5 rounded text-xs border transition-colors ${
-                commentType === t
+                commentType === ct
                   ? "bg-primary text-primary-foreground border-primary"
                   : "bg-background border-border hover:bg-accent"
               }`}
             >
-              {cfg.label}
+              {t(`commentType.${ct}`)}
             </button>
           );
         })}
@@ -182,7 +192,8 @@ function CommentForm({
       <Textarea
         value={content}
         onChange={(e) => setContent(e.target.value)}
-        placeholder="Add your review or comment..."
+        placeholder={t("comments.placeholder")}
+        aria-label={t("comments.label")}
         rows={2}
         className="text-sm"
       />
@@ -195,10 +206,10 @@ function CommentForm({
             onChange={(e) => setIsAnonymous(e.target.checked)}
             className="rounded"
           />
-          Post anonymously
+          {t("comments.anonymous")}
         </label>
         <Button type="submit" size="sm" disabled={isSubmitting || !content.trim()}>
-          {isSubmitting ? "Posting..." : "Post Comment"}
+          {isSubmitting ? t("comments.posting") : t("comments.post")}
         </Button>
       </div>
     </form>

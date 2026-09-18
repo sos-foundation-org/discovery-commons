@@ -81,22 +81,33 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const rule = await prisma.contentAccessRule.upsert({
-      where: {
-        ownerId_targetUserId_targetContributionId: {
+    // Manual upsert: a compound-unique `where` can't match a NULL
+    // targetContributionId (user-level rules), so the old upsert never found
+    // existing user-level rules and created duplicates.
+    const rule = await prisma.$transaction(async (tx) => {
+      const existing = await tx.contentAccessRule.findFirst({
+        where: {
           ownerId: session.user.id,
           targetUserId,
-          targetContributionId: targetContributionId ?? "",
+          targetContributionId: targetContributionId ?? null,
         },
-      },
-      update: { action, reason },
-      create: {
-        ownerId: session.user.id,
-        targetUserId,
-        targetContributionId: targetContributionId ?? null,
-        action,
-        reason,
-      },
+        select: { id: true },
+      });
+      if (existing) {
+        return tx.contentAccessRule.update({
+          where: { id: existing.id },
+          data: { action, reason },
+        });
+      }
+      return tx.contentAccessRule.create({
+        data: {
+          ownerId: session.user.id,
+          targetUserId,
+          targetContributionId: targetContributionId ?? null,
+          action,
+          reason,
+        },
+      });
     });
 
     return NextResponse.json(rule, { status: 201 });

@@ -3,6 +3,7 @@ import { z } from "zod";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import crypto from "crypto";
+import { logBackgroundError } from "@/lib/log";
 
 const logSchema = z.object({
   contributionId: z.string().min(1),
@@ -45,7 +46,7 @@ export async function POST(request: NextRequest) {
         ipHash,
       },
     })
-    .catch(() => {}); // Non-blocking — don't fail the user experience
+    .catch(logBackgroundError("api/content-access-log")); // Non-blocking — don't fail the user experience
 
   return NextResponse.json({ logged: true });
 }

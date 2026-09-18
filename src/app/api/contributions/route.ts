@@ -7,6 +7,7 @@ import { generatePriorityHash } from "@/lib/hash";
 import { STAGE_LEVEL } from "@/lib/types";
 import { generateCredits } from "@/lib/credits";
 import { rewardPublish, rewardWelcomeBonus } from "@/lib/points";
+import { logBackgroundError } from "@/lib/log";
 
 // Assemble the per-type metadata JSON (undefined when empty so we don't store {}).
 function buildMetadata(
@@ -174,8 +175,8 @@ export async function POST(request: NextRequest) {
 
     // Award DP for publishing (outside main transaction, non-blocking)
     if (contribution.publishedAt) {
-      rewardPublish(prisma, session.user.id, type, contribution.id).catch(() => {});
-      rewardWelcomeBonus(prisma, session.user.id, contribution.id).catch(() => {});
+      rewardPublish(prisma, session.user.id, type, contribution.id).catch(logBackgroundError("api/contributions"));
+      rewardWelcomeBonus(prisma, session.user.id, contribution.id).catch(logBackgroundError("api/contributions"));
     }
 
     // Notify thread creator (outside transaction, non-blocking)
@@ -192,7 +193,7 @@ export async function POST(request: NextRequest) {
             linkUrl: `/threads/${threadId}`,
           },
         })
-        .catch(() => {});
+        .catch(logBackgroundError("api/contributions"));
     }
 
     return NextResponse.json(contribution, { status: 201 });

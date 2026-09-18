@@ -3,6 +3,7 @@ import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { createReplicationSchema } from "@/lib/validations";
 import { updateVerificationBadge } from "@/lib/verification";
+import { canViewThread } from "@/lib/access-control";
 
 // GET /api/v2/threads/[threadId]/replications — list replications of a thread.
 export async function GET(
@@ -11,14 +12,62 @@ export async function GET(
 ) {
   const { threadId } = params;
   try {
+    const [session, thread] = await Promise.all([
+      getSession(),
+      prisma.thread.findUnique({
+        where: { id: threadId },
+        select: {
+          creatorId: true,
+          visibility: true,
+          collaborators: { select: { userId: true } },
+        },
+      }),
+    ]);
+    const userId = session?.user?.id ?? null;
+    if (
+      !thread ||
+      !canViewThread(
+        {
+          creatorId: thread.creatorId,
+          visibility: thread.visibility,
+          collaboratorIds: thread.collaborators.map((c) => c.userId),
+        },
+        userId
+      )
+    ) {
+      return NextResponse.json({ error: "Thread not found" }, { status: 404 });
+    }
+
     const replications = await prisma.replication.findMany({
       where: { originalThreadId: threadId },
       include: {
-        replicationThread: { select: { id: true, title: true } },
+        replicationThread: {
+          select: {
+            id: true,
+            title: true,
+            creatorId: true,
+            visibility: true,
+            collaborators: { select: { userId: true } },
+          },
+        },
       },
       orderBy: { createdAt: "desc" },
     });
-    return NextResponse.json({ replications });
+    // The linked replication thread may itself be private — hide its title.
+    const safe = replications.map(({ replicationThread: rt, ...r }) => ({
+      ...r,
+      replicationThread: canViewThread(
+        {
+          creatorId: rt.creatorId,
+          visibility: rt.visibility,
+          collaboratorIds: rt.collaborators.map((c) => c.userId),
+        },
+        userId
+      )
+        ? { id: rt.id, title: rt.title }
+        : { id: rt.id, title: "Private thread" },
+    }));
+    return NextResponse.json({ replications: safe });
   } catch (error) {
     console.error("Failed to list replications:", error);
     return NextResponse.json(

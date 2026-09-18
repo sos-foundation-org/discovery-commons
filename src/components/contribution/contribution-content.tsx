@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import remarkGfm from "remark-gfm";
+import rehypeSanitize, { defaultSchema } from "rehype-sanitize";
 import { SimpleChart } from "./simple-chart";
 import { EmbedBlock } from "./embed-block";
 
@@ -18,7 +19,24 @@ const ReactMarkdown = dynamic(
 // Splitting these blocks out first keeps the markdown pipeline simple and lets
 // them render as block-level figures rather than inside <pre>.
 
-type Segment = { type: "md" | "chart" | "embed"; text: string };
+// Defense in depth: react-markdown already drops raw HTML, but sanitize the
+// final tree too (GitHub's schema). remark-rehype already prefixes footnote ids
+// with "user-content-", so don't clobber them a second time.
+const SANITIZE_SCHEMA = { ...defaultSchema, clobberPrefix: "" };
+
+// react-markdown shows raw HTML typed in a contribution (e.g. "<sub>") as
+// literal text; rehype-sanitize would silently delete it instead. Turn raw
+// nodes into text first so existing contributions render exactly as before.
+type HastNode = { type: string; children?: HastNode[] };
+function rehypeRawAsText() {
+  const walk = (node: HastNode) => {
+    if (node.type === "raw") node.type = "text";
+    node.children?.forEach(walk);
+  };
+  return (tree: HastNode) => walk(tree);
+}
+
+type Segment ={ type: "md" | "chart" | "embed"; text: string };
 
 function splitBlocks(content: string): Segment[] {
   const re = /```(chart|embed)\s*\n([\s\S]*?)```/g;
@@ -58,7 +76,10 @@ export function ContributionContent({
             key={i}
             className="prose prose-neutral dark:prose-invert max-w-none text-[15px] leading-relaxed prose-headings:font-semibold prose-pre:bg-muted prose-pre:text-foreground prose-code:before:content-none prose-code:after:content-none prose-img:rounded-lg"
           >
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              rehypePlugins={[rehypeRawAsText, [rehypeSanitize, SANITIZE_SCHEMA]]}
+            >
               {seg.text}
             </ReactMarkdown>
           </div>

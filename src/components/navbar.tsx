@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useSession, signIn, signOut } from "next-auth/react";
 import { usePathname } from "next/navigation";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { AvatarBadge } from "@/components/ui/avatar-badge";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -42,6 +42,30 @@ export function Navbar() {
     }
   }, [session, fetchUnread]);
 
+  // Mobile menu: close on Escape, on a tap outside the header, and on
+  // navigation.
+  const headerRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMobileOpen(false);
+    };
+    const onPointer = (e: PointerEvent) => {
+      if (headerRef.current && !headerRef.current.contains(e.target as Node)) {
+        setMobileOpen(false);
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    document.addEventListener("pointerdown", onPointer);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.removeEventListener("pointerdown", onPointer);
+    };
+  }, [mobileOpen]);
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
+
   const navLinks = [
     { href: "/threads", label: t("nav.threads") },
     { href: "/about", label: t("nav.about") },
@@ -56,7 +80,7 @@ export function Navbar() {
   ];
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header ref={headerRef} className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-14 items-center px-4 mx-auto max-w-6xl">
         {/* Logo */}
         <Link href="/" className="flex items-center space-x-2 mr-6">
@@ -90,6 +114,8 @@ export function Navbar() {
           className="md:hidden ml-auto mr-2 p-2"
           onClick={() => setMobileOpen(!mobileOpen)}
           aria-label="Toggle menu"
+          aria-expanded={mobileOpen}
+          aria-controls="mobile-menu"
         >
           <svg
             className="w-5 h-5"
@@ -132,8 +158,17 @@ export function Navbar() {
                   {dpBalance.toLocaleString()} DP
                 </Link>
               )}
-              <Link href="/notifications" className="relative p-2">
+              <Link
+                href="/notifications"
+                className="relative p-2"
+                aria-label={
+                  unreadCount > 0
+                    ? `${t("nav.notifications")} (${unreadCount})`
+                    : t("nav.notifications")
+                }
+              >
                 <svg
+                  aria-hidden="true"
                   className="w-5 h-5 text-muted-foreground hover:text-foreground transition-colors"
                   fill="none"
                   stroke="currentColor"
@@ -184,7 +219,10 @@ export function Navbar() {
 
       {/* Mobile menu */}
       {mobileOpen && (
-        <div className="md:hidden border-t px-4 py-3 space-y-2 bg-background">
+        <div
+          id="mobile-menu"
+          className="dc-menu-enter md:hidden border-t px-4 py-3 space-y-2 bg-background"
+        >
           {navLinks.map((link) => (
             <Link
               key={link.href}
@@ -210,7 +248,7 @@ export function Navbar() {
               onClick={() => setMobileOpen(false)}
               className="block px-3 py-2 rounded-md text-sm text-muted-foreground"
             >
-              Notifications
+              {t("nav.notifications")}
               {unreadCount > 0 && (
                 <span className="ml-2 inline-flex items-center justify-center w-5 h-5 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold">
                   {unreadCount}

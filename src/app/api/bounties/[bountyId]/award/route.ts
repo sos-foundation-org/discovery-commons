@@ -3,6 +3,7 @@ import { z } from "zod";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { earnDP } from "@/lib/points";
+import { logBackgroundError } from "@/lib/log";
 
 const awardSchema = z.object({
   recipientId: z.string().min(1),
@@ -140,7 +141,7 @@ export async function POST(
         linkUrl: `/threads/${bounty.contributionId}`,
       },
     })
-    .catch(() => {});
+    .catch(logBackgroundError("api/bounties/[bountyId]/award"));
 
   return NextResponse.json({ success: true, amount });
 }

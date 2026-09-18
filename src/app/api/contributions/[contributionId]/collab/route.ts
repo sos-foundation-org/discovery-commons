@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db";
 import { freezeDP } from "@/lib/points";
 import { COLLAB_SEEKING_TYPES } from "@/lib/types";
 import type { ContributionPricingMeta } from "@/lib/types";
+import { logBackgroundError } from "@/lib/log";
 
 const proposeSchema = z.object({
   message: z.string().max(500).default(""),
@@ -209,7 +210,7 @@ export async function POST(
         linkUrl: `/threads/${params.contributionId}`,
       },
     })
-    .catch(() => {});
+    .catch(logBackgroundError("api/contributions/[contributionId]/collab"));
 
   return NextResponse.json(
     { id: collabRequest.id, status: collabRequest.status },

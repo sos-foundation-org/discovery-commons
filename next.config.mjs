@@ -18,6 +18,17 @@ const nextConfig = {
       "@radix-ui/react-tooltip",
     ],
   },
+  // API responses are often viewer-specific (session-dependent access
+  // control) — never let a browser or CDN cache them. The anonymous public
+  // API (/api/v2/public/*) is excluded and may set its own caching.
+  async headers() {
+    return [
+      {
+        source: "/api/:path((?!v2/public/).*)",
+        headers: [{ key: "Cache-Control", value: "private, no-store" }],
+      },
+    ];
+  },
 };
 
 export default nextConfig;

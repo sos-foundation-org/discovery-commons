@@ -17,7 +17,7 @@ export function TranslateButton({
   originalContent: string;
   onTranslated?: (text: string) => void;
 }) {
-  const { locale, t } = useI18n();
+  const { locale, t, te } = useI18n();
   const [translation, setTranslation] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [showOriginal, setShowOriginal] = useState(false);
@@ -77,7 +77,7 @@ export function TranslateButton({
             : `🌐 ${t("translate.button")}`}
       </button>
       {error && (
-        <span className="text-xs text-muted-foreground ml-2">{error}</span>
+        <span className="text-xs text-muted-foreground ml-2">{te(error)}</span>
       )}
     </div>
   );

@@ -4,6 +4,7 @@ import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { SUPPORTED_LOCALES } from "@/lib/i18n";
 import { checkContributionAccess } from "@/lib/access-control";
+import { logBackgroundError } from "@/lib/log";
 
 const translateSchema = z.object({
   contributionId: z.string().min(1),
@@ -127,7 +128,7 @@ export async function POST(request: NextRequest) {
         where: { id: contributionId },
         data: { metadata: updatedMeta as any },
       })
-      .catch(() => {}); // Non-blocking cache write
+      .catch(logBackgroundError("api/translate")); // Non-blocking cache write
 
     return NextResponse.json({
       translation: translatedText,

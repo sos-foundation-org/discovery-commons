@@ -12,26 +12,41 @@ import {
   CONTENT_LICENSES,
 } from "./types";
 
+// Minimum length counted on non-whitespace-padded text (10 spaces ≠ content).
+// Uses refine, not .trim(), so the stored text — and its hash — is unchanged.
+const minTrimmed = (n: number, message: string) =>
+  [(s: string) => s.trim().length >= n, { message }] as const;
+
+const domainTag = z.string().trim().min(1).max(100);
+
 export const createThreadSchema = z.object({
   title: z
     .string()
-    .min(10, "Title must be at least 10 characters")
-    .max(200, "Title must be at most 200 characters"),
+    .max(200, "Title must be at most 200 characters")
+    .refine(...minTrimmed(10, "Title must be at least 10 characters")),
   description: z
     .string()
-    .min(20, "Description must be at least 20 characters")
-    .max(10000),
+    .max(10000)
+    .refine(...minTrimmed(20, "Description must be at least 20 characters")),
   visibility: z.enum(VISIBILITY_LEVELS).default("private"),
   discipline: z.enum(DISCIPLINES).optional(),
-  domainTags: z.array(z.string()).min(1, "Select at least one domain tag").max(5),
+  domainTags: z.array(domainTag).min(1, "Select at least one domain tag").max(5),
 });
 
 // Thread edits (creator only). Visibility/stage have their own endpoints.
 export const updateThreadSchema = z
   .object({
-    title: z.string().min(10).max(200).optional(),
-    description: z.string().min(20).max(10000).optional(),
-    domainTags: z.array(z.string().min(1).max(100)).min(1).max(5).optional(),
+    title: z
+      .string()
+      .max(200)
+      .refine(...minTrimmed(10, "Title must be at least 10 characters"))
+      .optional(),
+    description: z
+      .string()
+      .max(10000)
+      .refine(...minTrimmed(20, "Description must be at least 20 characters"))
+      .optional(),
+    domainTags: z.array(domainTag).min(1).max(5).optional(),
     isArchived: z.boolean().optional(),
   })
   .strict();
@@ -41,8 +56,8 @@ export const createContributionSchema = z.object({
   type: z.enum(CONTRIBUTION_TYPES),
   content: z
     .string()
-    .min(10, "Content must be at least 10 characters")
-    .max(10000),
+    .max(10000)
+    .refine(...minTrimmed(10, "Content must be at least 10 characters")),
   visibility: z.enum(VISIBILITY_LEVELS).default("private"),
   parentId: z.string().min(1).optional(),
   sealed: z.boolean().default(false),
@@ -69,7 +84,10 @@ export const createContributionSchema = z.object({
 
 export const createCommentSchema = z.object({
   contributionId: z.string().min(1),
-  content: z.string().min(1).max(5000),
+  content: z
+    .string()
+    .max(5000)
+    .refine(...minTrimmed(1, "Comment cannot be empty")),
   commentType: z.enum(COMMENT_TYPES).default("endorsement"),
   isAnonymous: z.boolean().default(false),
   parentId: z.string().min(1).optional(),

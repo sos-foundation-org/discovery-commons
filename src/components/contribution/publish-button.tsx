@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useI18n } from "@/components/language-provider";
+import { useDialogA11y } from "@/components/ui/use-dialog-a11y";
 
 interface PublishButtonProps {
   contributionId: string;
@@ -30,6 +32,8 @@ export function PublishButton({
   threadTitle,
 }: PublishButtonProps) {
   const router = useRouter();
+  const { t, te } = useI18n();
+  const dialogRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
   const [ack, setAck] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -45,6 +49,9 @@ export function PublishButton({
     setAck(false);
     setError("");
   };
+  useDialogA11y(open, dialogRef, () => {
+    if (!isLoading) close();
+  });
 
   const handlePublish = async () => {
     setIsLoading(true);
@@ -69,11 +76,11 @@ export function PublishButton({
         variant="default"
         onClick={() => setOpen(true)}
         // Layer-3 contextual hint (Web Prototype §3B.7): just-in-time reminder.
-        title="Publishing will record your credit timestamp"
+        title={t("publish.hint")}
         className="gap-1 bg-green-600 text-xs hover:bg-green-700"
       >
         <Globe className="h-3.5 w-3.5" />
-        Publish
+        {t("publish.button")}
       </Button>
 
       {open && (
@@ -85,18 +92,20 @@ export function PublishButton({
           onClick={close}
         >
           <div
-            className="w-full max-w-lg rounded-lg border bg-background p-6 shadow-lg"
+            ref={dialogRef}
+            tabIndex={-1}
+            className="w-full max-w-lg rounded-lg border bg-background p-6 shadow-lg outline-none"
             onClick={(e) => e.stopPropagation()}
           >
             <h2 id="publish-dialog-title" className="mb-4 text-lg font-semibold">
-              Ready to publish?
+              {t("publish.title")}
             </h2>
 
             {/* Content preview — guards against publishing the wrong item. */}
             <div className="mb-4 rounded-md border bg-muted/40 p-3">
               <p className="mb-1 text-xs text-muted-foreground">
                 <span className="font-medium text-foreground">{typeLabel}</span>
-                {"  ·  in "}
+                {`  ·  ${t("publish.in")} `}
                 {threadTitle}
               </p>
               <p className="whitespace-pre-wrap text-sm text-foreground/90">
@@ -106,16 +115,16 @@ export function PublishButton({
 
             <div className="mb-4 text-sm text-muted-foreground">
               <p className="mb-1 font-medium text-foreground">
-                Once public:
+                {t("publish.oncePublic")}
               </p>
               <ul className="list-disc space-y-0.5 pl-5">
-                <li>Anyone can see this contribution&apos;s full content.</li>
+                <li>{t("publish.point1")}</li>
                 <li>
-                  This moment is recorded as your{" "}
+                  {t("publish.point2a")}
                   <span className="font-medium text-foreground">
-                    credit timestamp
+                    {t("publish.point2b")}
                   </span>
-                  .
+                  {t("publish.point2c")}
                 </li>
               </ul>
             </div>
@@ -127,14 +136,14 @@ export function PublishButton({
                 onChange={(e) => setAck(e.target.checked)}
                 className="mt-0.5 h-4 w-4"
               />
-              <span>I understand publishing cannot be undone.</span>
+              <span>{t("publish.ack")}</span>
             </label>
 
-            {error && <p className="mb-3 text-sm text-red-600">{error}</p>}
+            {error && <p className="mb-3 text-sm text-red-600" role="alert">{te(error)}</p>}
 
             <div className="flex justify-end gap-2">
               <Button variant="ghost" onClick={close} disabled={isLoading}>
-                Reconsider
+                {t("publish.reconsider")}
               </Button>
               <Button
                 onClick={handlePublish}
@@ -142,7 +151,7 @@ export function PublishButton({
                 className="gap-1 bg-green-600 hover:bg-green-700"
               >
                 <Globe className="h-4 w-4" />
-                {isLoading ? "Publishing…" : "Publish contribution"}
+                {isLoading ? t("publish.publishing") : t("publish.confirm")}
               </Button>
             </div>
           </div>

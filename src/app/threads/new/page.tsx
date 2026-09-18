@@ -7,9 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { useI18n } from "@/components/language-provider";
 import {
   THREAD_VISIBILITY,
-  VISIBILITY_LABELS,
   getVisibleDisciplines,
   DISCIPLINE_CONFIG,
   type VisibilityLevel,
@@ -39,6 +39,7 @@ const DOMAIN_SUGGESTIONS = [
 
 export default function NewThreadPage() {
   const router = useRouter();
+  const { t, te } = useI18n();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [visibility, setVisibility] = useState<VisibilityLevel>("private");
@@ -50,7 +51,7 @@ export default function NewThreadPage() {
 
   const toggleTag = (tag: string) => {
     setDomainTags((prev) =>
-      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
+      prev.includes(tag) ? prev.filter((x) => x !== tag) : [...prev, tag]
     );
   };
 
@@ -97,55 +98,57 @@ export default function NewThreadPage() {
 
   return (
     <div className="container mx-auto max-w-3xl px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8">Start a New Thread</h1>
+      <h1 className="text-3xl font-bold mb-8">{t("newThread.title")}</h1>
 
       <form onSubmit={handleSubmit}>
         <Card>
           <CardHeader>
-            <CardTitle>What are you curious about?</CardTitle>
+            <CardTitle>{t("newThread.curious")}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             {error && (
-              <div className="p-3 rounded-md bg-destructive/10 text-destructive text-sm">
-                {error}
+              <div className="p-3 rounded-md bg-destructive/10 text-destructive text-sm" role="alert">
+                {te(error)}
               </div>
             )}
 
             <div>
-              <label className="block text-sm font-medium mb-2">Title</label>
+              <label htmlFor="thread-title" className="block text-sm font-medium mb-2">{t("newThread.titleLabel")}</label>
               <Input
+                id="thread-title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="e.g., Does soundscape complexity predict species richness?"
+                placeholder={t("newThread.titlePlaceholder")}
                 maxLength={200}
                 required
               />
               <p className="text-xs text-muted-foreground mt-1">
-                {title.length}/200 characters
+                {t("newThread.chars", { n: title.length })}
               </p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">
-                Description
+              <label htmlFor="thread-description" className="block text-sm font-medium mb-2">
+                {t("newThread.descLabel")}
               </label>
               <Textarea
+                id="thread-description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Describe the line of inquiry. What's the question? Why does it matter? What do we already know?"
+                placeholder={t("newThread.descPlaceholder")}
                 rows={6}
                 required
               />
               <p className="text-xs text-muted-foreground mt-1">
-                Markdown supported
+                {t("common.markdown")}
               </p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">
-                Discipline
-              </label>
-              <div className="flex flex-wrap gap-2">
+              <p id="thread-discipline-label" className="block text-sm font-medium mb-2">
+                {t("newThread.discipline")}
+              </p>
+              <div className="flex flex-wrap gap-2" role="group" aria-labelledby="thread-discipline-label">
                 {VISIBLE_DISCIPLINES.map((d) => {
                   const cfg = DISCIPLINE_CONFIG[d];
                   const active = discipline === d;
@@ -153,6 +156,7 @@ export default function NewThreadPage() {
                     <button
                       key={d}
                       type="button"
+                      aria-pressed={active}
                       onClick={() => setDiscipline(active ? "" : d)}
                       className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium transition-all ${cfg.badge} ${
                         active
@@ -161,27 +165,36 @@ export default function NewThreadPage() {
                       }`}
                     >
                       <span className={`h-2 w-2 rounded-full ${cfg.dot}`} />
-                      {cfg.label}
+                      {t(`disc.${d}`)}
                     </button>
                   );
                 })}
               </div>
               <p className="text-xs text-muted-foreground mt-1">
-                Pick the closest top-level field — it colors your thread&apos;s badge.
+                {t("newThread.disciplineHint")}
               </p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">
-                Domain Tags
-              </label>
-              <div className="flex flex-wrap gap-2 mb-2">
+              <p id="thread-tags-label" className="block text-sm font-medium mb-2">
+                {t("newThread.tags")}
+              </p>
+              <div className="flex flex-wrap gap-2 mb-2" role="group" aria-labelledby="thread-tags-label">
                 {DOMAIN_SUGGESTIONS.map((tag) => (
                   <Badge
                     key={tag}
                     variant={domainTags.includes(tag) ? "default" : "outline"}
                     className="cursor-pointer"
+                    role="button"
+                    tabIndex={0}
+                    aria-pressed={domainTags.includes(tag)}
                     onClick={() => toggleTag(tag)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        toggleTag(tag);
+                      }
+                    }}
                   >
                     {tag}
                   </Badge>
@@ -191,7 +204,8 @@ export default function NewThreadPage() {
                 <Input
                   value={customTag}
                   onChange={(e) => setCustomTag(e.target.value)}
-                  placeholder="Add custom tag..."
+                  placeholder={t("newThread.customTag")}
+                  aria-label={t("newThread.customTag")}
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
                       e.preventDefault();
@@ -201,30 +215,31 @@ export default function NewThreadPage() {
                   className="max-w-xs"
                 />
                 <Button type="button" variant="outline" onClick={addCustomTag}>
-                  Add
+                  {t("common.add")}
                 </Button>
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">
-                Who can see this?
-              </label>
-              <div className="flex gap-2">
+              <p id="thread-visibility-label" className="block text-sm font-medium mb-2">
+                {t("newThread.who")}
+              </p>
+              <div className="flex gap-2" role="group" aria-labelledby="thread-visibility-label">
                 {THREAD_VISIBILITY.map((v) => (
                   <Button
                     key={v}
                     type="button"
                     variant={visibility === v ? "default" : "outline"}
                     size="sm"
+                    aria-pressed={visibility === v}
                     onClick={() => setVisibility(v)}
                   >
-                    {VISIBILITY_LABELS[v]}
+                    {t(`vis.${v}`)}
                   </Button>
                 ))}
               </div>
               <p className="text-xs text-muted-foreground mt-1">
-                You can increase visibility later, but cannot decrease it.
+                {t("newThread.visHint")}
               </p>
             </div>
 
@@ -234,7 +249,7 @@ export default function NewThreadPage() {
               className="w-full"
               size="lg"
             >
-              {isSubmitting ? "Creating..." : "Create Thread"}
+              {isSubmitting ? t("newThread.creating") : t("newThread.create")}
             </Button>
           </CardContent>
         </Card>

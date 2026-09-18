@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useI18n } from "@/components/language-provider";
 
 interface Share {
   id: string;
@@ -22,6 +23,7 @@ export function ShareManager({ contributionId }: { contributionId: string }) {
   const [email, setEmail] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const { te } = useI18n();
 
   const load = useCallback(async () => {
     const res = await fetch(
@@ -102,7 +104,7 @@ export function ShareManager({ contributionId }: { contributionId: string }) {
         Sharing with collaborators does not create a credit timestamp. To protect
         priority, seal first, then share.
       </p>
-      {error && <p className="mb-2 text-xs text-red-600">{error}</p>}
+      {error && <p className="mb-2 text-xs text-red-600">{te(error)}</p>}
       {shares.length === 0 ? (
         <p className="text-xs text-muted-foreground">
           Only thread collaborators can see this so far.

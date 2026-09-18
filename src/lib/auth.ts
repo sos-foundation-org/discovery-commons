@@ -5,6 +5,7 @@ import GitHubProvider from "next-auth/providers/github";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { prisma } from "./db";
+import { logBackgroundError } from "@/lib/log";
 
 const useCredentialsDev =
   process.env.NODE_ENV === "development" &&
@@ -147,7 +148,7 @@ export const authOptions: NextAuthOptions = {
             where: { id: user.id },
             data: { orcidId: account.providerAccountId, orcidVerified: true },
           })
-          .catch(() => {});
+          .catch(logBackgroundError("lib/auth.ts"));
       }
     },
   },

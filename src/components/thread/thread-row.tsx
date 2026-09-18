@@ -3,6 +3,7 @@ import { AvatarBadge } from "@/components/ui/avatar-badge";
 import { DisciplineBadge } from "@/components/thread/discipline-badge";
 import { DISCIPLINE_CONFIG, type Discipline } from "@/lib/types";
 import { timeAgo } from "@/lib/utils";
+import { T } from "@/components/t";
 
 export interface ThreadRowData {
   id: string;
@@ -62,11 +63,17 @@ export function ThreadRow({ thread }: { thread: ThreadRowData }) {
             <div className="mt-2.5 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-muted-foreground">
               <span className="font-medium text-foreground/80">{author}</span>
               <span aria-hidden>·</span>
-              <span className="capitalize">{thread.currentStage}</span>
+              <span className="capitalize"><T k={`type.${thread.currentStage}`} /></span>
               <span aria-hidden>·</span>
               <span>
-                {thread._count.contributions} contribution
-                {thread._count.contributions !== 1 ? "s" : ""}
+                <T
+                  k={
+                    thread._count.contributions === 1
+                      ? "row.contributionOne"
+                      : "row.contributionMany"
+                  }
+                  vars={{ n: thread._count.contributions }}
+                />
               </span>
               <span aria-hidden>·</span>
               <span>{timeAgo(thread.updatedAt)}</span>

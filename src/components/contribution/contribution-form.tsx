@@ -9,12 +9,11 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TypeIcon } from "@/components/contribution/type-icon";
+import { useI18n } from "@/components/language-provider";
 import {
-  CONTRIBUTION_TYPE_CONFIG,
   PRIMARY_CONTRIBUTION_TYPES,
   CONTRIBUTION_TYPES,
   THREAD_VISIBILITY,
-  VISIBILITY_LABELS,
   METHOD_APPLIES_TO,
   METHOD_APPLIES_TO_CONFIG,
   ACCESS_MODES,
@@ -32,6 +31,22 @@ import {
   type CollabSeekingType,
   type ContentLicense,
 } from "@/lib/types";
+
+/**
+ * Render a translated string whose `{name}` placeholders become inline
+ * elements (<code> by default) — keeps markup out of the dictionaries while
+ * letting each language order the sentence its own way.
+ */
+function withCode(
+  text: string,
+  values: Record<string, string>,
+  Tag: "code" | "strong" = "code"
+) {
+  return text.split(/(\{\w+\})/g).map((part, i) => {
+    const m = part.match(/^\{(\w+)\}$/);
+    return m && m[1] in values ? <Tag key={i}>{values[m[1]]}</Tag> : part;
+  });
+}
 
 interface CircleMember {
   id: string;
@@ -51,6 +66,7 @@ export function ContributionForm({
   threadVisibility: VisibilityLevel;
 }) {
   const router = useRouter();
+  const { t, te } = useI18n();
   const [type, setType] = useState<ContributionType>("question");
   const [content, setContent] = useState("");
   const [visibility, setVisibility] = useState<VisibilityLevel>(threadVisibility);
@@ -107,6 +123,16 @@ export function ContributionForm({
   const deselectAllCircle = useCallback(() => {
     setSelectedCircleUserIds([]);
   }, []);
+
+  const toggleMethod = (a: MethodAppliesTo) =>
+    setMethodAppliesTo((prev) =>
+      prev.includes(a) ? prev.filter((x) => x !== a) : [...prev, a]
+    );
+
+  const chooseVisibility = (v: VisibilityLevel) => {
+    setVisibility(v);
+    if (v !== "shared") setSelectedCircleUserIds([]);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -171,41 +197,41 @@ export function ContributionForm({
   };
 
   const advancedTypes = CONTRIBUTION_TYPES.filter(
-    (t) => !PRIMARY_CONTRIBUTION_TYPES.includes(t)
+    (ct) => !PRIMARY_CONTRIBUTION_TYPES.includes(ct)
   );
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg">Add a Contribution</CardTitle>
+        <CardTitle className="text-lg">{t("form.addTitle")}</CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
-            <div className="p-3 rounded-md bg-destructive/10 text-destructive text-sm">
-              {error}
+            <div className="p-3 rounded-md bg-destructive/10 text-destructive text-sm" role="alert">
+              {te(error)}
             </div>
           )}
 
           {/* Type selection */}
           <div>
-            <label className="block text-sm font-medium mb-2">
-              What kind of contribution?
-            </label>
-            <div className="flex flex-wrap gap-2">
-              {PRIMARY_CONTRIBUTION_TYPES.map((t) => {
-                const config = CONTRIBUTION_TYPE_CONFIG[t];
+            <p id="contrib-type-label" className="block text-sm font-medium mb-2">
+              {t("form.kind")}
+            </p>
+            <div className="flex flex-wrap gap-2" role="group" aria-labelledby="contrib-type-label">
+              {PRIMARY_CONTRIBUTION_TYPES.map((ct) => {
                 return (
                   <Button
-                    key={t}
+                    key={ct}
                     type="button"
-                    variant={type === t ? "default" : "outline"}
+                    variant={type === ct ? "default" : "outline"}
                     size="sm"
                     className="gap-1.5"
-                    onClick={() => setType(t)}
+                    aria-pressed={type === ct}
+                    onClick={() => setType(ct)}
                   >
-                    <TypeIcon type={t} className="h-4 w-4" />
-                    {config.label}
+                    <TypeIcon type={ct} className="h-4 w-4" />
+                    {t(`type.${ct}`)}
                   </Button>
                 );
               })}
@@ -215,42 +241,42 @@ export function ContributionForm({
                 size="sm"
                 onClick={() => setShowAdvancedTypes(!showAdvancedTypes)}
               >
-                {showAdvancedTypes ? "Less" : "More types..."}
+                {showAdvancedTypes ? t("form.less") : t("form.moreTypes")}
               </Button>
             </div>
             {showAdvancedTypes && (
               <div className="flex flex-wrap gap-2 mt-2">
-                {advancedTypes.map((t) => {
-                  const config = CONTRIBUTION_TYPE_CONFIG[t];
+                {advancedTypes.map((ct) => {
                   return (
                     <Button
-                      key={t}
+                      key={ct}
                       type="button"
-                      variant={type === t ? "default" : "outline"}
+                      variant={type === ct ? "default" : "outline"}
                       size="sm"
-                      onClick={() => setType(t)}
+                      aria-pressed={type === ct}
+                      onClick={() => setType(ct)}
                     >
-                      {config.label}
+                      {t(`type.${ct}`)}
                     </Button>
                   );
                 })}
               </div>
             )}
             <p className="text-xs text-muted-foreground mt-1">
-              {CONTRIBUTION_TYPE_CONFIG[type].description}
+              {t(`typeDesc.${type}`)}
             </p>
           </div>
 
           {/* Method: which activities does it support? */}
           {type === "methodology" && (
             <div className="rounded-lg border p-3">
-              <p className="text-sm font-medium mb-2">
-                This method applies to…{" "}
+              <p id="method-applies-label" className="text-sm font-medium mb-2">
+                {t("form.methodApplies")}{" "}
                 <span className="text-xs font-normal text-muted-foreground">
-                  (pick all that fit)
+                  {t("form.pickAll")}
                 </span>
               </p>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2" role="group" aria-labelledby="method-applies-label">
                 {METHOD_APPLIES_TO.map((a) => {
                   const cfg = METHOD_APPLIES_TO_CONFIG[a];
                   const active = methodAppliesTo.includes(a);
@@ -259,15 +285,18 @@ export function ContributionForm({
                       key={a}
                       variant={active ? "default" : "outline"}
                       className={`cursor-pointer ${active ? "" : cfg.color}`}
-                      onClick={() =>
-                        setMethodAppliesTo((prev) =>
-                          prev.includes(a)
-                            ? prev.filter((x) => x !== a)
-                            : [...prev, a]
-                        )
-                      }
+                      role="button"
+                      tabIndex={0}
+                      aria-pressed={active}
+                      onClick={() => toggleMethod(a)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          toggleMethod(a);
+                        }
+                      }}
                     >
-                      {cfg.label}
+                      {t(`method.${a}`)}
                     </Badge>
                   );
                 })}
@@ -278,20 +307,21 @@ export function ContributionForm({
           {/* Data: link to the raw dataset (not uploaded — hosted elsewhere) */}
           {type === "data" && (
             <div className="rounded-lg border p-3">
-              <label className="block text-sm font-medium mb-1">
-                Raw data link{" "}
+              <label htmlFor="contrib-data-url" className="block text-sm font-medium mb-1">
+                {t("form.dataLink")}{" "}
                 <span className="text-xs font-normal text-muted-foreground">
-                  (optional)
+                  {t("common.optional")}
                 </span>
               </label>
               <Input
+                id="contrib-data-url"
                 type="url"
                 value={dataUrl}
                 onChange={(e) => setDataUrl(e.target.value)}
                 placeholder="https://zenodo.org/… · OSF · GitHub · a CSV URL"
               />
               <p className="text-xs text-muted-foreground mt-1">
-                Link to where the dataset lives so others (and code) can fetch it.
+                {t("form.dataLinkHint")}
               </p>
             </div>
           )}
@@ -301,31 +331,41 @@ export function ContributionForm({
             <Textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              placeholder={`Share your ${CONTRIBUTION_TYPE_CONFIG[type].label.toLowerCase()}...`}
+              placeholder={t("form.contentPlaceholder", { type: t(`type.${type}`).toLowerCase() })}
+              aria-label={t("form.contentLabel")}
               rows={5}
               required
             />
             <p className="text-xs text-muted-foreground mt-1">
-              {content.length}/10,000 &middot; Markdown supported &middot; embed an
-              image with <code>![alt](url)</code>, a chart with a{" "}
-              <code>```chart</code> block, or a video with <code>```embed</code>
+              {content.length}/10,000 &middot;{" "}
+              {withCode(t("form.contentHint"), {
+                img: "![alt](url)",
+                chart: "```chart",
+                embed: "```embed",
+              })}
             </p>
           </div>
 
           {/* Visibility */}
-          <div className="flex items-center gap-2">
-            <span className="text-sm">Visibility:</span>
+          <div className="flex items-center gap-2" role="group" aria-labelledby="contrib-visibility-label">
+            <span id="contrib-visibility-label" className="text-sm">{t("form.visibility")}</span>
             {THREAD_VISIBILITY.map((v) => (
               <Badge
                 key={v}
                 variant={visibility === v ? "default" : "outline"}
                 className="cursor-pointer"
-                onClick={() => {
-                  setVisibility(v);
-                  if (v !== "shared") setSelectedCircleUserIds([]);
+                role="button"
+                tabIndex={0}
+                aria-pressed={visibility === v}
+                onClick={() => chooseVisibility(v)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    chooseVisibility(v);
+                  }
                 }}
               >
-                {VISIBILITY_LABELS[v]}
+                {t(`vis.${v}`)}
               </Badge>
             ))}
           </div>
@@ -335,7 +375,7 @@ export function ContributionForm({
             <div className="rounded-lg border p-3 space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">
-                  Who in your circle can see this?
+                  {t("form.circleWho")}
                 </span>
                 {circleMembers.length > 0 && (
                   <div className="flex gap-2">
@@ -344,25 +384,25 @@ export function ContributionForm({
                       className="text-xs text-muted-foreground hover:text-foreground underline"
                       onClick={selectAllCircle}
                     >
-                      Select all
+                      {t("form.selectAll")}
                     </button>
                     <button
                       type="button"
                       className="text-xs text-muted-foreground hover:text-foreground underline"
                       onClick={deselectAllCircle}
                     >
-                      Deselect all
+                      {t("form.deselectAll")}
                     </button>
                   </div>
                 )}
               </div>
               {circleLoading ? (
-                <p className="text-sm text-muted-foreground">Loading circle members...</p>
+                <p className="text-sm text-muted-foreground">{t("form.loadingCircle")}</p>
               ) : circleMembers.length === 0 ? (
                 <p className="text-sm text-muted-foreground">
-                  You have no trusted circle members yet.{" "}
+                  {t("form.noCircle")}{" "}
                   <Link href="/settings" className="underline hover:text-foreground">
-                    Add people in Settings
+                    {t("form.addInSettings")}
                   </Link>
                 </p>
               ) : (
@@ -385,7 +425,7 @@ export function ContributionForm({
                   ))}
                   {selectedCircleUserIds.length === 0 && (
                     <p className="text-xs text-muted-foreground mt-1">
-                      No members selected — your full circle will have access.
+                      {t("form.noneSelected")}
                     </p>
                   )}
                 </div>
@@ -395,21 +435,22 @@ export function ContributionForm({
 
           {/* Access & Pricing — progressive disclosure */}
           <div className="rounded-lg border p-3 space-y-3">
-            <label className="block text-sm font-medium">
-              Access &amp; Pricing
-            </label>
-            <div className="flex flex-wrap gap-2">
+            <p id="contrib-access-label" className="block text-sm font-medium">
+              {t("form.accessTitle")}
+            </p>
+            <div className="flex flex-wrap gap-2" role="group" aria-labelledby="contrib-access-label">
               {(
                 [
-                  { mode: "open" as AccessMode, label: "🌐 Free & Open" },
-                  { mode: "priced" as AccessMode, label: "🔓 Priced" },
-                  { mode: "collab_open" as AccessMode, label: "🤝 Collaboration" },
-                  { mode: "priced_collab" as AccessMode, label: "🔓+🤝 Both" },
+                  { mode: "open" as AccessMode, label: `🌐 ${t("form.freeOpen")}` },
+                  { mode: "priced" as AccessMode, label: `🔓 ${t("form.priced")}` },
+                  { mode: "collab_open" as AccessMode, label: `🤝 ${t("form.collaboration")}` },
+                  { mode: "priced_collab" as AccessMode, label: `🔓+🤝 ${t("form.both")}` },
                 ] as const
               ).map(({ mode, label }) => (
                 <button
                   key={mode}
                   type="button"
+                  aria-pressed={accessMode === mode}
                   onClick={() => setAccessMode(mode)}
                   className={`px-3 py-2 min-h-[44px] rounded-md text-sm border transition-colors ${
                     accessMode === mode
@@ -426,8 +467,9 @@ export function ContributionForm({
             {(accessMode === "priced" || accessMode === "priced_collab") && (
               <div className="space-y-2 pl-1">
                 <div className="flex items-center gap-2">
-                  <label className="text-xs text-muted-foreground">Price:</label>
+                  <label htmlFor="contrib-price" className="text-xs text-muted-foreground">{t("form.price")}</label>
                   <Input
+                    id="contrib-price"
                     type="number"
                     min={1}
                     max={1000}
@@ -439,13 +481,14 @@ export function ContributionForm({
                   <span className="text-xs text-muted-foreground">DP</span>
                 </div>
                 <div>
-                  <label className="text-xs text-muted-foreground">
-                    Why gated? (helps buyers understand the value)
+                  <label htmlFor="contrib-why-gated" className="text-xs text-muted-foreground">
+                    {t("form.whyGatedLong")}
                   </label>
                   <Input
+                    id="contrib-why-gated"
                     value={whyGated}
                     onChange={(e) => setWhyGated(e.target.value)}
-                    placeholder="e.g. 3 years of field recordings + calibration pipeline"
+                    placeholder={t("form.whyGatedPlaceholder")}
                     className="h-8 text-sm mt-1"
                     maxLength={200}
                   />
@@ -458,29 +501,31 @@ export function ContributionForm({
               accessMode === "collab_gated" ||
               accessMode === "priced_collab") && (
               <div className="space-y-2 pl-1">
-                <div className="flex items-center gap-2">
-                  <label className="text-xs text-muted-foreground">Type:</label>
-                  {COLLAB_SEEKING_TYPES.map((t) => {
-                    const cfg = COLLAB_SEEKING_LABELS[t];
+                <div className="flex items-center gap-2" role="group" aria-labelledby="contrib-collab-type-label">
+                  <span id="contrib-collab-type-label" className="text-xs text-muted-foreground">{t("form.collabType")}</span>
+                  {COLLAB_SEEKING_TYPES.map((st) => {
+                    const cfg = COLLAB_SEEKING_LABELS[st];
                     return (
                       <button
-                        key={t}
+                        key={st}
                         type="button"
-                        onClick={() => setCollabSeekingType(t)}
+                        aria-pressed={collabSeekingType === st}
+                        onClick={() => setCollabSeekingType(st)}
                         className={`px-2 py-1 rounded text-xs border transition-colors ${
-                          collabSeekingType === t
+                          collabSeekingType === st
                             ? "bg-primary text-primary-foreground border-primary"
                             : "bg-background border-border hover:bg-accent"
                         }`}
                       >
-                        {cfg.icon} {cfg.label}
+                        {cfg.icon} {t(`collab.${st}`)}
                       </button>
                     );
                   })}
                 </div>
                 <div className="flex items-center gap-2">
-                  <label className="text-xs text-muted-foreground">Min level:</label>
+                  <label htmlFor="contrib-min-level" className="text-xs text-muted-foreground">{t("form.minLevel")}</label>
                   <select
+                    id="contrib-min-level"
                     value={collabMinLevel}
                     onChange={(e) => setCollabMinLevel(Number(e.target.value))}
                     className="px-2 py-1 rounded border bg-background text-xs"
@@ -493,26 +538,28 @@ export function ContributionForm({
                   </select>
                 </div>
                 <div>
-                  <label className="text-xs text-muted-foreground">
-                    What are you looking for?
+                  <label htmlFor="contrib-collab-desc" className="text-xs text-muted-foreground">
+                    {t("form.lookingFor")}
                   </label>
                   <Input
+                    id="contrib-collab-desc"
                     value={collabDescription}
                     onChange={(e) => setCollabDescription(e.target.value)}
-                    placeholder="e.g. Statistician to validate density estimation model"
+                    placeholder={t("form.lookingForPlaceholder")}
                     className="h-8 text-sm mt-1"
                     maxLength={300}
                   />
                 </div>
                 {accessMode !== "priced_collab" && !whyGated && (
                   <div>
-                    <label className="text-xs text-muted-foreground">
-                      Why gated?
+                    <label htmlFor="contrib-why-gated-collab" className="text-xs text-muted-foreground">
+                      {t("form.whyGated")}
                     </label>
                     <Input
+                      id="contrib-why-gated-collab"
                       value={whyGated}
                       onChange={(e) => setWhyGated(e.target.value)}
-                      placeholder="e.g. Unpublished methodology — seeking co-author"
+                      placeholder={t("form.whyGatedCollabPlaceholder")}
                       className="h-8 text-sm mt-1"
                       maxLength={200}
                     />
@@ -523,18 +570,18 @@ export function ContributionForm({
 
             {accessMode === "open" && (
               <p className="text-xs text-muted-foreground">
-                Everyone can read the full content. You earn DP from likes,
-                citations, and reviews.
+                {t("form.openHint")}
               </p>
             )}
           </div>
 
           {/* License selector */}
           <div className="rounded-lg border p-3 space-y-2">
-            <label className="block text-sm font-medium">
-              License (Intellectual Property)
+            <label htmlFor="contrib-license" className="block text-sm font-medium">
+              {t("form.licenseTitle")}
             </label>
             <select
+              id="contrib-license"
               value={license}
               onChange={(e) => {
                 const newLicense = e.target.value as ContentLicense;
@@ -550,7 +597,7 @@ export function ContributionForm({
                 const cfg = CONTENT_LICENSE_CONFIG[l];
                 return (
                   <option key={l} value={l}>
-                    {cfg.shortLabel}{cfg.irrevocable ? " (irrevocable)" : ""}
+                    {cfg.shortLabel}{cfg.irrevocable ? ` ${t("form.irrevocable")}` : ""}
                   </option>
                 );
               })}
@@ -565,28 +612,30 @@ export function ContributionForm({
                 rel="noopener noreferrer"
                 className="text-xs text-primary hover:underline"
               >
-                Read the full license text &rarr;
+                {t("form.readLicense")}
               </a>
             )}
             {/* Irrevocable warning + confirmation */}
             {showLicenseConfirm && CONTENT_LICENSE_CONFIG[license].irrevocable && (
               <div className="rounded-md border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950 p-3 text-sm space-y-2">
                 <p className="font-medium text-amber-800 dark:text-amber-200">
-                  &#x26A0; This license is irrevocable
+                  &#x26A0; {t("form.irrevocableTitle")}
                 </p>
                 <p className="text-xs text-amber-700 dark:text-amber-300">
-                  Once you publish under <strong>{CONTENT_LICENSE_CONFIG[license].shortLabel}</strong>,
-                  you cannot later change to a more restrictive license.
-                  Others who have accessed this content under this license
-                  retain their rights permanently. You still own the work —
-                  you just cannot revoke the permissions already granted.
+                  {withCode(
+                    t("form.irrevocableBody"),
+                    { license: CONTENT_LICENSE_CONFIG[license].shortLabel },
+                    "strong"
+                  )}
                 </p>
                 <button
                   type="button"
                   onClick={() => setShowLicenseConfirm(false)}
                   className="px-3 py-1.5 min-h-[44px] rounded-md text-sm font-medium bg-amber-600 text-white hover:bg-amber-700 transition-colors"
                 >
-                  I understand — proceed with {CONTENT_LICENSE_CONFIG[license].shortLabel}
+                  {t("form.irrevocableConfirm", {
+                    license: CONTENT_LICENSE_CONFIG[license].shortLabel,
+                  })}
                 </button>
               </div>
             )}
@@ -602,28 +651,27 @@ export function ContributionForm({
             />
             <div>
               <span className="text-sm font-medium">
-                Seal this contribution
+                {t("form.seal")}
               </span>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Others will only see the SHA-256 hash until you choose to reveal the content.
-                Proves you had the idea at this timestamp without sharing it yet.
+                {t("form.sealDesc")}
               </p>
             </div>
           </label>
 
           <div className="flex justify-between items-center">
             <p className="text-xs text-muted-foreground">
-              A SHA-256 hash will be generated automatically for priority proof.
+              {t("form.hashNote")}
             </p>
             <Button
               type="submit"
               disabled={isSubmitting || content.length < 10}
             >
               {isSubmitting
-                ? "Submitting..."
+                ? t("form.submitting")
                 : sealed
-                  ? "Seal & Submit"
-                  : "Submit Contribution"}
+                  ? t("form.sealSubmit")
+                  : t("form.submit")}
             </Button>
           </div>
         </form>

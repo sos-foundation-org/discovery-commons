@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { rewardLikeReceived } from "@/lib/points";
+import { logBackgroundError } from "@/lib/log";
 
 // POST — toggle the current user's like on a contribution. Returns { liked, count }.
 export async function POST(
@@ -31,7 +32,7 @@ export async function POST(
       .findUnique({ where: { id: contributionId }, select: { authorId: true } })
       .catch(() => null);
     if (contribution && contribution.authorId !== userId) {
-      rewardLikeReceived(prisma, contribution.authorId, contributionId, userId).catch(() => {});
+      rewardLikeReceived(prisma, contribution.authorId, contributionId, userId).catch(logBackgroundError("api/contributions/[contributionId]/like"));
     }
   }
 

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { COLLAB_SEEKING_TYPES, COLLAB_SEEKING_LABELS, type CollabSeekingType } from "@/lib/types";
+import { useI18n } from "@/components/language-provider";
 
 /**
  * Shopee-style collaboration proposal form — one-line message + type quick-select.
@@ -26,6 +27,7 @@ export function CollabRequestForm({
   const [seekingType, setSeekingType] = useState<CollabSeekingType>("either");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const { te } = useI18n();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -93,7 +95,7 @@ export function CollabRequestForm({
         Your profile (level, disciplines, contributions) is automatically attached.
       </p>
 
-      {error && <p className="text-xs text-destructive">{error}</p>}
+      {error && <p className="text-xs text-destructive">{te(error)}</p>}
 
       <div className="flex gap-2">
         <Button type="submit" size="sm" disabled={submitting}>

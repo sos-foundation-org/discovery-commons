@@ -35,7 +35,9 @@ export default async function HomePage() {
       {/* Hero — photo at /public/images/hero.png layered under a theme scrim so
           text stays readable in both light and dark. Tune the scrim opacity if
           your image is very light/dark. */}
-      <section className="py-24 px-4 relative overflow-hidden dc-hero dc-hero-image">
+      {/* Tighter vertical padding on phones — the desktop 96px + next
+          section's 64px left a ~160px empty band under the stats on mobile. */}
+      <section className="pt-16 pb-10 sm:py-24 px-4 relative overflow-hidden dc-hero dc-hero-image">
         <div
           className="absolute inset-0 bg-gradient-to-b from-background/70 via-background/55 to-background/80"
           aria-hidden

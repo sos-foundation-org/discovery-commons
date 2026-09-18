@@ -6,12 +6,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { AIReviewPanel } from "./AIReviewPanel";
 import { AIRoleBadge } from "./AIRoleBadge";
 import type { AIReviewResult } from "@/lib/ai/prompts/reviewer";
+import { useI18n } from "@/components/language-provider";
 
 // Client wrapper that runs the AI Reviewer on demand and renders the result.
 export function AIReviewSection({ threadId }: { threadId: string }) {
   const [review, setReview] = useState<AIReviewResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { te } = useI18n();
 
   async function runReview() {
     setLoading(true);
@@ -58,7 +60,7 @@ export function AIReviewSection({ threadId }: { threadId: string }) {
         <Button size="sm" onClick={runReview} disabled={loading}>
           {loading ? "Running…" : "Run AI Review"}
         </Button>
-        {error && <p className="text-sm text-red-600">{error}</p>}
+        {error && <p className="text-sm text-red-600">{te(error)}</p>}
       </CardContent>
     </Card>
   );

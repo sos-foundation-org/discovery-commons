@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { createCommentSchema } from "@/lib/validations";
 import { rewardCommentPosted, rewardReviewReceived } from "@/lib/points";
 import { checkContributionAccess } from "@/lib/access-control";
+import { logBackgroundError } from "@/lib/log";
 
 export async function GET(
   request: NextRequest,
@@ -136,14 +137,14 @@ export async function POST(
     });
 
     // Award DP to commenter + contribution author (non-blocking)
-    rewardCommentPosted(prisma, session.user.id, params.contributionId).catch(() => {});
+    rewardCommentPosted(prisma, session.user.id, params.contributionId).catch(logBackgroundError("api/contributions/[contributionId]/comments"));
     // If this is a review-type comment, also reward the contribution author
     if (["method_review", "stat_review", "critique"].includes(commentType)) {
       const contrib = await prisma.contribution
         .findUnique({ where: { id: params.contributionId }, select: { authorId: true } })
         .catch(() => null);
       if (contrib && contrib.authorId !== session.user.id) {
-        rewardReviewReceived(prisma, contrib.authorId, params.contributionId, session.user.id).catch(() => {});
+        rewardReviewReceived(prisma, contrib.authorId, params.contributionId, session.user.id).catch(logBackgroundError("api/contributions/[contributionId]/comments"));
       }
     }
 

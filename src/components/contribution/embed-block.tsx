@@ -33,6 +33,14 @@ export function EmbedBlock({ url }: { url: string }) {
   const embed = toEmbed(first);
 
   if (!embed) {
+    // Only http(s) links are clickable — never javascript:, data:, etc.
+    if (!/^https?:\/\//i.test(first)) {
+      return (
+        <span className="my-3 inline-block break-all text-sm text-muted-foreground">
+          {first}
+        </span>
+      );
+    }
     return (
       <a
         href={first}

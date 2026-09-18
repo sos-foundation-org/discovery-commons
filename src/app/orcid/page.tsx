@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { OrcidBadge } from "@/components/profile/OrcidBadge";
+import { useI18n } from "@/components/language-provider";
 
 interface OrcidStatus {
   linked: boolean;
@@ -16,6 +17,7 @@ export default function OrcidPage() {
   const [status, setStatus] = useState<OrcidStatus | null>(null);
   const [orcidInput, setOrcidInput] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const { te } = useI18n();
   const [busy, setBusy] = useState(false);
 
   async function load() {
@@ -93,7 +95,7 @@ export default function OrcidPage() {
                   Link
                 </Button>
               </div>
-              {error && <p className="text-sm text-red-600">{error}</p>}
+              {error && <p className="text-sm text-red-600">{te(error)}</p>}
               <p className="text-xs text-muted-foreground">
                 Enter your 16-digit ORCID iD. Manual links are self-asserted; the
                 ORCID sign-in flow (when configured) marks the link verified.

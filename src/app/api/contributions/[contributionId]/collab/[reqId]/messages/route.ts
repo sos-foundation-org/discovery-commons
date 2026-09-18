@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { logBackgroundError } from "@/lib/log";
 
 const messageSchema = z.object({
   text: z.string().min(1).max(2000),
@@ -159,7 +160,7 @@ export async function POST(
         linkUrl: `/threads/${params.contributionId}`,
       },
     })
-    .catch(() => {});
+    .catch(logBackgroundError("api/contributions/[contributionId]/collab/[reqId]/messages"));
 
   return NextResponse.json({ message: newMessage, status: newStatus });
 }

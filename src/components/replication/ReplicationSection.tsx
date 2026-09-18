@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { ReplicationCard } from "./ReplicationCard";
 import { REPLICATION_OUTCOMES, REPLICATION_OUTCOME_CONFIG } from "@/lib/types";
+import { useI18n } from "@/components/language-provider";
 
 interface Replication {
   id: string;
@@ -31,6 +32,7 @@ export function ReplicationSection({
   const [outcome, setOutcome] = useState<string>("replicated");
   const [notes, setNotes] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const { te } = useI18n();
   const [busy, setBusy] = useState(false);
 
   const load = useCallback(async () => {
@@ -118,7 +120,7 @@ export function ReplicationSection({
               placeholder="Notes (optional). Failed replications are equally valued — report honestly."
               rows={3}
             />
-            {error && <p className="text-sm text-red-600">{error}</p>}
+            {error && <p className="text-sm text-red-600">{te(error)}</p>}
             <Button
               size="sm"
               onClick={register}

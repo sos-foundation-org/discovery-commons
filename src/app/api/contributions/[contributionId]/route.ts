@@ -126,7 +126,7 @@ export async function PATCH(
     }
 
     const { content, editSummary } = body;
-    if (typeof content !== "string" || content.length < 10 || content.length > 10000) {
+    if (typeof content !== "string" || content.trim().length < 10 || content.length > 10000) {
       return NextResponse.json(
         { error: "Content must be 10–10,000 characters" },
         { status: 400 }

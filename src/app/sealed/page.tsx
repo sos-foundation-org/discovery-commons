@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { formatDateTime } from "@/lib/utils";
+import { useI18n } from "@/components/language-provider";
 
 export default function SealedPage() {
   const { data: session, status } = useSession();
@@ -18,6 +19,7 @@ export default function SealedPage() {
   const [title, setTitle] = useState("");
   const [isSealing, setIsSealing] = useState(false);
   const [error, setError] = useState("");
+  const { te } = useI18n();
   const [generatedHash, setGeneratedHash] = useState("");
 
   useEffect(() => {
@@ -107,7 +109,7 @@ export default function SealedPage() {
         <CardContent className="space-y-4">
           {error && (
             <div className="p-3 rounded-md bg-destructive/10 text-destructive text-sm">
-              {error}
+              {te(error)}
             </div>
           )}
 

@@ -16,6 +16,7 @@ import {
   LEVELS,
 } from "@/lib/types";
 import { CollabRequestForm } from "./collab-request-form";
+import { useI18n } from "@/components/language-provider";
 
 interface GatedContentProps {
   contributionId: string;
@@ -57,6 +58,7 @@ export function GatedContent({
   const [purchaseSuccess, setPurchaseSuccess] = useState(false);
   const [showCollabForm, setShowCollabForm] = useState(false);
   const [error, setError] = useState("");
+  const { te } = useI18n();
 
   // If open or user has access, show everything
   if (accessMode === "open" || hasAccess) {
@@ -145,7 +147,7 @@ export function GatedContent({
           )}
 
           {error && (
-            <p className="text-xs text-destructive mb-3">{error}</p>
+            <p className="text-xs text-destructive mb-3">{te(error)}</p>
           )}
 
           {/* Action buttons */}

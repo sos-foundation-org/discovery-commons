@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useI18n } from "@/components/language-provider";
 
 interface Collaborator {
   id: string;
@@ -24,6 +25,7 @@ export function CollaboratorManager({ threadId }: { threadId: string }) {
   const [role, setRole] = useState<(typeof ROLES)[number]>("contributor");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const { te } = useI18n();
 
   const load = useCallback(async () => {
     const res = await fetch(`/api/threads/${threadId}/collaborators`).catch(
@@ -97,7 +99,7 @@ export function CollaboratorManager({ threadId }: { threadId: string }) {
           {loading ? "…" : "Add"}
         </Button>
       </div>
-      {error && <p className="text-xs text-red-600 mb-2">{error}</p>}
+      {error && <p className="text-xs text-red-600 mb-2">{te(error)}</p>}
 
       {collaborators.length === 0 ? (
         <p className="text-xs text-muted-foreground">No collaborators yet.</p>

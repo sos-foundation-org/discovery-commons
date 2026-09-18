@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { checkContributionAccess } from "@/lib/access-control";
 import { ACCESS_MODES, COLLAB_SEEKING_TYPES, CONTENT_LICENSES, isLicenseChangeAllowed } from "@/lib/types";
 import type { ContributionPricingMeta, ContentLicense } from "@/lib/types";
 
@@ -28,6 +29,13 @@ export async function GET(
   _req: NextRequest,
   { params }: { params: { contributionId: string } }
 ) {
+  const session = await getSession();
+  const userId = session?.user?.id ?? null;
+  const access = await checkContributionAccess(params.contributionId, userId);
+  if (!access.canView) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+
   const contribution = await prisma.contribution.findUnique({
     where: { id: params.contributionId },
     select: { metadata: true, authorId: true },
@@ -41,7 +49,8 @@ export async function GET(
     accessMode: meta?.accessMode ?? "open",
     price: meta?.price ?? 0,
     whyGated: meta?.whyGated ?? "",
-    outlineBreak: meta?.outlineBreak ?? null,
+    // The outline break position is an author-side editing detail.
+    outlineBreak: userId === contribution.authorId ? meta?.outlineBreak ?? null : null,
     collaborationGate: meta?.collaborationGate ?? null,
   });
 }

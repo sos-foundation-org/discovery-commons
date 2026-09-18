@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { STAGE_ORDER, STAGE_LEVEL } from "@/lib/types";
+import { useI18n } from "@/components/language-provider";
 
 export function StageAdvance({
   threadId,
@@ -17,6 +18,7 @@ export function StageAdvance({
   const router = useRouter();
   const [isAdvancing, setIsAdvancing] = useState(false);
   const [error, setError] = useState("");
+  const { te } = useI18n();
 
   const currentLevel = STAGE_LEVEL[currentStage] ?? -1;
   const maxLevel = Math.max(...Object.values(STAGE_LEVEL));
@@ -71,7 +73,7 @@ export function StageAdvance({
         </Button>
       </div>
       {error && (
-        <p className="text-xs text-destructive mt-2">{error}</p>
+        <p className="text-xs text-destructive mt-2">{te(error)}</p>
       )}
     </div>
   );

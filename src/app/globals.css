@@ -104,6 +104,26 @@
     }
   }
 
+  /* Mobile menu entrance — short fade + slide down. */
+  .dc-menu-enter {
+    animation: dc-menu-enter 160ms ease-out;
+  }
+  @keyframes dc-menu-enter {
+    from {
+      opacity: 0;
+      transform: translateY(-6px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .dc-menu-enter {
+      animation: none;
+    }
+  }
+
   .dc-card-gradient {
     background-image: linear-gradient(
       135deg,

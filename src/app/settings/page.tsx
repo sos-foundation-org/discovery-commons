@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { timeAgo } from "@/lib/utils";
 import { AvatarPicker } from "@/components/profile/avatar-picker";
+import { useI18n } from "@/components/language-provider";
 
 interface CircleMember {
   id: string;
@@ -31,6 +32,7 @@ export default function SettingsPage() {
   const [note, setNote] = useState("");
   const [isAdding, setIsAdding] = useState(false);
   const [error, setError] = useState("");
+  const { te } = useI18n();
   const [success, setSuccess] = useState("");
 
   const fetchCircle = useCallback(async () => {
@@ -105,7 +107,7 @@ export default function SettingsPage() {
           <form onSubmit={handleAdd} className="space-y-3">
             {error && (
               <p className="text-sm text-destructive p-2 rounded bg-destructive/10">
-                {error}
+                {te(error)}
               </p>
             )}
             {success && (

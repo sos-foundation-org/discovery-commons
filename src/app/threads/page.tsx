@@ -119,38 +119,44 @@ export default async function ThreadsPage({
       {/* Active filter chips */}
       {hasFilters && (
         <div className="flex items-center gap-2 mb-4 flex-wrap">
-          <span className="text-xs text-muted-foreground">Filters:</span>
+          <span className="text-xs text-muted-foreground"><T k="threads.filters" />:</span>
           {searchParams.q && (
             <Badge variant="secondary" className="text-xs">
-              Search: &quot;{searchParams.q}&quot;
+              <T k="common.search" />: &quot;{searchParams.q}&quot;
             </Badge>
           )}
           {searchParams.stage && (
             <Badge variant="secondary" className="text-xs">
-              Stage: {searchParams.stage}
+              <T k="filters.stage" />: <T k={`type.${searchParams.stage}`} />
             </Badge>
           )}
           {searchParams.visibility && (
             <Badge variant="secondary" className="text-xs">
-              Visibility:{" "}
-              {VISIBILITY_LABELS[searchParams.visibility as VisibilityLevel] ||
-                searchParams.visibility}
+              <T k="filters.visibility" />:{" "}
+              {VISIBILITY_LABELS[searchParams.visibility as VisibilityLevel] ? (
+                <T k={`vis.${searchParams.visibility}`} />
+              ) : (
+                searchParams.visibility
+              )}
             </Badge>
           )}
           {searchParams.domain && (
             <Badge variant="secondary" className="text-xs">
-              Domain: {searchParams.domain}
+              <T k="filters.domain" />: {searchParams.domain}
             </Badge>
           )}
           <Link href="/threads" className="text-xs text-primary hover:underline">
-            Clear all
+            <T k="filters.clearAll" />
           </Link>
         </div>
       )}
 
       {/* Results count */}
       <p className="text-sm text-muted-foreground mb-4">
-        {threads.length} thread{threads.length !== 1 ? "s" : ""} found
+        <T
+          k={threads.length === 1 ? "threads.countOne" : "threads.countMany"}
+          vars={{ n: threads.length }}
+        />
       </p>
 
       {/* Thread list */}
@@ -169,7 +175,7 @@ export default async function ThreadsPage({
                 </Link>
               ) : (
                 <Link href="/threads/new">
-                  <Button>Start a Thread</Button>
+                  <Button><T k="home.startThread" /></Button>
                 </Link>
               )}
             </CardContent>

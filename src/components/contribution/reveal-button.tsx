@@ -3,11 +3,13 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { useI18n } from "@/components/language-provider";
 
 // Reveals a sealed contribution. The author picks the target visibility
 // (Shared or Public); the server verifies the hash before revealing.
 export function RevealButton({ contributionId }: { contributionId: string }) {
   const router = useRouter();
+  const { t, te } = useI18n();
   const [confirming, setConfirming] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -38,7 +40,7 @@ export function RevealButton({ contributionId }: { contributionId: string }) {
         onClick={() => setConfirming(true)}
         className="text-xs"
       >
-        Reveal
+        {t("reveal.button")}
       </Button>
     );
   }
@@ -47,7 +49,7 @@ export function RevealButton({ contributionId }: { contributionId: string }) {
     <div className="flex flex-col items-end gap-1">
       <div className="flex items-center gap-2">
         <span className="text-xs text-amber-700 dark:text-amber-300">
-          Reveal to:
+          {t("reveal.to")}
         </span>
         <Button
           size="sm"
@@ -56,17 +58,17 @@ export function RevealButton({ contributionId }: { contributionId: string }) {
           disabled={isLoading}
           className="text-xs"
         >
-          Collaborators
+          {t("reveal.collaborators")}
         </Button>
         <Button
           size="sm"
           variant="default"
           onClick={() => handleReveal("public")}
           disabled={isLoading}
-          title="Also records your credit timestamp"
+          title={t("reveal.publicTitle")}
           className="text-xs"
         >
-          Public
+          {t("vis.public")}
         </Button>
         <Button
           size="sm"
@@ -77,15 +79,13 @@ export function RevealButton({ contributionId }: { contributionId: string }) {
           }}
           className="text-xs"
         >
-          Cancel
+          {t("common.cancel")}
         </Button>
       </div>
-      <span className="text-[11px] text-muted-foreground">
-        {isLoading
-          ? "Verifying hash…"
-          : "Reveal is irreversible. The hash is re-checked before unlocking. Revealing to Public also records your credit timestamp."}
+      <span className="text-xs text-muted-foreground">
+        {isLoading ? t("reveal.verifying") : t("reveal.note")}
       </span>
-      {error && <span className="text-[11px] text-red-600">{error}</span>}
+      {error && <span className="text-xs text-red-600" role="alert">{te(error)}</span>}
     </div>
   );
 }

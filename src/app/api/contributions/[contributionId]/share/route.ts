@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { logBackgroundError } from "@/lib/log";
 
 const shareSchema = z.object({ email: z.string().email() });
 
@@ -82,7 +83,7 @@ export async function POST(
           linkUrl: `/threads/${c.threadId}`,
         },
       })
-      .catch(() => {});
+      .catch(logBackgroundError("api/contributions/[contributionId]/share"));
     return NextResponse.json(share, { status: 201 });
   } catch {
     return NextResponse.json({ error: "Already shared with this user" }, { status: 409 });
@@ -106,6 +107,6 @@ export async function DELETE(
 
   await prisma.contributionShare
     .delete({ where: { contributionId_userId: { contributionId: c.id, userId } } })
-    .catch(() => {});
+    .catch(logBackgroundError("api/contributions/[contributionId]/share"));
   return NextResponse.json({ success: true });
 }

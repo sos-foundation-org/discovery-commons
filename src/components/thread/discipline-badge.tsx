@@ -1,4 +1,5 @@
 import { DISCIPLINE_CONFIG, type Discipline } from "@/lib/types";
+import { T } from "@/components/t";
 
 // Colored top-level discipline badge. Server-component friendly.
 export function DisciplineBadge({
@@ -16,7 +17,7 @@ export function DisciplineBadge({
       className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium ${cfg.badge} ${className}`}
     >
       <span className={`h-2 w-2 rounded-full ${cfg.dot}`} />
-      {cfg.label}
+      <T k={`disc.${discipline}`} />
     </span>
   );
 }

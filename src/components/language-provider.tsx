@@ -14,18 +14,23 @@ import {
   LOCALE_LABELS,
   detectLocale,
   t as translate,
+  translateError,
+  type TranslateVars,
 } from "@/lib/i18n";
 
 interface I18nContextValue {
   locale: Locale;
   setLocale: (locale: Locale) => void;
-  t: (key: string) => string;
+  t: (key: string, vars?: TranslateVars) => string;
+  /** Translate an API / client error message for display. */
+  te: (message: string) => string;
 }
 
 const I18nContext = createContext<I18nContextValue>({
   locale: "en",
   setLocale: () => {},
   t: (key) => key,
+  te: (message) => message,
 });
 
 export function useI18n() {
@@ -60,21 +65,32 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const t = useCallback(
-    (key: string) => translate(key, locale),
+    (key: string, vars?: TranslateVars) => translate(key, locale, vars),
+    [locale]
+  );
+  const te = useCallback(
+    (message: string) => translateError(message, locale),
     [locale]
   );
 
   // Avoid hydration mismatch
   if (!mounted) {
     return (
-      <I18nContext.Provider value={{ locale: "en", setLocale, t: (key) => translate(key, "en") }}>
+      <I18nContext.Provider
+        value={{
+          locale: "en",
+          setLocale,
+          t: (key, vars) => translate(key, "en", vars),
+          te: (message) => message,
+        }}
+      >
         {children}
       </I18nContext.Provider>
     );
   }
 
   return (
-    <I18nContext.Provider value={{ locale, setLocale, t }}>
+    <I18nContext.Provider value={{ locale, setLocale, t, te }}>
       {children}
     </I18nContext.Provider>
   );
