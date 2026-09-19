@@ -26,6 +26,7 @@ import { VisibilityUpgrade } from "@/components/thread/visibility-upgrade";
 import { CollaboratorManager } from "@/components/thread/collaborator-manager";
 import { DisciplineBadge } from "@/components/thread/discipline-badge";
 import { AvatarBadge } from "@/components/ui/avatar-badge";
+import { ScrollFade } from "@/components/ui/scroll-fade";
 import { ContributionContent } from "@/components/contribution/contribution-content";
 import { GatedContent } from "@/components/contribution/gated-content";
 import { CollabManagePanel } from "@/components/contribution/collab-manage-panel";
@@ -285,7 +286,7 @@ export default async function ThreadDetailPage({
           <span>
             <TimeAgo date={thread.createdAt} />
           </span>
-          <div className="flex gap-1">
+          <div className="flex flex-wrap gap-1">
             {(thread.domainTags as string[]).map((tag) => (
               <Badge key={tag} variant="outline" className="text-xs">
                 <TagLabel tag={tag} />
@@ -295,7 +296,7 @@ export default async function ThreadDetailPage({
         </div>
 
         {/* Stage Progress Bar — horizontally scrollable on mobile */}
-        <div className="mt-4 flex items-center gap-1 overflow-x-auto pb-2 scrollbar-thin">
+        <ScrollFade className="mt-4 flex items-center gap-1 overflow-x-auto pb-2 scrollbar-thin">
           {STAGE_LEVELS.map((level, li) => {
             const stages = Array.isArray(level) ? level : [level];
             const isParallel = stages.length > 1;
@@ -391,7 +392,7 @@ export default async function ThreadDetailPage({
               </div>
             );
           })}
-        </div>
+        </ScrollFade>
 
         {/* Visibility upgrade for owner */}
         {isOwner && thread.visibility !== "public" && (
@@ -586,7 +587,7 @@ export default async function ThreadDetailPage({
                       <p className="text-sm text-muted-foreground mb-1">
                         <T k="thread.sealedNotice" />
                       </p>
-                      <p className="text-xs font-mono text-muted-foreground">
+                      <p className="text-xs font-mono text-muted-foreground break-all">
                         SHA-256: {contribution.contentHash}
                       </p>
                     </div>
