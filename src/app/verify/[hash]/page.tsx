@@ -69,7 +69,7 @@ export default async function VerifyHashPage({
           ) : contribution ? (
             <>
               <div className="flex flex-wrap items-center gap-2">
-                <Badge className="bg-green-600"><T k="account.verify.recordFound" /></Badge>
+                <Badge className="bg-green-700 dark:bg-green-600"><T k="account.verify.recordFound" /></Badge>
                 {integrityOk ? (
                   <Badge variant="secondary"><T k="account.verify.integrityOk" /></Badge>
                 ) : (
@@ -132,7 +132,7 @@ export default async function VerifyHashPage({
           ) : sealedReg ? (
             <>
               <div className="flex flex-wrap items-center gap-2">
-                <Badge className="bg-green-600"><T k="account.verify.sealedFound" /></Badge>
+                <Badge className="bg-green-700 dark:bg-green-600"><T k="account.verify.sealedFound" /></Badge>
                 <Badge variant="outline">
                   <IdLabel id={sealedReg.status} k={`account.sealStatus.${sealedReg.status}`} />
                 </Badge>

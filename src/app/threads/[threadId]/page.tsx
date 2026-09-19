@@ -326,7 +326,7 @@ export default async function ThreadDetailPage({
                           >
                             <StageName stage={stage} />
                             {count > 0 && (
-                              <span className="ml-1 opacity-75">({count})</span>
+                              <span className="ml-1 dark:opacity-75">({count})</span>
                             )}
                           </TitledDiv>
                         );
@@ -376,7 +376,7 @@ export default async function ThreadDetailPage({
                   >
                     <StageName stage={stages[0]} />
                     {(stageCounts[stages[0]] || 0) > 0 && (
-                      <span className="ml-1 opacity-75">
+                      <span className="ml-1 dark:opacity-75">
                         ({stageCounts[stages[0]]})
                       </span>
                     )}

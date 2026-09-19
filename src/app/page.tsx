@@ -39,7 +39,7 @@ export default async function HomePage() {
           section's 64px left a ~160px empty band under the stats on mobile. */}
       <section className="pt-16 pb-10 sm:py-24 px-4 relative overflow-hidden dc-hero dc-hero-image">
         <div
-          className="absolute inset-0 bg-gradient-to-b from-background/70 via-background/55 to-background/80"
+          className="dc-hero-scrim absolute inset-0 bg-gradient-to-b from-background/70 via-background/55 to-background/80"
           aria-hidden
         />
         <div className="container mx-auto max-w-4xl text-center relative">

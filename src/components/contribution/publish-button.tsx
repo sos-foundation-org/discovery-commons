@@ -80,7 +80,7 @@ export function PublishButton({
         onClick={() => setOpen(true)}
         // Layer-3 contextual hint (Web Prototype §3B.7): just-in-time reminder.
         title={t("publish.hint")}
-        className="gap-1 bg-green-600 text-xs hover:bg-green-700"
+        className="gap-1 bg-green-700 text-xs hover:bg-green-800 dark:bg-green-600 dark:hover:bg-green-700"
       >
         <Globe className="h-3.5 w-3.5" />
         {t("publish.button")}
@@ -153,7 +153,7 @@ export function PublishButton({
               <Button
                 onClick={handlePublish}
                 disabled={!ack || isLoading}
-                className="gap-1 bg-green-600 hover:bg-green-700"
+                className="gap-1 bg-green-700 hover:bg-green-800 dark:bg-green-600 dark:hover:bg-green-700"
               >
                 <Globe className="h-4 w-4" />
                 {isLoading ? t("publish.publishing") : t("publish.confirm")}

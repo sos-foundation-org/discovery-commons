@@ -7,6 +7,24 @@ const config: Config = {
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
+  // src/lib isn't scanned, so colour classes used only in lib config (e.g. the
+  // discipline dots in lib/types.ts) relied on the avatar palette happening to
+  // contain the same strings. Keep that exact set generated explicitly.
+  safelist: [
+    "bg-red-500",
+    "bg-orange-500",
+    "bg-amber-500",
+    "bg-green-500",
+    "bg-emerald-500",
+    "bg-teal-500",
+    "bg-cyan-500",
+    "bg-blue-500",
+    "bg-indigo-500",
+    "bg-violet-500",
+    "bg-purple-500",
+    "bg-pink-500",
+    "bg-rose-500",
+  ],
   theme: {
     extend: {
       colors: {

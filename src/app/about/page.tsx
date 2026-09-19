@@ -96,7 +96,7 @@ export default function AboutPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className={`text-sm ${item.text} opacity-80`}>
+                <p className={`text-sm ${item.text} dark:opacity-80`}>
                   <T k={`site.about.stage.${item.stage}`} />
                 </p>
               </CardContent>

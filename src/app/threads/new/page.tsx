@@ -162,7 +162,7 @@ export default function NewThreadPage() {
                       className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium transition-all ${cfg.badge} ${
                         active
                           ? "ring-2 ring-ring ring-offset-1"
-                          : "opacity-75 hover:opacity-100"
+                          : "opacity-90 hover:opacity-100 dark:opacity-75 dark:hover:opacity-100"
                       }`}
                     >
                       <span className={`h-2 w-2 rounded-full ${cfg.dot}`} />

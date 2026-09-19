@@ -237,7 +237,7 @@ export default function PointsPage() {
                   </div>
                   <Badge
                     variant={tx.amount >= 0 ? "default" : "secondary"}
-                    className={tx.amount >= 0 ? "bg-green-600" : ""}
+                    className={tx.amount >= 0 ? "bg-green-700 dark:bg-green-600" : ""}
                   >
                     {tx.amount >= 0 ? "+" : ""}
                     {tx.amount} DP
