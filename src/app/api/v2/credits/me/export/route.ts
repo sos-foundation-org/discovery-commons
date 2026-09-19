@@ -5,7 +5,7 @@ import { summarizeCredits } from "@/lib/credits";
 
 // GET /api/v2/credits/me/export?format=credit|json|csv
 // Export the nine-dimension credit portfolio. `credit` is a CRediT-compatible
-// JSON shape that maps DC dimensions to a contributor-role summary.
+// JSON shape that maps Map of the Unknown credit dimensions to a contributor-role summary.
 export async function GET(request: NextRequest) {
   const session = await getSession();
   if (!session?.user?.id) {
@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
       return new NextResponse(csv, {
         headers: {
           "Content-Type": "text/csv",
-          "Content-Disposition": "attachment; filename=dc-credits-v2.csv",
+          "Content-Disposition": "attachment; filename=map-of-the-unknown-credits-v2.csv",
         },
       });
     }

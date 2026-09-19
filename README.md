@@ -1,4 +1,4 @@
-# Discovery Commons
+# Map of the Unknown
 
 **Map of the Unknown** — an open, non-commercial research platform where a
 thoughtful *question* earns the same credit as a published result. Every

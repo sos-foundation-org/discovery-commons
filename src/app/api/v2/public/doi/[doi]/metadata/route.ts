@@ -58,6 +58,6 @@ export async function GET(
         ? { identifier: `https://orcid.org/${thread.creator.orcidId}` }
         : {}),
     },
-    publisher: { "@type": "Organization", name: "SOS Foundation — Discovery Commons" },
+    publisher: { "@type": "Organization", name: "SOS Foundation — Map of the Unknown" },
   });
 }

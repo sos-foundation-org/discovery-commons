@@ -3,7 +3,7 @@
 // Zero-dependency, server-rendered chart from a JSON spec embedded in a
 // ```chart fenced code block. The spec is plain text stored in the contribution,
 // so it is hashed, versioned, and reproduces identically — a natural fit for
-// DC's verification model. Supports bar and line; extend later with Vega-Lite.
+// Map of the Unknown's verification model. Supports bar and line; extend later with Vega-Lite.
 //
 // Spec shape:
 //   { "type": "bar" | "line", "title"?: string, "unit"?: string,

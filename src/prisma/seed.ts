@@ -52,7 +52,7 @@ async function seedContribution(opts: {
 }
 
 async function main() {
-  console.log("Seeding Discovery Commons...");
+  console.log("Seeding Map of the Unknown...");
 
   const admin = await prisma.user.upsert({
     where: { email: "admin@discoverycommons.org" },

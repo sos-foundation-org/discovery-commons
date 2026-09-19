@@ -695,7 +695,7 @@ export const CONTENT_LICENSES = [
   "cc_by_nd",      // CC BY-ND 4.0
   "cc_by_nc_nd",   // CC BY-NC-ND 4.0 — most restrictive CC
   "all_rights_reserved", // Traditional copyright — default for gated/priced content
-  "dc_collab",     // DC Collaboration License — for active collaborations
+  "dc_collab",     // Map of the Unknown Collaboration License — for active collaborations
 ] as const;
 export type ContentLicense = (typeof CONTENT_LICENSES)[number];
 
@@ -775,9 +775,9 @@ export const CONTENT_LICENSE_CONFIG: Record<
     allowDerivatives: false,
   },
   dc_collab: {
-    label: "DC Collaboration License",
-    shortLabel: "DC Collab",
-    description: "Content is shared under the DC Collaboration Covenant with accepted collaborators. Can be relicensed when collaboration completes.",
+    label: "Map of the Unknown Collaboration License",
+    shortLabel: "MU Collab",
+    description: "Content is shared under the Map of the Unknown Collaboration Covenant with accepted collaborators. Can be relicensed when collaboration completes.",
     url: null,
     irrevocable: false, // temporary — changes when collab resolves
     allowCommercial: false,
@@ -820,6 +820,6 @@ export function isLicenseChangeAllowed(
     if (oldConfig.allowDerivatives && !newConfig.allowDerivatives) return false;
     return true; // same permissiveness level
   }
-  // Non-irrevocable (All Rights Reserved, DC Collab) → anything is fine
+  // Non-irrevocable (All Rights Reserved, MU Collab) → anything is fine
   return true;
 }

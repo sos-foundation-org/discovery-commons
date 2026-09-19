@@ -26,7 +26,7 @@ const PREVIEW_CHARS = 200;
 // enhanced single-step confirmation with a content preview + an explicit
 // acknowledgement checkbox (Web Prototype §3B.7). Deliberately NOT a
 // type-to-confirm gate: publishing is an exposure, not a destructive action, and
-// DC wants to encourage — not suppress — sharing.
+// Map of the Unknown wants to encourage — not suppress — sharing.
 export function PublishButton({
   contributionId,
   content,

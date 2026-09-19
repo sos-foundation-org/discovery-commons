@@ -11,7 +11,7 @@
 export interface ContentNode {
   id: string;
   content: string; // Markdown
-  contributionIds: string[]; // which DC contributions this node maps to
+  contributionIds: string[]; // which contributions this node maps to
   updatedAt: string; // ISO timestamp
 }
 
