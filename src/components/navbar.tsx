@@ -66,18 +66,23 @@ export function Navbar() {
     setMobileOpen(false);
   }, [pathname]);
 
+  // `secondary` links don't fit the desktop bar between md and lg; there they
+  // live in the hamburger menu instead (which stays available until lg).
   const navLinks = [
-    { href: "/threads", label: t("nav.threads") },
-    { href: "/about", label: t("nav.about") },
+    { href: "/threads", label: t("nav.threads"), secondary: false },
+    { href: "/about", label: t("nav.about"), secondary: false },
     ...(session
       ? [
-          { href: "/sealed", label: t("nav.sealed") },
-          { href: "/points", label: t("nav.points") },
-          { href: "/credits", label: t("nav.credits") },
-          { href: "/settings", label: t("nav.settings") },
+          { href: "/sealed", label: t("nav.sealed"), secondary: false },
+          { href: "/points", label: t("nav.points"), secondary: true },
+          { href: "/credits", label: t("nav.credits"), secondary: true },
+          { href: "/settings", label: t("nav.settings"), secondary: true },
         ]
       : []),
   ];
+  const hasSecondary = navLinks.some((link) => link.secondary);
+  // Hamburger + menu: mobile only, or until lg when there are secondary links.
+  const menuHidden = hasSecondary ? "lg:hidden" : "md:hidden";
 
   return (
     <header ref={headerRef} className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -87,7 +92,12 @@ export function Navbar() {
           <div className="w-7 h-7 rounded bg-primary flex items-center justify-center text-primary-foreground text-xs font-bold">
             DC
           </div>
-          <span className="text-lg font-bold hidden sm:inline">
+          {/* Signed in, hidden md–xl so the nav links fit on one line. */}
+          <span
+            className={`text-lg font-bold hidden sm:inline ${
+              hasSecondary ? "md:hidden xl:inline" : ""
+            }`}
+          >
             Discovery Commons
           </span>
         </Link>
@@ -98,7 +108,9 @@ export function Navbar() {
             <Link
               key={link.href}
               href={link.href}
-              className={`px-3 py-1.5 rounded-md transition-colors ${
+              className={`whitespace-nowrap px-2 xl:px-2.5 py-1.5 rounded-md transition-colors ${
+                link.secondary ? "hidden lg:block" : ""
+              } ${
                 pathname === link.href
                   ? "bg-accent text-foreground"
                   : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
@@ -111,7 +123,7 @@ export function Navbar() {
 
         {/* Mobile hamburger */}
         <button
-          className="md:hidden ml-auto mr-2 p-2"
+          className={`${menuHidden} ml-auto mr-2 p-2`}
           onClick={() => setMobileOpen(!mobileOpen)}
           aria-label={t("site.nav.toggleMenu")}
           aria-expanded={mobileOpen}
@@ -221,14 +233,18 @@ export function Navbar() {
       {mobileOpen && (
         <div
           id="mobile-menu"
-          className="dc-menu-enter md:hidden border-t px-4 py-3 space-y-2 bg-background"
+          className={`dc-menu-enter ${menuHidden} border-t px-4 py-3 space-y-2 bg-background`}
         >
+          {/* md–lg: the desktop bar already shows the primary links and the
+              account controls, so only the secondary links appear here. */}
           {navLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
               onClick={() => setMobileOpen(false)}
               className={`block px-3 py-2 rounded-md text-sm ${
+                link.secondary ? "" : "md:hidden"
+              } ${
                 pathname === link.href
                   ? "bg-accent text-foreground"
                   : "text-muted-foreground"
@@ -238,7 +254,7 @@ export function Navbar() {
             </Link>
           ))}
           {session && dpBalance !== null && (
-            <div className="px-3 py-2 text-sm font-medium text-muted-foreground">
+            <div className="md:hidden px-3 py-2 text-sm font-medium text-muted-foreground">
               {dpBalance.toLocaleString()} DP
             </div>
           )}
@@ -246,7 +262,7 @@ export function Navbar() {
             <Link
               href="/notifications"
               onClick={() => setMobileOpen(false)}
-              className="block px-3 py-2 rounded-md text-sm text-muted-foreground"
+              className="block md:hidden px-3 py-2 rounded-md text-sm text-muted-foreground"
             >
               {t("nav.notifications")}
               {unreadCount > 0 && (
@@ -256,7 +272,7 @@ export function Navbar() {
               )}
             </Link>
           )}
-          <div className="pt-2 border-t">
+          <div className="md:hidden pt-2 border-t">
             <div className="flex items-center gap-3 px-3 py-2">
               <LanguageSelector />
               <ThemeToggle />
