@@ -52,6 +52,9 @@ export default async function HomePage() {
           <p className="text-xl text-muted-foreground mb-2 max-w-2xl mx-auto">
             <T k="home.subtitle" />
           </p>
+          <p className="text-sm font-medium text-foreground/80 mb-4 max-w-2xl mx-auto">
+            <T k="home.tagline" />
+          </p>
           <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
             <T k="home.description" />
           </p>
@@ -99,7 +102,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Anti-Library Concept */}
+      {/* Map of the Unknown — concept */}
       <section className="py-16 px-4 border-t">
         <div className="container mx-auto max-w-4xl">
           <div className="grid md:grid-cols-2 gap-8 items-center">
@@ -114,14 +117,29 @@ export default async function HomePage() {
                 <T k="anti.p2" />
               </p>
             </div>
+            {/* Concept flow: Map the Unknown → … → Enable New Discoveries */}
             <div className="rounded-xl bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-orange-500/10 p-8 border flex items-center justify-center min-h-[240px]">
-              <div className="text-center">
-                <div className="text-5xl mb-3">?</div>
-                <p className="text-sm text-muted-foreground">
-                  <T k="site.home.illus1" />
-                  <br />
-                  <T k="site.home.illus2" />
+              <div className="w-full max-w-xs">
+                <p className="mb-4 text-center text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  <T k="map.flowLabel" />
                 </p>
+                <ol className="flex flex-col items-center">
+                  {[1, 2, 3, 4].map((step) => (
+                    <li key={step} className="flex w-full flex-col items-center">
+                      <div className="flex w-full items-center gap-3 rounded-lg border bg-background/80 px-4 py-2.5 text-sm font-medium">
+                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
+                          {step}
+                        </span>
+                        <T k={`map.flow.${step}`} />
+                      </div>
+                      {step < 4 && (
+                        <span aria-hidden className="py-1 text-muted-foreground">
+                          &darr;
+                        </span>
+                      )}
+                    </li>
+                  ))}
+                </ol>
               </div>
             </div>
           </div>

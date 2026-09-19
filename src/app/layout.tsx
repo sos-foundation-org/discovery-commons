@@ -9,9 +9,9 @@ import { Toaster } from "@/components/ui/toaster";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Discovery Commons — The Antilibrary of Science",
+  title: "Discovery Commons — Map of the Unknown",
   description:
-    "Where great questions are as valuable as great answers. A collaborative platform for transparent scientific discovery with built-in priority protection.",
+    "Mapping the unknown. Expanding the frontier of discovery. A collaborative platform for transparent scientific discovery with built-in priority protection.",
 };
 
 export default function RootLayout({

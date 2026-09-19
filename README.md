@@ -1,6 +1,6 @@
 # Discovery Commons
 
-**The Antilibrary of Science** — an open, non-commercial research platform where a
+**Map of the Unknown** — an open, non-commercial research platform where a
 thoughtful *question* earns the same credit as a published result. Every
 contribution is SHA-256 hashed and timestamped for priority protection, and
 authors control visibility per-contribution (private / shared / public / sealed).
