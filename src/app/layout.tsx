@@ -8,10 +8,25 @@ import { Toaster } from "@/components/ui/toaster";
 
 const inter = Inter({ subsets: ["latin"] });
 
+const SITE_NAME = "Map of the Unknown";
+const SITE_DESCRIPTION =
+  "Mapping the unknown. Expanding the frontier of discovery. A collaborative platform for transparent scientific discovery with built-in priority protection.";
+
 export const metadata: Metadata = {
-  title: "Discovery Commons — Map of the Unknown",
-  description:
-    "Mapping the unknown. Expanding the frontier of discovery. A collaborative platform for transparent scientific discovery with built-in priority protection.",
+  title: SITE_NAME,
+  description: SITE_DESCRIPTION,
+  applicationName: SITE_NAME,
+  openGraph: {
+    siteName: SITE_NAME,
+    title: SITE_NAME,
+    description: SITE_DESCRIPTION,
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: SITE_NAME,
+    description: SITE_DESCRIPTION,
+  },
 };
 
 export default function RootLayout({

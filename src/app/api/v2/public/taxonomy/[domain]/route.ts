@@ -36,7 +36,7 @@ export async function GET(
     "@context": "https://schema.org",
     "@type": "DefinedTerm",
     name: domain,
-    inDefinedTermSet: "Discovery Commons domain taxonomy",
+    inDefinedTermSet: "Map of the Unknown domain taxonomy",
     numberOfItems: matches.length,
     itemListElement: matches.map((t) => ({
       "@type": "CreativeWork",

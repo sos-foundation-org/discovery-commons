@@ -6,7 +6,7 @@ import { T } from "@/components/t";
 import { RichT } from "./rich-t";
 
 export const metadata = {
-  title: "About — Discovery Commons",
+  title: "About — Map of the Unknown",
 };
 
 export default function AboutPage() {

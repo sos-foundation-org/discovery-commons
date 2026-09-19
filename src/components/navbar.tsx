@@ -88,17 +88,24 @@ export function Navbar() {
     <header ref={headerRef} className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-14 items-center px-4 mx-auto max-w-6xl">
         {/* Logo */}
-        <Link href="/" className="flex items-center space-x-2 mr-6">
-          <div className="w-7 h-7 rounded bg-primary flex items-center justify-center text-primary-foreground text-xs font-bold">
-            DC
+        <Link
+          href="/"
+          className="flex items-center space-x-2 mr-6"
+          aria-label={t("site.name")}
+        >
+          <div
+            aria-hidden
+            className="w-7 h-7 rounded bg-primary flex items-center justify-center text-primary-foreground text-xs font-bold"
+          >
+            MU
           </div>
           {/* Signed in, hidden md–xl so the nav links fit on one line. */}
           <span
-            className={`text-lg font-bold hidden sm:inline ${
+            className={`text-lg font-bold hidden sm:inline whitespace-nowrap ${
               hasSecondary ? "md:hidden xl:inline" : ""
             }`}
           >
-            Discovery Commons
+            {t("site.name")}
           </span>
         </Link>
 

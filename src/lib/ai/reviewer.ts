@@ -30,7 +30,7 @@ export async function runReview(threadContent: string): Promise<RunReviewOutput>
     messages: [
       {
         role: "user",
-        content: `Review the following Discovery Commons thread content and return your JSON assessment.\n\n---\n${threadContent}\n---`,
+        content: `Review the following Map of the Unknown thread content and return your JSON assessment.\n\n---\n${threadContent}\n---`,
       },
     ],
   });

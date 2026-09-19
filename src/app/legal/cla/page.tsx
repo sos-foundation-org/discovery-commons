@@ -1,7 +1,7 @@
 import { ClaBody } from "./cla-body";
 
 export const metadata = {
-  title: "Contributor License — Discovery Commons",
+  title: "Contributor License — Map of the Unknown",
 };
 
 export default function ContributorLicensePage() {

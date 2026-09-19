@@ -16,7 +16,7 @@ export function Footer() {
       <div className="container mx-auto max-w-6xl px-4 py-8">
         <div className="grid sm:grid-cols-3 gap-8">
           <div>
-            <h3 className="font-semibold mb-3">Discovery Commons</h3>
+            <h3 className="font-semibold mb-3"><T k="site.name" /></h3>
             <p className="text-sm text-muted-foreground">
               <T k="footer.desc" />
             </p>

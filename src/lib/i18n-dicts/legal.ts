@@ -17,7 +17,7 @@ export const legal: DictSet = {
     // ── Terms of Service ──
     "legal.terms.title": "Terms of Service",
     "legal.terms.intro":
-      "Discovery Commons is a non-commercial research prototype operated by the Sustainability of Sustainability Foundation, a 501(c)(3) public charity. By using it you agree to these terms.",
+      "Map of the Unknown, a Discovery Commons project, is a non-commercial research prototype operated by the Sustainability of Sustainability Foundation, a 501(c)(3) public charity. By using it you agree to these terms.",
     "legal.terms.alpha.h": "Alpha status",
     "legal.terms.alpha.p":
       "This is an early prototype provided {asIs}, without warranties of any kind. Features may change or break, and data may be reset during the alpha period. Do not rely on it as your only record of important work.",
@@ -44,7 +44,7 @@ export const legal: DictSet = {
     // ── Privacy Policy ──
     "legal.privacy.title": "Privacy Policy",
     "legal.privacy.intro":
-      "Discovery Commons is a non-commercial research prototype operated by the Sustainability of Sustainability Foundation, a 501(c)(3) public charity. This policy describes what we collect and why. It will be reviewed before any general-availability launch.",
+      "Map of the Unknown, a Discovery Commons project, is a non-commercial research prototype operated by the Sustainability of Sustainability Foundation, a 501(c)(3) public charity. This policy describes what we collect and why. It will be reviewed before any general-availability launch.",
     "legal.privacy.collect.h": "What we collect",
     "legal.privacy.collect.account.label": "Account data",
     "legal.privacy.collect.account":
@@ -79,17 +79,17 @@ export const legal: DictSet = {
     // ── Contributor License ──
     "legal.cla.title": "Contributor License",
     "legal.cla.intro":
-      "Discovery Commons is an open research commons. This page explains the licensing of both the research contributions posted on the platform and the platform’s source code.",
+      "Map of the Unknown, a Discovery Commons project, is an open research commons. This page explains the licensing of both the research contributions posted on the platform and the platform’s source code.",
     "legal.cla.not": "not",
     "legal.cla.arr": "All Rights Reserved",
     "legal.cla.dcLicense": "DC Collaboration License",
     "legal.cla.ip.h": "Your intellectual property",
     "legal.cla.ownership.h": "Ownership",
     "legal.cla.ownership.p":
-      "Discovery Commons and the Sustainability of Sustainability Foundation do {not} claim ownership of your contributions. Your work remains yours.",
+      "Map of the Unknown and the Sustainability of Sustainability Foundation do {not} claim ownership of your contributions. Your work remains yours.",
     "legal.cla.does.h": "What the platform does with your content",
     "legal.cla.does.p":
-      "By posting on Discovery Commons, you grant the Foundation a limited, non-exclusive right to:",
+      "By posting on Map of the Unknown, you grant the Foundation a limited, non-exclusive right to:",
     "legal.cla.does.store.label": "Store, display, and index",
     "legal.cla.does.store":
       "{label} your content according to the visibility and license settings you choose — this is necessary for the platform to function (search, feeds, thread pages).",
@@ -159,7 +159,7 @@ export const legal: DictSet = {
     // ── Terms of Service ──
     "legal.terms.title": "服務條款",
     "legal.terms.intro":
-      "Discovery Commons 是由 Sustainability of Sustainability Foundation（一家 501(c)(3) 公共慈善機構，以下稱「本基金會」）營運的非商業性研究原型。您使用本服務，即表示您同意本條款。",
+      "「未知地圖」（Discovery Commons 計畫的一部分）是由 Sustainability of Sustainability Foundation（一家 501(c)(3) 公共慈善機構，以下稱「本基金會」）營運的非商業性研究原型。您使用本服務，即表示您同意本條款。",
     "legal.terms.alpha.h": "Alpha 測試階段",
     "legal.terms.alpha.p":
       "本服務為早期原型，係按{asIs}提供，不附帶任何形式之保證。功能可能變更或失效，且資料可能於 Alpha 測試期間遭重設。請勿將本服務作為重要工作的唯一紀錄。",
@@ -186,7 +186,7 @@ export const legal: DictSet = {
     // ── Privacy Policy ──
     "legal.privacy.title": "隱私政策",
     "legal.privacy.intro":
-      "Discovery Commons 是由 Sustainability of Sustainability Foundation（一家 501(c)(3) 公共慈善機構）營運的非商業性研究原型。本政策說明我們蒐集哪些資料及其原因。本政策將於任何正式上線（general availability）之前重新審閱。",
+      "「未知地圖」（Discovery Commons 計畫的一部分）是由 Sustainability of Sustainability Foundation（一家 501(c)(3) 公共慈善機構）營運的非商業性研究原型。本政策說明我們蒐集哪些資料及其原因。本政策將於任何正式上線（general availability）之前重新審閱。",
     "legal.privacy.collect.h": "我們蒐集的資料",
     "legal.privacy.collect.account.label": "帳號資料",
     "legal.privacy.collect.account":
@@ -221,16 +221,16 @@ export const legal: DictSet = {
     // ── Contributor License ──
     "legal.cla.title": "貢獻者授權",
     "legal.cla.intro":
-      "Discovery Commons 是一個開放的研究共享空間（research commons）。本頁說明平台上所發布之研究貢獻，以及平台原始碼兩者的授權方式。",
+      "「未知地圖」（Discovery Commons 計畫的一部分）是一個開放的研究共享空間（research commons）。本頁說明平台上所發布之研究貢獻，以及平台原始碼兩者的授權方式。",
     "legal.cla.not": "並不",
     "legal.cla.arr": "保留所有權利",
     "legal.cla.dcLicense": "DC 合作授權",
     "legal.cla.ip.h": "您的智慧財產權",
     "legal.cla.ownership.h": "所有權",
     "legal.cla.ownership.p":
-      "Discovery Commons 及 Sustainability of Sustainability Foundation（以下稱「本基金會」）{not}主張您貢獻內容的所有權。您的作品仍歸您所有。",
+      "「未知地圖」及 Sustainability of Sustainability Foundation（以下稱「本基金會」）{not}主張您貢獻內容的所有權。您的作品仍歸您所有。",
     "legal.cla.does.h": "平台如何處理您的內容",
-    "legal.cla.does.p": "您於 Discovery Commons 發布內容，即授予本基金會有限且非專屬的權利，得：",
+    "legal.cla.does.p": "您於「未知地圖」發布內容，即授予本基金會有限且非專屬的權利，得：",
     "legal.cla.does.store.label": "儲存、展示及索引",
     "legal.cla.does.store":
       "依您所選擇的可見度及授權設定，{label}您的內容 — 此為平台運作（搜尋、動態、討論串頁面）所必需。",
@@ -298,7 +298,7 @@ export const legal: DictSet = {
     // ── Terms of Service ──
     "legal.terms.title": "服务条款",
     "legal.terms.intro":
-      "Discovery Commons 是由 Sustainability of Sustainability Foundation（一家 501(c)(3) 公共慈善机构，以下简称“本基金会”）运营的非商业性研究原型。您使用本服务，即表示您同意本条款。",
+      "「未知地图」（Discovery Commons 项目的一部分）是由 Sustainability of Sustainability Foundation（一家 501(c)(3) 公共慈善机构，以下简称“本基金会”）运营的非商业性研究原型。您使用本服务，即表示您同意本条款。",
     "legal.terms.alpha.h": "Alpha 测试阶段",
     "legal.terms.alpha.p":
       "本服务为早期原型，按{asIs}提供，不附带任何形式的保证。功能可能变更或失效，且数据可能在 Alpha 测试期间被重置。请勿将本服务作为重要工作的唯一记录。",
@@ -325,7 +325,7 @@ export const legal: DictSet = {
     // ── Privacy Policy ──
     "legal.privacy.title": "隐私政策",
     "legal.privacy.intro":
-      "Discovery Commons 是由 Sustainability of Sustainability Foundation（一家 501(c)(3) 公共慈善机构）运营的非商业性研究原型。本政策说明我们收集哪些数据及其原因。本政策将在任何正式上线（general availability）之前重新审阅。",
+      "「未知地图」（Discovery Commons 项目的一部分）是由 Sustainability of Sustainability Foundation（一家 501(c)(3) 公共慈善机构）运营的非商业性研究原型。本政策说明我们收集哪些数据及其原因。本政策将在任何正式上线（general availability）之前重新审阅。",
     "legal.privacy.collect.h": "我们收集的数据",
     "legal.privacy.collect.account.label": "账号数据",
     "legal.privacy.collect.account":
@@ -360,16 +360,16 @@ export const legal: DictSet = {
     // ── Contributor License ──
     "legal.cla.title": "贡献者授权",
     "legal.cla.intro":
-      "Discovery Commons 是一个开放的研究共享空间（research commons）。本页说明平台上所发布的研究贡献，以及平台源代码两者的授权方式。",
+      "「未知地图」（Discovery Commons 项目的一部分）是一个开放的研究共享空间（research commons）。本页说明平台上所发布的研究贡献，以及平台源代码两者的授权方式。",
     "legal.cla.not": "并不",
     "legal.cla.arr": "保留所有权利",
     "legal.cla.dcLicense": "DC 合作授权",
     "legal.cla.ip.h": "您的知识产权",
     "legal.cla.ownership.h": "所有权",
     "legal.cla.ownership.p":
-      "Discovery Commons 及 Sustainability of Sustainability Foundation（以下简称“本基金会”）{not}主张您贡献内容的所有权。您的作品仍归您所有。",
+      "「未知地图」及 Sustainability of Sustainability Foundation（以下简称“本基金会”）{not}主张您贡献内容的所有权。您的作品仍归您所有。",
     "legal.cla.does.h": "平台如何处理您的内容",
-    "legal.cla.does.p": "您在 Discovery Commons 上发布内容，即授予本基金会有限且非独占的权利，以：",
+    "legal.cla.does.p": "您在「未知地图」上发布内容，即授予本基金会有限且非独占的权利，以：",
     "legal.cla.does.store.label": "存储、展示及索引",
     "legal.cla.does.store":
       "依据您所选择的可见度及授权设置，{label}您的内容 — 这是平台运作（搜索、信息流、讨论串页面）所必需的。",

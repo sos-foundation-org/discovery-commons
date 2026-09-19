@@ -10,7 +10,7 @@ import { OrcidBadge } from "@/components/profile/OrcidBadge";
 import { T } from "@/components/t";
 
 export const metadata = {
-  title: "Credit Portfolio — Discovery Commons",
+  title: "Credit Portfolio — Map of the Unknown",
 };
 
 export default async function CreditsPage() {

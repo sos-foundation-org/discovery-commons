@@ -1,7 +1,7 @@
 import { PrivacyBody } from "./privacy-body";
 
 export const metadata = {
-  title: "Privacy Policy — Discovery Commons",
+  title: "Privacy Policy — Map of the Unknown",
 };
 
 export default function PrivacyPage() {

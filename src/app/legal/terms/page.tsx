@@ -1,7 +1,7 @@
 import { TermsBody } from "./terms-body";
 
 export const metadata = {
-  title: "Terms of Service — Discovery Commons",
+  title: "Terms of Service — Map of the Unknown",
 };
 
 export default function TermsPage() {

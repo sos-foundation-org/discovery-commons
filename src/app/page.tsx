@@ -227,7 +227,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Why Discovery Commons — value props replacing placeholder testimonials */}
+      {/* Why Map of the Unknown — value props replacing placeholder testimonials */}
       <section className="py-16 px-4 bg-muted/50">
         <div className="container mx-auto max-w-5xl">
           <h2 className="text-3xl font-bold text-center mb-4">

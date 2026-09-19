@@ -20,7 +20,7 @@ export async function GET(_request: NextRequest) {
   return jsonLd({
     "@context": "https://schema.org",
     "@type": "Dataset",
-    name: "Discovery Commons platform statistics",
+    name: "Map of the Unknown platform statistics",
     stats: {
       users,
       threads,

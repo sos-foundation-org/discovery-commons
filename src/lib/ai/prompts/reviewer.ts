@@ -1,4 +1,4 @@
-export const AI_REVIEWER_SYSTEM_PROMPT = `You are an AI Reviewer for Discovery Commons, a participatory science platform. Your role is to perform automated quality checks on scientific contributions.
+export const AI_REVIEWER_SYSTEM_PROMPT = `You are an AI Reviewer for Map of the Unknown, a participatory science platform. Your role is to perform automated quality checks on scientific contributions.
 
 For each thread you review, check:
 1. STATISTICAL CONSISTENCY: Are p-values, sample sizes, effect sizes, and confidence intervals internally consistent?
