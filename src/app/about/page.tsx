@@ -1,10 +1,35 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Fragment } from "react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { Disclosure } from "@/components/ui/disclosure";
 import { T } from "@/components/t";
 import { RichT } from "./rich-t";
 import { AboutImage } from "./about-image";
+import {
+  BadgeCheck,
+  BarChart3,
+  Bot,
+  BookOpen,
+  ChevronRight,
+  Clock,
+  Cpu,
+  Database,
+  Eye,
+  Flag,
+  Globe,
+  Hash,
+  HelpCircle,
+  Lightbulb,
+  Lock,
+  MessageSquare,
+  RefreshCw,
+  Scale,
+  ShieldAlert,
+  Sparkles,
+  type LucideIcon,
+} from "lucide-react";
 import growingNetwork from "../../../public/images/growing-network.png";
 import stageDiagram from "../../../public/images/question-hypothesis-data.png";
 import shaExample from "../../../public/images/sha256-example.png";
@@ -17,339 +42,420 @@ export const metadata = {
   title: "About — Map of the Unknown",
 };
 
+/** Shared surface for the page's figures: one radius, one hairline border. */
+const FIGURE = "overflow-hidden rounded-xl border border-border/60";
+/** Body copy stays inside a comfortable measure. */
+const MEASURE = "max-w-[65ch] text-base leading-relaxed text-muted-foreground";
+const H2 = "text-2xl font-bold tracking-tight sm:text-3xl";
+const SECTION = "mb-16 sm:mb-24";
+
+/**
+ * The seven contribution stages. The colour coding survives as a 2px left
+ * border in each stage's hue; the surface itself stays neutral, and `more`
+ * marks the stages whose detail is folded into a disclosure.
+ */
+const STAGES: {
+  stage: string;
+  icon: LucideIcon;
+  accent: string;
+  more?: "eg" | "pair";
+}[] = [
+  {
+    stage: "question",
+    icon: HelpCircle,
+    accent: "border-l-blue-500",
+    more: "eg",
+  },
+  {
+    stage: "hypothesis",
+    icon: Lightbulb,
+    accent: "border-l-yellow-500",
+    more: "eg",
+  },
+  {
+    stage: "data",
+    icon: Database,
+    accent: "border-l-green-600",
+    more: "pair",
+  },
+  {
+    stage: "simulation",
+    icon: Cpu,
+    accent: "border-l-cyan-600",
+    more: "pair",
+  },
+  { stage: "statistics", icon: BarChart3, accent: "border-l-purple-500" },
+  { stage: "interpretation", icon: BookOpen, accent: "border-l-amber-500" },
+  { stage: "insight", icon: Sparkles, accent: "border-l-orange-500" },
+];
+
+const VISIBILITY: { level: string; image: typeof privateIcon }[] = [
+  { level: "private", image: privateIcon },
+  { level: "shared", image: sharedIcon },
+  { level: "public", image: publicIcon },
+];
+
+/** Covenant items 1–9, in dictionary order. */
+const COVENANT: LucideIcon[] = [
+  BadgeCheck,
+  Hash,
+  MessageSquare,
+  Eye,
+  ShieldAlert,
+  Flag,
+  Scale,
+  RefreshCw,
+  Bot,
+];
+
 export default function AboutPage() {
   return (
-    <div className="container mx-auto max-w-4xl px-4 py-12">
-      {/* Hero */}
-      <div className="text-center mb-12">
-        <h1 className="text-4xl font-bold tracking-tight mb-4">
+    <div className="container mx-auto max-w-4xl px-4 py-12 sm:py-16">
+      {/* 1. Intro — the long "who can contribute" paragraph folds away. */}
+      <header className={SECTION}>
+        <h1 className="text-4xl font-bold tracking-tight">
           <T k="home.title" />
         </h1>
-        <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+        <p className="mt-6 max-w-[65ch] text-lg leading-relaxed text-muted-foreground">
           <T k="site.about.intro1" />
         </p>
-        <p className="text-lg text-muted-foreground max-w-2xl mx-auto mt-4">
-          <T k="site.about.intro2" />
-        </p>
-      </div>
+        <div className="mt-6 max-w-[65ch]">
+          <Disclosure summary={<T k="site.about.intro2Disc" />}>
+            <p className="leading-relaxed">
+              <T k="site.about.intro2" />
+            </p>
+          </Disclosure>
+        </div>
+        <figure className={`mt-10 ${FIGURE}`}>
+          <AboutImage src={growingNetwork} altKey="site.about.illus" priority />
+        </figure>
+      </header>
 
-      <div className="mb-12 overflow-hidden rounded-lg border">
-        <AboutImage src={growingNetwork} altKey="site.about.illus" priority />
-      </div>
-
-      {/* Seven-stage contribution model */}
-      <section className="mb-12">
-        <h2 className="text-2xl font-bold mb-6">
+      {/* 2. How a contribution grows */}
+      <section className={SECTION}>
+        <h2 className={H2}>
           <T k="site.about.stagesTitle" />
         </h2>
-        <p className="text-muted-foreground mb-6">
+        <p className={`mt-4 ${MEASURE}`}>
           <T k="site.about.stagesIntro" />
         </p>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[
-            {
-              stage: "question",
-              color: "bg-blue-100 dark:bg-blue-950",
-              border: "border-blue-300 dark:border-blue-800",
-              text: "text-blue-800 dark:text-blue-200",
-            },
-            {
-              stage: "hypothesis",
-              color: "bg-yellow-100 dark:bg-yellow-950",
-              border: "border-yellow-300 dark:border-yellow-800",
-              text: "text-yellow-800 dark:text-yellow-200",
-            },
-            {
-              stage: "data",
-              color: "bg-green-100 dark:bg-green-950",
-              border: "border-green-300 dark:border-green-800",
-              text: "text-green-800 dark:text-green-200",
-            },
-            {
-              stage: "simulation",
-              color: "bg-cyan-100 dark:bg-cyan-950",
-              border: "border-cyan-300 dark:border-cyan-800",
-              text: "text-cyan-800 dark:text-cyan-200",
-            },
-            {
-              stage: "statistics",
-              color: "bg-purple-100 dark:bg-purple-950",
-              border: "border-purple-300 dark:border-purple-800",
-              text: "text-purple-800 dark:text-purple-200",
-            },
-            {
-              stage: "interpretation",
-              color: "bg-amber-100 dark:bg-amber-950",
-              border: "border-amber-300 dark:border-amber-800",
-              text: "text-amber-800 dark:text-amber-200",
-            },
-            {
-              stage: "insight",
-              color: "bg-orange-100 dark:bg-orange-950",
-              border: "border-orange-300 dark:border-orange-800",
-              text: "text-orange-800 dark:text-orange-200",
-            },
-          ].map((item) => (
+        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {STAGES.map(({ stage, icon: Icon, accent, more }) => (
             <Card
-              key={item.stage}
-              className={`${item.color} ${item.border} border`}
+              key={stage}
+              className={`rounded-xl border-l-2 ${accent} transition-colors duration-200 hover:bg-muted/40 motion-reduce:transition-none`}
             >
-              <CardHeader className="pb-2">
-                <CardTitle className={`text-lg ${item.text}`}>
-                  <T k={`type.${item.stage}`} />
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className={`text-sm ${item.text} dark:opacity-80`}>
-                  <T k={`site.about.stage.${item.stage}`} />
+              <CardContent className="p-6">
+                <div className="flex items-center gap-2">
+                  <Icon
+                    aria-hidden
+                    strokeWidth={1.5}
+                    className="h-5 w-5 shrink-0 text-muted-foreground"
+                  />
+                  <h3 className="text-base font-semibold tracking-tight">
+                    <T k={`type.${stage}`} />
+                  </h3>
+                </div>
+                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                  <T k={`site.about.stage.${stage}`} />
                 </p>
+                {more && (
+                  <div className="mt-3">
+                    <Disclosure
+                      summary={
+                        <T
+                          k={
+                            more === "eg"
+                              ? "site.about.stageEg"
+                              : "site.about.stagePair"
+                          }
+                        />
+                      }
+                    >
+                      <p className="leading-relaxed">
+                        <T k={`site.about.stageMore.${stage}`} />
+                      </p>
+                    </Disclosure>
+                  </div>
+                )}
               </CardContent>
             </Card>
           ))}
         </div>
+
+        <figure className={`mt-8 ${FIGURE}`}>
+          <AboutImage src={stageDiagram} altKey="site.about.diagram" />
+        </figure>
       </section>
 
-      <div className="mb-12 overflow-hidden rounded-lg border">
-        <AboutImage src={stageDiagram} altKey="site.about.diagram" />
-      </div>
-
-      {/* Anti-scooping */}
-      <section className="mb-12">
-        <h2 className="text-2xl font-bold mb-6">
+      {/* 3. Priority, sealing and credit — the former "Anti-scooping" and
+          "Credit timestamps" sections merged; the id keeps /about#credit-timestamps
+          deep links (used by the contribution UI) working. */}
+      <section id="credit-timestamps" className={`${SECTION} scroll-mt-24`}>
+        <h2 className={H2}>
           <T k="site.about.priorityTitle" />
         </h2>
-        <div className="grid sm:grid-cols-2 gap-6">
-          <div>
-            <p className="text-muted-foreground mb-4">
-              <T k="site.about.priorityP1" />
-            </p>
-            <p className="text-muted-foreground mb-4">
+        <p className={`mt-4 ${MEASURE}`}>
+          <T k="site.about.priorityLead" />
+        </p>
+
+        <div className="mt-6 flex flex-wrap gap-2">
+          <Badge className="gap-1.5">
+            <Hash aria-hidden strokeWidth={1.5} className="h-3.5 w-3.5" />
+            <T k="site.about.badgeAuto" />
+          </Badge>
+          <Badge variant="secondary" className="gap-1.5">
+            <Lock aria-hidden strokeWidth={1.5} className="h-3.5 w-3.5" />
+            <T k="site.about.sealReveal" />
+          </Badge>
+          <Badge variant="outline" className="gap-1.5">
+            <Clock aria-hidden strokeWidth={1.5} className="h-3.5 w-3.5" />
+            <T k="site.about.badgeTimestamped" />
+          </Badge>
+        </div>
+
+        <figure className="mt-8 rounded-xl border border-border/60 bg-muted/40 p-4">
+          <AboutImage
+            src={shaExample}
+            altKey="site.about.shaExample"
+            sizes="(max-width: 640px) 88vw, 640px"
+            className="mx-auto h-auto w-full max-w-xl rounded-lg"
+          />
+        </figure>
+
+        <div className="mt-8 divide-y divide-border/60 rounded-xl border border-border/60">
+          <div className="p-5">
+            <Disclosure summary={<T k="site.about.hashDisc" />}>
+              <p className="leading-relaxed">
+                <T k="site.about.priorityP1" />
+              </p>
+            </Disclosure>
+          </div>
+          <div className="p-5">
+            <Disclosure summary={<T k="site.about.sealDisc" />}>
+              <p className="leading-relaxed">
+                <RichT
+                  k="site.about.priorityP2"
+                  parts={{
+                    sealReveal: (
+                      <strong className="text-foreground">
+                        <T k="site.about.sealReveal" />
+                      </strong>
+                    ),
+                  }}
+                />
+              </p>
+            </Disclosure>
+          </div>
+          <div className="p-5">
+            {/* Open by default: /about#credit-timestamps is deep-linked from
+                the contribution cards, so arrivals should land on the text. */}
+            <Disclosure summary={<T k="site.about.creditTitle" />} defaultOpen>
+              <p className="leading-relaxed">
+                <RichT
+                  k="site.about.creditIntro"
+                  parts={{
+                    public: (
+                      <strong className="text-foreground">
+                        <T k="site.about.publicWord" />
+                      </strong>
+                    ),
+                  }}
+                />
+              </p>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="rounded-lg border border-border/60 bg-muted/40 p-4">
+                  <div className="flex items-center gap-2">
+                    <Lock
+                      aria-hidden
+                      strokeWidth={1.5}
+                      className="h-4 w-4 shrink-0 text-muted-foreground"
+                    />
+                    <h3 className="text-sm font-semibold tracking-tight text-foreground">
+                      <T k="site.about.sealCardTitle" />
+                    </h3>
+                  </div>
+                  <p className="mt-2 leading-relaxed">
+                    <RichT
+                      k="site.about.sealCardBody"
+                      parts={{
+                        quote: (
+                          <em>
+                            <T k="site.about.sealQuote" />
+                          </em>
+                        ),
+                        not: (
+                          <strong className="text-foreground">
+                            <T k="site.about.not" />
+                          </strong>
+                        ),
+                      }}
+                    />
+                  </p>
+                </div>
+                <div className="rounded-lg border border-border/60 bg-muted/40 p-4">
+                  <div className="flex items-center gap-2">
+                    <Globe
+                      aria-hidden
+                      strokeWidth={1.5}
+                      className="h-4 w-4 shrink-0 text-muted-foreground"
+                    />
+                    <h3 className="text-sm font-semibold tracking-tight text-foreground">
+                      <T k="site.about.publishCardTitle" />
+                    </h3>
+                  </div>
+                  <p className="mt-2 leading-relaxed">
+                    <RichT
+                      k="site.about.publishCardBody"
+                      parts={{
+                        ts: (
+                          <strong className="text-foreground">
+                            <T k="publish.point2b" />
+                          </strong>
+                        ),
+                      }}
+                    />
+                  </p>
+                </div>
+              </div>
+            </Disclosure>
+          </div>
+          <div className="p-5">
+            <Disclosure summary={<T k="site.about.pathDisc" />}>
+              <p className="leading-relaxed">
+                <RichT
+                  k="site.about.path"
+                  parts={{
+                    seal: (
+                      <strong className="text-foreground">
+                        <T k="site.about.sealWord" />
+                      </strong>
+                    ),
+                    publish: (
+                      <strong className="text-foreground">
+                        <T k="site.about.publishWord" />
+                      </strong>
+                    ),
+                  }}
+                />
+              </p>
+            </Disclosure>
+          </div>
+        </div>
+      </section>
+
+      {/* 4. Graduated visibility */}
+      <section className={SECTION}>
+        <h2 className={H2}>
+          <T k="feat.visibility.title" />
+        </h2>
+        <p className={`mt-4 ${MEASURE}`}>
+          <T k="site.about.visIntro" />
+        </p>
+
+        <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-stretch">
+          {VISIBILITY.map((v, i) => (
+            <Fragment key={v.level}>
+              <div className="flex-1 rounded-xl border border-border/60 bg-card p-6 text-center transition-colors duration-200 hover:bg-muted/40 motion-reduce:transition-none">
+                {/* Decorative: the label right below names the level. */}
+                <div className="mx-auto mb-4 h-20 w-20 overflow-hidden rounded-lg border border-border/60 bg-muted">
+                  <AboutImage
+                    src={v.image}
+                    altKey=""
+                    sizes="96px"
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+                <p className="text-base font-semibold tracking-tight">
+                  <T k={`vis.${v.level}`} />
+                </p>
+                <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                  <T k={`site.about.visDesc.${v.level}`} />
+                </p>
+              </div>
+              {i < VISIBILITY.length - 1 && (
+                <div className="hidden items-center sm:flex">
+                  <ChevronRight
+                    aria-hidden
+                    strokeWidth={1.5}
+                    className="h-5 w-5 text-muted-foreground"
+                  />
+                </div>
+              )}
+            </Fragment>
+          ))}
+        </div>
+
+        <div className="mt-6 rounded-xl border border-border/60 p-5">
+          <Disclosure summary={<T k="site.about.sealedDisc" />}>
+            <p className="leading-relaxed">
               <RichT
-                k="site.about.priorityP2"
+                k="site.about.visSealed"
                 parts={{
-                  sealReveal: (
-                    <strong>
-                      <T k="site.about.sealReveal" />
-                    </strong>
+                  sealed: (
+                    <span className="font-medium text-foreground">
+                      <T k="vis.sealed" />
+                    </span>
                   ),
                 }}
               />
             </p>
-            <div className="flex gap-2">
-              <Badge>
-                <T k="site.about.badgeAuto" />
-              </Badge>
-              <Badge variant="secondary">
-                <T k="site.about.sealReveal" />
-              </Badge>
-              <Badge variant="outline">
-                <T k="site.about.badgeTimestamped" />
-              </Badge>
-            </div>
-          </div>
-          <div className="flex flex-col items-center justify-center gap-3 rounded-lg border bg-gradient-to-br from-amber-500/20 to-orange-500/20 p-6">
-            <div className="overflow-hidden rounded-md">
-              <AboutImage
-                src={shaExample}
-                altKey="site.about.shaExample"
-                sizes="(max-width: 640px) 90vw, 400px"
-              />
-            </div>
-            <p className="text-center text-xs text-muted-foreground">
-              <T k="site.about.shaProven" />
-            </p>
-          </div>
+          </Disclosure>
         </div>
       </section>
 
-      {/* Graduated visibility */}
-      <section className="mb-12">
-        <h2 className="text-2xl font-bold mb-6">
-          <T k="feat.visibility.title" />
-        </h2>
-        <p className="text-muted-foreground mb-6">
-          <T k="site.about.visIntro" />
-        </p>
-        <div className="flex flex-col sm:flex-row gap-3">
-          {[
-            {
-              level: "private",
-              color: "bg-gray-100 dark:bg-gray-900",
-              image: privateIcon,
-            },
-            {
-              level: "shared",
-              color: "bg-blue-50 dark:bg-blue-950",
-              image: sharedIcon,
-            },
-            {
-              level: "public",
-              color: "bg-orange-50 dark:bg-orange-950",
-              image: publicIcon,
-            },
-          ].map((v, i, arr) => (
-            <div
-              key={v.level}
-              className={`flex-1 rounded-lg p-4 ${v.color} border text-center`}
-            >
-              {/* Decorative: the label right below names the level. */}
-              <AboutImage
-                src={v.image}
-                altKey=""
-                sizes="96px"
-                className="mx-auto mb-3 h-20 w-20 rounded-lg object-cover"
-              />
-              <p className="font-semibold text-base">
-                <T k={`vis.${v.level}`} />
-              </p>
-              <p className="text-sm text-muted-foreground">
-                <T k={`site.about.visDesc.${v.level}`} />
-              </p>
-              {i < arr.length - 1 && (
-                <p className="text-muted-foreground mt-2 hidden sm:block">
-                  &rarr;
-                </p>
-              )}
-            </div>
-          ))}
-        </div>
-        <p className="text-sm text-muted-foreground mt-4">
-          <RichT
-            k="site.about.visSealed"
-            parts={{
-              sealed: (
-                <span className="font-medium text-foreground">
-                  <T k="vis.sealed" />
-                </span>
-              ),
-            }}
-          />
-        </p>
-      </section>
-
-      {/* Credit timestamps: publishing establishes priority */}
-      <section id="credit-timestamps" className="mb-12 scroll-mt-24">
-        <h2 className="text-2xl font-bold mb-6">
-          <T k="site.about.creditTitle" />
-        </h2>
-        <p className="text-muted-foreground mb-6">
-          <RichT
-            k="site.about.creditIntro"
-            parts={{
-              public: (
-                <strong>
-                  <T k="site.about.publicWord" />
-                </strong>
-              ),
-            }}
-          />
-        </p>
-        <div className="grid sm:grid-cols-2 gap-6">
-          <Card className="border-amber-300 dark:border-amber-800">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg">
-                <T k="site.about.sealCardTitle" />
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                <RichT
-                  k="site.about.sealCardBody"
-                  parts={{
-                    quote: (
-                      <em>
-                        <T k="site.about.sealQuote" />
-                      </em>
-                    ),
-                    not: (
-                      <strong className="text-foreground">
-                        <T k="site.about.not" />
-                      </strong>
-                    ),
-                  }}
-                />
-              </p>
-            </CardContent>
-          </Card>
-          <Card className="border-green-300 dark:border-green-800">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg">
-                <T k="site.about.publishCardTitle" />
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                <RichT
-                  k="site.about.publishCardBody"
-                  parts={{
-                    ts: (
-                      <strong className="text-foreground">
-                        <T k="publish.point2b" />
-                      </strong>
-                    ),
-                  }}
-                />
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-        <p className="text-sm text-muted-foreground mt-4">
-          <RichT
-            k="site.about.path"
-            parts={{
-              seal: (
-                <strong>
-                  <T k="site.about.sealWord" />
-                </strong>
-              ),
-              publish: (
-                <strong>
-                  <T k="site.about.publishWord" />
-                </strong>
-              ),
-            }}
-          />
-        </p>
-      </section>
-
-      {/* Community Covenant */}
-      <section className="mb-12">
-        <h2 className="text-2xl font-bold mb-6">
+      {/* 5. Community Covenant — nine titles stay visible, each description
+          folds into its own disclosure. */}
+      <section className={SECTION}>
+        <h2 className={H2}>
           <T k="covenant.title" />
         </h2>
-        <p className="text-muted-foreground mb-6">
+        <p className={`mt-4 ${MEASURE}`}>
           <T k="site.about.covenantIntro" />
         </p>
-        <div className="grid sm:grid-cols-2 gap-4">
-          {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => (
-            <Card key={n}>
-              <CardContent className="pt-4">
-                <h3 className="font-semibold text-sm mb-1">
-                  <T k={`site.about.cov.${n}.title`} />
-                </h3>
-                <p className="text-xs text-muted-foreground">
-                  <T k={`site.about.cov.${n}.desc`} />
-                </p>
+        <div className="mt-8 grid gap-3 sm:grid-cols-2">
+          {COVENANT.map((Icon, idx) => (
+            <Card
+              key={idx}
+              className="rounded-xl transition-colors duration-200 hover:bg-muted/40 motion-reduce:transition-none"
+            >
+              <CardContent className="p-5">
+                <Disclosure
+                  summary={
+                    <span className="flex items-center gap-2">
+                      <Icon
+                        aria-hidden
+                        strokeWidth={1.5}
+                        className="h-4 w-4 shrink-0 text-muted-foreground"
+                      />
+                      <T k={`site.about.cov.${idx + 1}.title`} />
+                    </span>
+                  }
+                >
+                  <p className="leading-relaxed">
+                    <T k={`site.about.cov.${idx + 1}.desc`} />
+                  </p>
+                </Disclosure>
               </CardContent>
             </Card>
           ))}
         </div>
       </section>
 
-      <div className="mb-12 overflow-hidden rounded-lg border">
+      <figure className={`${SECTION} ${FIGURE}`}>
         <AboutImage src={buildingTogether} altKey="site.about.photo" />
-      </div>
+      </figure>
 
-      {/* CTA */}
-      <section className="text-center py-8">
-        <h2 className="text-2xl font-bold mb-4">
+      {/* 6. CTA */}
+      <section className="pb-8 text-center">
+        <h2 className={H2}>
           <T k="site.about.ctaTitle" />
         </h2>
-        <p className="text-muted-foreground mb-6">
+        <p className="mx-auto mt-4 max-w-[55ch] text-base leading-relaxed text-muted-foreground">
           <T k="site.about.ctaDesc" />
         </p>
-        <div className="flex gap-4 justify-center">
+        <div className="mt-8 flex flex-wrap justify-center gap-4">
           <Link href="/threads">
             <Button size="lg">
               <T k="home.browseThreads" />
