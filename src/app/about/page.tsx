@@ -4,6 +4,10 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { T } from "@/components/t";
 import { RichT } from "./rich-t";
+import { AboutImage } from "./about-image";
+import growingNetwork from "../../../public/images/growing-network.png";
+import stageDiagram from "../../../public/images/question-hypothesis-data.png";
+import shaExample from "../../../public/images/sha256-example.png";
 
 export const metadata = {
   title: "About — Map of the Unknown",
@@ -25,11 +29,8 @@ export default function AboutPage() {
         </p>
       </div>
 
-      {/* Placeholder image */}
-      <div className="w-full h-48 rounded-lg bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-orange-500/20 flex items-center justify-center mb-12 border">
-        <p className="text-sm text-muted-foreground">
-          <T k="site.about.illus" />
-        </p>
+      <div className="mb-12 overflow-hidden rounded-lg border">
+        <AboutImage src={growingNetwork} altKey="site.about.illus" priority />
       </div>
 
       {/* Seven-stage contribution model */}
@@ -105,11 +106,8 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Placeholder image */}
-      <div className="w-full h-36 rounded-lg bg-gradient-to-r from-green-500/20 to-teal-500/20 flex items-center justify-center mb-12 border">
-        <p className="text-sm text-muted-foreground">
-          <T k="site.about.diagram" />
-        </p>
+      <div className="mb-12 overflow-hidden rounded-lg border">
+        <AboutImage src={stageDiagram} altKey="site.about.diagram" />
       </div>
 
       {/* Anti-scooping */}
@@ -146,18 +144,17 @@ export default function AboutPage() {
               </Badge>
             </div>
           </div>
-          <div className="rounded-lg bg-gradient-to-br from-amber-500/20 to-orange-500/20 flex items-center justify-center p-6 border">
-            <div className="text-center">
-              <p className="font-mono text-xs text-muted-foreground mb-2">
-                <T k="site.about.shaExample" />
-              </p>
-              <p className="font-mono text-xs break-all">
-                a7ffc6f8bf1ed766...
-              </p>
-              <p className="text-xs text-muted-foreground mt-2">
-                <T k="site.about.shaProven" />
-              </p>
+          <div className="flex flex-col items-center justify-center gap-3 rounded-lg border bg-gradient-to-br from-amber-500/20 to-orange-500/20 p-6">
+            <div className="overflow-hidden rounded-md">
+              <AboutImage
+                src={shaExample}
+                altKey="site.about.shaExample"
+                sizes="(max-width: 640px) 90vw, 400px"
+              />
             </div>
+            <p className="text-center text-xs text-muted-foreground">
+              <T k="site.about.shaProven" />
+            </p>
           </div>
         </div>
       </section>
