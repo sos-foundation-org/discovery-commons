@@ -8,6 +8,10 @@ import { AboutImage } from "./about-image";
 import growingNetwork from "../../../public/images/growing-network.png";
 import stageDiagram from "../../../public/images/question-hypothesis-data.png";
 import shaExample from "../../../public/images/sha256-example.png";
+import buildingTogether from "../../../public/images/building-an-idea-together.png";
+import privateIcon from "../../../public/images/private.png";
+import sharedIcon from "../../../public/images/shared.png";
+import publicIcon from "../../../public/images/public.png";
 
 export const metadata = {
   title: "About — Map of the Unknown",
@@ -172,24 +176,34 @@ export default function AboutPage() {
             {
               level: "private",
               color: "bg-gray-100 dark:bg-gray-900",
+              image: privateIcon,
             },
             {
               level: "shared",
               color: "bg-blue-50 dark:bg-blue-950",
+              image: sharedIcon,
             },
             {
               level: "public",
               color: "bg-orange-50 dark:bg-orange-950",
+              image: publicIcon,
             },
           ].map((v, i, arr) => (
             <div
               key={v.level}
               className={`flex-1 rounded-lg p-4 ${v.color} border text-center`}
             >
-              <p className="font-medium text-sm">
+              {/* Decorative: the label right below names the level. */}
+              <AboutImage
+                src={v.image}
+                altKey=""
+                sizes="96px"
+                className="mx-auto mb-3 h-20 w-20 rounded-lg object-cover"
+              />
+              <p className="font-semibold text-base">
                 <T k={`vis.${v.level}`} />
               </p>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-sm text-muted-foreground">
                 <T k={`site.about.visDesc.${v.level}`} />
               </p>
               {i < arr.length - 1 && (
@@ -323,11 +337,8 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Placeholder image */}
-      <div className="w-full h-36 rounded-lg bg-gradient-to-r from-indigo-500/20 to-pink-500/20 flex items-center justify-center mb-12 border">
-        <p className="text-sm text-muted-foreground">
-          <T k="site.about.photo" />
-        </p>
+      <div className="mb-12 overflow-hidden rounded-lg border">
+        <AboutImage src={buildingTogether} altKey="site.about.photo" />
       </div>
 
       {/* CTA */}

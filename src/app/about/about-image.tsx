@@ -11,11 +11,12 @@ import { useT } from "@/components/language-provider";
 export function AboutImage({
   src,
   altKey,
-  className = "",
+  className = "h-auto w-full",
   priority = false,
   sizes = "(max-width: 896px) 100vw, 896px",
 }: {
   src: StaticImageData;
+  /** Dictionary key for the alt text; "" marks the image as decorative. */
   altKey: string;
   className?: string;
   priority?: boolean;
@@ -26,11 +27,11 @@ export function AboutImage({
   return (
     <Image
       src={src}
-      alt={t(altKey)}
+      alt={altKey ? t(altKey) : ""}
       sizes={sizes}
       placeholder="blur"
       priority={priority}
-      className={`h-auto w-full ${className}`}
+      className={className}
     />
   );
 }
