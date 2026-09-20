@@ -49,7 +49,31 @@
       "mcp__claude-in-chrome__tabs_context_mcp",
       "Bash(git check-ignore *)",
       "Bash(grep -iA2 \"execute\\\\|--file\\\\|--url\")",
-      "PowerShell(Get-Content \"C:/Users/milkb/AppData/Local/Temp/claude/E--Github-wpc-work-discovery-commons/7e7f92f7-3c08-4461-ac87-6d7638664a5b/scratchpad/prod_migration.sql\" -Raw | Set-Clipboard; \"clipboard length: \" + \\(Get-Clipboard -Raw\\).Length)"
+      "PowerShell(Get-Content \"C:/Users/milkb/AppData/Local/Temp/claude/E--Github-wpc-work-discovery-commons/7e7f92f7-3c08-4461-ac87-6d7638664a5b/scratchpad/prod_migration.sql\" -Raw | Set-Clipboard; \"clipboard length: \" + \\(Get-Clipboard -Raw\\).Length)",
+      "PowerShell(npm install rehype-sanitize@^6.0.0 2>&1)",
+      "PowerShell($f='src/app/api/contributions/[contributionId]/like/route.ts'; \\(Get-Content -LiteralPath $f\\)[18..35] -join \"`n\"; \"-----\"; \\(Get-Content -LiteralPath 'src/app/api/contributions/[contributionId]/pricing/route.ts'\\)[138..150] -join \"`n\"; \"-----\"; \\(Get-Content src/lib/auth.ts\\)[140..152] -join \"`n\")",
+      "PowerShell(node \"C:\\\\Users\\\\milkb\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\E--Github-wpc-work-discovery-commons\\\\9db8dc8c-3498-40d2-840b-4dcd72dfa102\\\\scratchpad\\\\fix-catches.mjs\" .)",
+      "PowerShell(npx tsc --noEmit 2>&1)",
+      "PowerShell(npx tsc --noEmit)",
+      "PowerShell(npx next lint 2>&1)",
+      "PowerShell($tok = \\(npx tsx mint-session.tmp.ts 2>&1 | Select-Object -Last 1\\); Remove-Item mint-session.tmp.ts; $tok)",
+      "PowerShell(npm run build 2>&1)",
+      "PowerShell(git stash push -q -- .claude/settings.local.json)",
+      "PowerShell(git rebase origin/main 2>&1)",
+      "PowerShell(git stash pop -q)",
+      "PowerShell(git push origin main 2>&1)",
+      "PowerShell(node \"C:\\\\Users\\\\milkb\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\E--Github-wpc-work-discovery-commons\\\\9db8dc8c-3498-40d2-840b-4dcd72dfa102\\\\scratchpad\\\\map-copy.mjs\"; Select-String -Path src/lib/i18n.ts -Pattern '\"\\(home\\\\.title|home\\\\.subtitle|home\\\\.tagline|footer\\\\.desc|map\\\\.flow\\\\.1|map\\\\.flowLabel\\)\"' | ForEach-Object { \"$\\($_.LineNumber\\): $\\($_.Line.Trim\\(\\)\\)\" })",
+      "PowerShell(git checkout -- .claude/launch.json)",
+      "PowerShell(git fetch origin 2>&1)",
+      "PowerShell(node \"C:\\\\Users\\\\milkb\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\E--Github-wpc-work-discovery-commons\\\\9db8dc8c-3498-40d2-840b-4dcd72dfa102\\\\scratchpad\\\\comments.mjs\")",
+      "PowerShell($tok = \\(npx tsx mint-session.tmp.ts 2>&1 | Select-Object -Last 1\\); Remove-Item -LiteralPath \\(Join-Path \\(Get-Location\\) 'mint-session.tmp.ts'\\); $tok)",
+      "PowerShell(Get-ChildItem \"public\\\\images\" -File | ForEach-Object { \"{0,-32} {1,10:N0} bytes\" -f $_.Name, $_.Length })",
+      "PowerShell(Test-Path node_modules\\\\sharp; \\(Get-Content package.json | Select-String '\"\\(sharp|next\\)\"'\\); Add-Type -AssemblyName System.Drawing; foreach \\($n in 'growing network.png','Question_Hypothesis_Data.png','SHA256.png'\\) { $p = Join-Path \\(Get-Location\\) \"public\\\\images\\\\$n\"; $img = [System.Drawing.Image]::FromFile\\($p\\); \"{0}: {1}x{2}\" -f $n, $img.Width, $img.Height; $img.Dispose\\(\\) })",
+      "PowerShell(node \"C:\\\\Users\\\\milkb\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\E--Github-wpc-work-discovery-commons\\\\9db8dc8c-3498-40d2-840b-4dcd72dfa102\\\\scratchpad\\\\alt-text.mjs\")",
+      "PowerShell(node \"C:\\\\Users\\\\milkb\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\E--Github-wpc-work-discovery-commons\\\\9db8dc8c-3498-40d2-840b-4dcd72dfa102\\\\scratchpad\\\\content-audit.mjs\")",
+      "Bash(node -e \"const l=require\\('lucide-react'\\); ['ShieldCheck','Scale','Eye','Workflow','HelpCircle','Users','Lock','Handshake','MessagesSquare','Compass','FileCheck2','Globe','ArrowRight','Sparkles','CircleHelp','EyeOff','Fingerprint','Layers'].forEach\\(n=>console.log\\(n, !!l[n]\\)\\)\")",
+      "Bash(node -e ' *)",
+      "PowerShell(foreach \\($pair in @\\(@\\('src/app/page.tsx',240\\),@\\('src/app/page.tsx',378\\),@\\('src/app/about/page.tsx',270\\),@\\('src/app/about/page.tsx',299\\),@\\('src/app/about/page.tsx',379\\)\\)\\) { $lines = Get-Content -LiteralPath $pair[0]; \"--- $\\($pair[0]\\):$\\($pair[1]\\)\"; $lines[\\($pair[1]-1\\)..\\([Math]::Min\\($lines.Count-1,$pair[1]+3\\)\\)] | ForEach-Object { \"    $\\($_.Trim\\(\\)\\)\" } })"
     ]
   }
 }
