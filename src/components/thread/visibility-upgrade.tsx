@@ -16,6 +16,7 @@ export function VisibilityUpgrade({
   const router = useRouter();
   const { t } = useI18n();
   const [isUpgrading, setIsUpgrading] = useState(false);
+  const [error, setError] = useState("");
   const currentIndex = VISIBILITY_LEVELS.indexOf(currentLevel);
   const nextLevel = VISIBILITY_LEVELS[currentIndex + 1];
 
@@ -30,13 +31,21 @@ export function VisibilityUpgrade({
       return;
 
     setIsUpgrading(true);
+    setError("");
     try {
       const res = await fetch(`/api/threads/${threadId}/visibility`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ visibility: nextLevel }),
       });
-      if (res.ok) router.refresh();
+      if (res.ok) {
+        router.refresh();
+      } else {
+        const data = await res.json().catch(() => null);
+        setError(data?.error || t("common.error"));
+      }
+    } catch {
+      setError(t("common.error"));
     } finally {
       setIsUpgrading(false);
     }
@@ -57,6 +66,7 @@ export function VisibilityUpgrade({
       <span className="text-xs text-muted-foreground">
         {t("thread.cannotReverse")}
       </span>
+      {error && <span className="text-xs text-red-600">{error}</span>}
     </div>
   );
 }

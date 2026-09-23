@@ -17,6 +17,7 @@ export function ShareLinkButton({
   const [path, setPath] = useState<string | null>(initialPath);
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [error, setError] = useState("");
   const { t } = useI18n();
 
   const fullUrl =
@@ -24,6 +25,7 @@ export function ShareLinkButton({
 
   const create = async () => {
     setBusy(true);
+    setError("");
     const res = await fetch(
       `/api/contributions/${contributionId}/share-link`,
       { method: "POST" }
@@ -32,6 +34,8 @@ export function ShareLinkButton({
       const d = await res.json();
       setPath(d.path);
       if (d.path) copy(window.location.origin + d.path);
+    } else {
+      setError(t("contribution.createLinkFailed") ?? "Failed to create link");
     }
     setBusy(false);
   };
@@ -48,25 +52,33 @@ export function ShareLinkButton({
 
   const revoke = async () => {
     setBusy(true);
-    await fetch(`/api/contributions/${contributionId}/share-link`, {
+    setError("");
+    const res = await fetch(`/api/contributions/${contributionId}/share-link`, {
       method: "DELETE",
     }).catch(() => null);
-    setPath(null);
+    if (res?.ok) {
+      setPath(null);
+    } else {
+      setError(t("contribution.revokeFailed") ?? "Failed to revoke link");
+    }
     setBusy(false);
   };
 
   if (!path) {
     return (
-      <Button
-        size="sm"
-        variant="outline"
-        className="gap-1.5 text-xs"
-        onClick={create}
-        disabled={busy}
-      >
-        <Link2 className="h-3.5 w-3.5" />
-        {busy ? "…" : t("contribution.createPrivateLink")}
-      </Button>
+      <div className="flex flex-col items-start gap-1">
+        <Button
+          size="sm"
+          variant="outline"
+          className="gap-1.5 text-xs"
+          onClick={create}
+          disabled={busy}
+        >
+          <Link2 className="h-3.5 w-3.5" />
+          {busy ? "…" : t("contribution.createPrivateLink")}
+        </Button>
+        {error && <p className="text-xs text-red-600 mt-1">{error}</p>}
+      </div>
     );
   }
 
@@ -91,6 +103,7 @@ export function ShareLinkButton({
       >
         {t("contribution.revoke")}
       </button>
+      {error && <p className="text-xs text-red-600 mt-1">{error}</p>}
     </div>
   );
 }

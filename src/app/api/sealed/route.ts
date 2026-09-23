@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { sealRegistrationSchema } from "@/lib/validations";
+import { generateContentHash } from "@/lib/hash";
 
 export async function GET(request: NextRequest) {
   const session = await getSession();
@@ -52,14 +53,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { contentHash, title } = parsed.data;
+    const { contentHash, title, content: sealContent } = parsed.data;
 
+    // If content is provided, verify hash matches
+    if (sealContent) {
+      const computedHash = generateContentHash(sealContent);
+      if (computedHash !== contentHash) {
+        return NextResponse.json(
+          { error: "Content does not match the provided hash" },
+          { status: 400 }
+        );
+      }
+    }
+
+    // sealedContent is a new schema field — remove `as any` after `prisma generate`.
     const seal = await prisma.sealedRegistration.create({
       data: {
         userId: session.user.id,
         contentHash,
         title,
-      },
+        sealedContent: sealContent ?? null,
+      } as any,
     });
 
     return NextResponse.json(seal, { status: 201 });

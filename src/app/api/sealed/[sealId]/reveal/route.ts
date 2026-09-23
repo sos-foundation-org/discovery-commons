@@ -3,7 +3,8 @@ import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { generateContentHash, generatePriorityHash } from "@/lib/hash";
 import { revealSealSchema } from "@/lib/validations";
-import { STAGE_ORDER } from "@/lib/types";
+import { STAGE_LEVEL } from "@/lib/types";
+import { generateCredits } from "@/lib/credits";
 
 export async function POST(
   request: NextRequest,
@@ -94,7 +95,7 @@ export async function POST(
         },
       });
 
-      // Create credit with original seal time
+      // Create credit (legacy v1 — preserved for backwards compatibility)
       await tx.credit.create({
         data: {
           userId: session.user.id,
@@ -106,6 +107,12 @@ export async function POST(
         },
       });
 
+      // Create CreditV2 records (9-dimension system)
+      await generateCredits(
+        { id: contribution.id, authorId: session.user.id, threadId, type },
+        tx
+      );
+
       // Update seal
       const updatedSeal = await tx.sealedRegistration.update({
         where: { id: seal.id },
@@ -116,9 +123,9 @@ export async function POST(
         },
       });
 
-      // Update thread stage
-      const stageIndex = STAGE_ORDER.indexOf(type as any);
-      const currentIndex = STAGE_ORDER.indexOf(thread.currentStage as any);
+      // Update thread stage (level-based, same as contributions/route.ts)
+      const stageIndex = STAGE_LEVEL[type] ?? -1;
+      const currentIndex = STAGE_LEVEL[thread.currentStage as string] ?? -1;
       if (stageIndex > currentIndex) {
         await tx.thread.update({
           where: { id: threadId },

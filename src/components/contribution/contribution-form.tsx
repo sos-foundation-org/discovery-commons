@@ -74,6 +74,7 @@ export function ContributionForm({
   const [methodAppliesTo, setMethodAppliesTo] = useState<MethodAppliesTo[]>([]);
   const [dataUrl, setDataUrl] = useState("");
   const [showAdvancedTypes, setShowAdvancedTypes] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   // Pricing & collaboration (Phase 2)
@@ -433,6 +434,27 @@ export function ContributionForm({
             </div>
           )}
 
+          {/* Advanced options toggle */}
+          <button
+            type="button"
+            onClick={() => setShowAdvanced(!showAdvanced)}
+            className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <svg
+              className={`h-4 w-4 transition-transform ${showAdvanced ? "rotate-90" : ""}`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+            {t("form.advancedOptions") ?? "Advanced options"}
+            <span className="text-xs">
+              ({t("form.pricingLicenseSeal") ?? "pricing, license, seal"})
+            </span>
+          </button>
+
+          {showAdvanced && (<>
           {/* Access & Pricing — progressive disclosure */}
           <div className="rounded-lg border p-3 space-y-3">
             <p id="contrib-access-label" className="block text-sm font-medium">
@@ -658,6 +680,7 @@ export function ContributionForm({
               </p>
             </div>
           </label>
+          </>)}
 
           <div className="flex justify-between items-center">
             <p className="text-xs text-muted-foreground">

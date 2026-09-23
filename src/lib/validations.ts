@@ -96,6 +96,7 @@ export const createCommentSchema = z.object({
 export const sealRegistrationSchema = z.object({
   contentHash: z.string().length(64, "Hash must be a valid SHA-256 (64 hex characters)"),
   title: z.string().max(200).optional(),
+  content: z.string().min(1).max(50000).optional(),
 });
 
 export const revealSealSchema = z.object({

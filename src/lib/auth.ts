@@ -6,6 +6,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { prisma } from "./db";
 import { logBackgroundError } from "@/lib/log";
+import { rateLimit } from "@/lib/rate-limit";
 
 const useCredentialsDev =
   process.env.NODE_ENV === "development" &&
@@ -68,6 +69,13 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
+
+        // Rate limit by email: 5 attempts per 15 minutes
+        const key = `auth:${credentials.email.toLowerCase().trim()}`;
+        if (!rateLimit(key, 5, 15 * 60 * 1000)) {
+          throw new Error("Too many login attempts. Please try again later.");
+        }
+
         const user = await prisma.user.findUnique({
           where: { email: credentials.email.toLowerCase().trim() },
         });
@@ -120,19 +128,17 @@ export const authOptions: NextAuthOptions = {
       if (user?.id) {
         token.sub = user.id;
         const dbUser = await prisma.user.findUnique({ where: { id: user.id } });
-        (token as any).trustLevel = (dbUser as any)?.trustLevel ?? "new_member";
-        (token as any).displayName =
-          (dbUser as any)?.displayName ?? user.name ?? null;
-        token.picture = (dbUser as any)?.image ?? token.picture ?? null;
+        token.trustLevel = dbUser?.trustLevel ?? "new_member";
+        token.displayName = dbUser?.displayName ?? user.name ?? null;
+        token.picture = dbUser?.image ?? token.picture ?? null;
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user && token?.sub) {
         session.user.id = token.sub;
-        session.user.trustLevel = (token as any).trustLevel ?? "new_member";
-        session.user.displayName =
-          (token as any).displayName ?? session.user.name;
+        session.user.trustLevel = token.trustLevel ?? "new_member";
+        session.user.displayName = token.displayName ?? session.user.name;
         if (token.picture) session.user.image = token.picture as string;
       }
       return session;

@@ -221,6 +221,7 @@ model SealedRegistration {
   userId         String    @map("user_id")
   contentHash    String    @map("content_hash")
   title          String?
+  sealedContent    String? @map("sealed_content")
   registeredAt   DateTime  @default(now()) @map("registered_at")
   revealedAt     DateTime? @map("revealed_at")
   contributionId String?   @unique @map("contribution_id")
@@ -255,6 +256,8 @@ model Comment {
   @@map("comments")
 }
 
+// @deprecated — Legacy v1 credit system. Use CreditV2 for new features.
+// Retained for backward compatibility; will be migrated and removed.
 model Credit {
   id             String   @id @default(uuid())
   userId         String   @map("user_id")

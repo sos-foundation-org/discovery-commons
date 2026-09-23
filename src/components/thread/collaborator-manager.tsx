@@ -59,10 +59,15 @@ export function CollaboratorManager({ threadId }: { threadId: string }) {
 
   const remove = async (userId: string) => {
     setLoading(true);
-    await fetch(
+    setError("");
+    const res = await fetch(
       `/api/threads/${threadId}/collaborators?userId=${encodeURIComponent(userId)}`,
       { method: "DELETE" }
     ).catch(() => null);
+    if (!res?.ok) {
+      const data = await res?.json().catch(() => null);
+      setError(data?.error || t("thread.removeCollabFailed"));
+    }
     await load();
     setLoading(false);
   };

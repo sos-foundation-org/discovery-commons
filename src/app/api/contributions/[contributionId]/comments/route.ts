@@ -5,6 +5,7 @@ import { createCommentSchema } from "@/lib/validations";
 import { rewardCommentPosted, rewardReviewReceived } from "@/lib/points";
 import { checkContributionAccess } from "@/lib/access-control";
 import { logBackgroundError } from "@/lib/log";
+import { rateLimit } from "@/lib/rate-limit";
 
 export async function GET(
   request: NextRequest,
@@ -79,6 +80,15 @@ export async function POST(
   const session = await getSession();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  // Rate limit: 20 comments per 10 minutes per user
+  const commentKey = `comment:${session.user.id}`;
+  if (!rateLimit(commentKey, 20, 10 * 60 * 1000)) {
+    return NextResponse.json(
+      { error: "Too many comments. Please slow down." },
+      { status: 429 }
+    );
   }
 
   let body;

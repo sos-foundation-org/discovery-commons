@@ -13,6 +13,7 @@ read alongside `src/prisma/schema.prisma` and `src/lib/`.
 - [Contribution types, disciplines, media](#contribution-types-disciplines-media)
 - [Dual-database strategy](#dual-database-strategy)
 - [Integrity triggers (production)](#integrity-triggers-production)
+- [Discovery Points (DP) economy](#discovery-points-dp-economy)
 - [Dormant Phase-2 subsystems](#dormant-phase-2-subsystems)
 
 ---
@@ -42,7 +43,7 @@ User ──< Thread ──< Contribution ──< Comment
               │           │
               │           ├─ ContributionVersion (edit history)
               │           ├─ ContributionShare   (extra viewers)
-              │           └─ SealedRegistration   (legacy seal record)
+              │           └─ SealedRegistration   (standalone seal + contribution seal record)
               ├─ ThreadCollaborator (shared-thread members)
               └─ CreditV2 / Credit  (attribution)
 ```
@@ -81,8 +82,12 @@ Threads: `private | shared | public`. Contributions add `sealed`.
 Rules (also enforced by prod triggers):
 - A contribution is gated by **both** its own and its thread's visibility.
 - Visibility only widens: `public` is terminal; `sealed → private` is forbidden.
-- **Seal** (`POST /api/contributions/[id]/seal`): private|shared → sealed, stamps `sealedAt`; content becomes immutable.
-- **Reveal** (`POST /api/contributions/[id]/reveal`): sealed → shared|public, stamps `revealedAt`, and **re-verifies `SHA-256(content)` against the stored hash** (409 if it no longer matches) — proving the revealed content is exactly what was sealed.
+- **Seal** (two paths): (a) inline via `POST /api/contributions` with `sealed: true`
+  — creates both a Contribution and a SealedRegistration; (b) standalone via
+  `POST /api/sealed` — registers a hash+content without a thread.
+- **Reveal** (`POST /api/sealed/[sealId]/reveal`): verifies `SHA-256(content)`
+  against the stored hash (400 on mismatch), creates a Contribution in the
+  chosen thread, stamps `revealedAt`.
 
 ## Access control
 
@@ -102,11 +107,11 @@ means *sealed for a non-author* → the card shows the hash, masks the content.
 
 ## Credit system
 
-Two coexisting layers:
-- **`Credit`** (v1) — one row per contribution, keyed by contribution type;
-  drives the "Discovery Credit Score" on `/profile`.
-- **`CreditV2`** — append-only, dimension-based; drives dashboards, the thread
-  distribution, and public profiles.
+**`CreditV2`** is the active system — append-only, dimension-based; drives
+dashboards, the thread distribution, and public profiles.
+
+`Credit` (v1) is **deprecated** and retained only for backward compatibility.
+New features must use CreditV2; v1 will be migrated and removed.
 
 Prototype uses a **5-dimension** subset — `idea / data / method / analysis /
 validation` (`PROTOTYPE_CREDIT_DIMENSIONS` in `src/lib/types.ts`). Contribution
@@ -130,8 +135,9 @@ the token **once at sign-in**; the `session` callback reads them from the token
 - **Local dev** — an extra `dev` credentials provider (only when
   `NODE_ENV=development` and no `GOOGLE_CLIENT_ID`) signs you in by email, no
   password.
-- `middleware.ts` protects `/threads/new /sealed /profile /notifications
-  /settings /admin/*`.
+- `middleware.ts` uses a **whitelist** approach: all pages require login by default;
+  only explicitly listed public routes (`/`, `/about`, `/auth/*`, `/verify/*`,
+  `/share/*`, `/legal/*`) are exempt. Forgetting a new page fails closed.
 
 ## Hashing & verification
 
@@ -170,6 +176,31 @@ dev relies on the app layer). Applied once via the Supabase SQL editor after
 `prisma db push`. They enforce: immutable `content_hash` / `created_at` / credit
 hashes+timestamps; sealed content can't change; visibility can't downgrade; and
 no deletes on hash-bearing tables. See [DEPLOY.md](../DEPLOY.md).
+
+## Discovery Points (DP) economy
+
+A virtual-point system that incentivises contributions and enables content gating.
+DP are **not real currency** — they cannot be converted to money.
+
+Models: `PointsAccount`, `PointsTransaction`, `ContentPurchase`, `CollaborationRequest`,
+`ContentAccessRule`, `ContentAccessLog`, `Bounty`, `BountyAward`.
+
+Logic: `src/lib/points.ts` (earn / spend / transfer / freeze / unfreeze).
+Config: `src/lib/types.ts` (`DP_PUBLISH_REWARDS`, `DP_EVENT_REWARDS`,
+`DP_LIKE_MILESTONES`, `DP_PLATFORM_FEE`).
+
+How points flow:
+
+- **Earning**: posting contributions (`DP_PUBLISH_REWARDS` by type, 10–30 DP),
+  receiving likes/comments/reviews (`DP_EVENT_REWARDS`), welcome bonus (50 DP).
+- **Spending**: purchasing gated content, posting bounties.
+- **Transfer**: buyer → seller on content purchase; 10 % platform fee is sunk
+  (removed from circulation).
+- **Escrow**: collaboration deposits freeze DP until the request resolves.
+- **Reputation & level**: `lifetimeEarned` (excluding purchase income) maps to a
+  6-tier level (Glimmer → Horizon); level gates collaboration access.
+
+Rate limiting on earn actions is applied at the API layer to prevent farming.
 
 ## Dormant Phase-2 subsystems
 

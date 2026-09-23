@@ -29,8 +29,13 @@ export default function SealedPage() {
   }, [status, router]);
 
   const fetchSeals = async () => {
-    const res = await fetch("/api/sealed");
-    if (res.ok) setSeals(await res.json());
+    try {
+      const res = await fetch("/api/sealed");
+      if (res.ok) setSeals(await res.json());
+      else setError(t("common.error") ?? "Failed to load seals");
+    } catch {
+      setError(t("common.error") ?? "Failed to load seals");
+    }
   };
 
   const generateClientHash = async (text: string) => {
@@ -60,7 +65,7 @@ export default function SealedPage() {
       const res = await fetch("/api/sealed", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ contentHash: generatedHash, title: title || undefined }),
+        body: JSON.stringify({ contentHash: generatedHash, title: title || undefined, content }),
       });
 
       if (!res.ok) {

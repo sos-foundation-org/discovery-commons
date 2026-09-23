@@ -3,7 +3,7 @@ import { Prisma } from "@prisma/client";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { createContributionSchema } from "@/lib/validations";
-import { generatePriorityHash } from "@/lib/hash";
+import { generatePriorityHash, generateContentHash } from "@/lib/hash";
 import { STAGE_LEVEL } from "@/lib/types";
 import { generateCredits } from "@/lib/credits";
 import { rewardPublish, rewardWelcomeBonus } from "@/lib/points";
@@ -147,16 +147,21 @@ export async function POST(request: NextRequest) {
         tx
       );
 
-      // Create sealed registration if requested
+      // Create sealed registration if requested.
+      // SealedRegistration.contentHash uses generateContentHash (plain SHA-256 of
+      // content) — NOT the priority hash — so the reveal endpoint can verify it
+      // with the same function. The Contribution.contentHash (priority hash) is a
+      // separate, different hash that includes userId + timestamp.
       if (sealed) {
         await tx.sealedRegistration.create({
           data: {
             userId: session.user.id,
-            contentHash: contentHash,
+            contentHash: generateContentHash(content),
+            sealedContent: content,
             title: content.slice(0, 80),
             contributionId: contrib.id,
             status: "sealed",
-          },
+          } as any, // sealedContent: remove `as any` after `prisma generate`
         });
       }
 

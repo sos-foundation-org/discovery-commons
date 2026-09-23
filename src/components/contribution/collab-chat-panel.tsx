@@ -34,6 +34,7 @@ export function CollabChatPanel({
   const [newText, setNewText] = useState("");
   const [sending, setSending] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   const fetchMessages = useCallback(async () => {
     const res = await fetch(
@@ -59,6 +60,7 @@ export function CollabChatPanel({
     e.preventDefault();
     if (!newText.trim() || sending) return;
     setSending(true);
+    setError("");
 
     const res = await fetch(
       `/api/contributions/${contributionId}/collab/${reqId}/messages`,
@@ -74,11 +76,14 @@ export function CollabChatPanel({
       setMessages((prev) => [...prev, data.message]);
       setStatus(data.status);
       setNewText("");
+    } else {
+      setError(t("contribution.sendFailed") ?? "Failed to send message");
     }
     setSending(false);
   };
 
   const handleAction = async (action: "accept" | "decline" | "chat_first") => {
+    setError("");
     const res = await fetch(
       `/api/contributions/${contributionId}/collab/${reqId}`,
       {
@@ -90,6 +95,8 @@ export function CollabChatPanel({
     if (res?.ok) {
       const data = await res.json();
       setStatus(data.status);
+    } else {
+      setError(t("contribution.actionFailed") ?? "Action failed");
     }
   };
 
@@ -152,6 +159,8 @@ export function CollabChatPanel({
           );
         })}
       </div>
+
+      {error && <p className="text-xs text-red-600">{error}</p>}
 
       {/* Send message */}
       {canChat && (

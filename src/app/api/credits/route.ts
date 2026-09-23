@@ -1,3 +1,4 @@
+// @deprecated — Legacy v1 credit endpoints. New features should use CreditV2.
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";

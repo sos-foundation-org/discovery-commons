@@ -33,6 +33,9 @@ export default async function CreditsPage() {
 
   return (
     <div className="container mx-auto max-w-4xl px-4 py-8">
+      <div className="mb-4 rounded-md bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 p-3 text-sm text-amber-800 dark:text-amber-200">
+        This credit view uses the legacy system and will be consolidated into your profile page in a future update.
+      </div>
       <div className="mb-8 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-3xl font-bold"><T k="account.credits.title" /></h1>

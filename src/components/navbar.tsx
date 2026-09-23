@@ -172,7 +172,7 @@ export function Navbar() {
                 <Link
                   href="/points"
                   className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded-md hover:bg-accent"
-                  title={t("site.nav.discoveryPoints")}
+                  title="Discovery Points (virtual)"
                 >
                   {dpBalance.toLocaleString()} DP
                 </Link>

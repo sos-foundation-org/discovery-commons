@@ -3,6 +3,7 @@ import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { rewardLikeReceived } from "@/lib/points";
 import { logBackgroundError } from "@/lib/log";
+import { rateLimit } from "@/lib/rate-limit";
 
 // POST — toggle the current user's like on a contribution. Returns { liked, count }.
 export async function POST(
@@ -13,6 +14,15 @@ export async function POST(
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  // Rate limit: 30 likes per 10 minutes per user
+  const likeKey = `like:${session.user.id}`;
+  if (!rateLimit(likeKey, 30, 10 * 60 * 1000)) {
+    return NextResponse.json(
+      { error: "Too many likes. Please slow down." },
+      { status: 429 }
+    );
+  }
+
   const contributionId = params.contributionId;
   const userId = session.user.id;
 

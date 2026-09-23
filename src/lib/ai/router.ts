@@ -9,6 +9,8 @@ import type { AIRole } from "../types";
 export const AI_MODEL = process.env.AI_MODEL || "claude-opus-4-8";
 
 // USD per 1M tokens, by model. Used for per-interaction cost tracking.
+// TODO: Move model pricing to environment variables or external config.
+// These values go stale as AI providers update pricing.
 const MODEL_PRICING: Record<string, { input: number; output: number }> = {
   "claude-opus-4-8": { input: 5.0, output: 25.0 },
   "claude-opus-4-7": { input: 5.0, output: 25.0 },
