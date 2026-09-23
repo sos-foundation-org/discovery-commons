@@ -12,6 +12,6 @@ export const config = {
      * - favicon.ico, robots.txt, sitemap.xml
      * - Public pages listed below
      */
-    "/((?!api/|api$|_next/|favicon\\.ico|robots\\.txt|sitemap\\.xml|avatars/|$|about$|about/|auth/|auth$|verify/|share/|legal/).*)",
+    "/((?!api/|api$|_next/|favicon\\.ico|robots\\.txt|sitemap\\.xml|avatars/|images/|$|about$|about/|auth/|auth$|verify/|share/|legal/).*)",
   ],
 };
