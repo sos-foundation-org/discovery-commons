@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { Disclosure } from "@/components/ui/disclosure";
 import { ThreadRow } from "@/components/thread/thread-row";
 import { T } from "@/components/t";
+import { BetaDisclaimer } from "@/components/home/beta-disclaimer";
 
 /** Four steps of "How Discovery Works": short visible line + folded detail. */
 const HOW_STEPS = [
@@ -408,6 +409,9 @@ export default async function HomePage() {
           </div>
         </section>
       )}
+
+      {/* First-visit beta disclaimer overlay (same pattern as the ECI site) */}
+      <BetaDisclaimer />
     </div>
   );
 }
