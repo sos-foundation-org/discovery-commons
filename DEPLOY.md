@@ -9,7 +9,10 @@ provider at build time based on `DATABASE_PROVIDER`.
 > (`src/lib/access-control.ts`), not via Supabase RLS. This app uses NextAuth +
 > Prisma (connecting as the DB owner), which bypasses RLS. The Postgres triggers
 > in `src/prisma/triggers.sql` guard *immutability* (hashes, timestamps, sealed
-> content, visibility downgrades) — Prisma cannot bypass those.
+> content, visibility downgrades) — Prisma cannot bypass those. The same file
+> enables RLS (no policies) and revokes `anon`/`authenticated` on every `public`
+> table so the Supabase Data API can't reach the data; re-run it after any
+> `prisma db push` that adds a table.
 
 ---
 

@@ -77,8 +77,10 @@ Deferred, dormant code already exists for several of these (see ARCHITECTURE
   unify in production.
 - **`SealedRegistration`** (legacy standalone seal) coexists with the newer
   `Contribution.visibility='sealed'`; the `/sealed` page uses the legacy path.
-- **RLS is intentionally unused** (NextAuth+Prisma bypasses it) — access control
-  is app-layer. Any future Supabase-client access must re-derive authorization.
+- **RLS is not the access-control layer** (NextAuth+Prisma bypasses it) — access
+  control is app-layer. RLS is enabled with no policies only to block the
+  Supabase Data API. Any future Supabase-client access must add real policies
+  *and* explicit GRANTs (Supabase stopped auto-granting new tables 2026-10-30).
 - **No automated tests / CI** beyond the build.
 - **Prod seed data is frozen** by immutability triggers — new demo/content must be
   created via the app, not re-seeded.

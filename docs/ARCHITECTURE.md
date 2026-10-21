@@ -104,6 +104,9 @@ means *sealed for a non-author* → the card shows the hash, masks the content.
 > connects through Prisma as the database owner, which **bypasses RLS**. RLS
 > policies keyed on `auth.uid()` would do nothing. So visibility is enforced in
 > code; the DB triggers only guard immutability (which Prisma cannot bypass).
+> RLS *is* enabled on every `public` table, with **no policies**, and
+> `anon`/`authenticated` grants are revoked (`triggers.sql` §9) — solely to lock
+> the Supabase Data API (PostgREST, keyed by the public anon key) out.
 
 ## Credit system
 

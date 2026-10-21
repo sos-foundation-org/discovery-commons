@@ -12,7 +12,8 @@
 -- (src/lib/access-control.ts), NOT via Postgres RLS: this app authenticates
 -- with NextAuth and connects through Prisma as the database owner, which
 -- bypasses RLS. These triggers only guard immutability, which Prisma cannot
--- bypass. Idempotent: safe to re-run.
+-- bypass. RLS is enabled (with no policies) purely to lock the Supabase Data
+-- API out — see §9. Idempotent: safe to re-run.
 -- ============================================================================
 
 -- ---------------------------------------------------------------------------
@@ -288,3 +289,27 @@ DROP TRIGGER IF EXISTS trg_sealed_no_delete ON sealed_registrations;
 CREATE TRIGGER trg_sealed_no_delete
   BEFORE DELETE ON sealed_registrations
   FOR EACH ROW EXECUTE FUNCTION prevent_delete();
+
+-- ---------------------------------------------------------------------------
+-- 9. Lock the Supabase Data API (PostgREST / supabase-js / GraphQL) out of
+--    every table in public. The app never uses it — Prisma connects as the
+--    table owner, which RLS does not apply to — but Supabase grants anon /
+--    authenticated full access to public tables by default, and the anon key
+--    is public. Enabling RLS with NO policies denies those roles every row;
+--    revoking their grants is a second lock. Clears Supabase's
+--    `rls_disabled_in_public` advisory. Loops over all public tables, so
+--    re-running this file after `prisma db push` adds a table covers it too.
+--    (From 2026-10-30 Supabase stops auto-granting new public tables to the
+--    Data API — which is what we want; never add GRANTs to anon/authenticated
+--    unless a future Supabase client needs them, with real RLS policies.)
+-- ---------------------------------------------------------------------------
+DO $$
+DECLARE
+  t record;
+BEGIN
+  FOR t IN SELECT tablename FROM pg_tables WHERE schemaname = 'public' LOOP
+    EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', t.tablename);
+    EXECUTE format('REVOKE ALL ON public.%I FROM anon, authenticated', t.tablename);
+  END LOOP;
+END;
+$$;

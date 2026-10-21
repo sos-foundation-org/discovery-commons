@@ -16,6 +16,10 @@ Live at https://discovery-commons.vercel.app on Vercel + Supabase free tiers ($0
   `DATABASE_PROVIDER=postgresql npm run prisma:provider && npx prisma db push`,
   then `git checkout src/prisma/schema.prisma` and `npm run db:generate` to
   restore the local SQLite client. Never re-seed prod (triggers block it).
+- **New prod tables:** after `prisma db push`, re-run `src/prisma/triggers.sql`
+  (§9 enables RLS + revokes `anon`/`authenticated` on every `public` table).
+  Since 2026-10-30 Supabase no longer auto-grants new tables to the Data API —
+  that's intended; never GRANT to `anon`/`authenticated`.
 - End commit messages with the Co-Authored-By trailer.
 
 ## Conventions
@@ -23,7 +27,8 @@ Live at https://discovery-commons.vercel.app on Vercel + Supabase free tiers ($0
   types, disciplines, credit dimensions, visibility, method-applies-to).
 - **API input validation:** Zod in `src/lib/validations.ts`.
 - **Access control:** always via `src/lib/access-control.ts` — never re-implement
-  visibility checks inline. RLS is intentionally NOT used (Prisma bypasses it).
+  visibility checks inline. RLS is on with *no policies* only to lock out the
+  Supabase Data API; it is not the access-control layer (Prisma bypasses it).
 - **Schema portability:** arrays are `Json` (not `String[]`), no native enums, so
   one schema runs on SQLite (local) and Postgres (prod). Don't break this.
 - **Per-type extras:** store in `Contribution.metadata` (JSON) — no migration
